@@ -16,22 +16,15 @@
  */
 package org.adbcj.support;
 
+import org.adbcj.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.adbcj.DbException;
-import org.adbcj.DbSession;
-import org.adbcj.DbSessionClosedException;
-import org.adbcj.DbSessionFuture;
-import org.adbcj.Field;
-import org.adbcj.ResultEventHandler;
-import org.adbcj.ResultSet;
-import org.adbcj.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractDbSession implements DbSession {
 
@@ -155,7 +148,12 @@ public abstract class AbstractDbSession implements DbSession {
 	public void errorPendingRequests(Throwable exception) {
 		synchronized (lock) {
 			if (activeRequest != null && !activeRequest.isDone()) {
-				activeRequest.setException(exception);
+                if(activeRequest instanceof ClosingRequest){
+                    activeRequest.complete(null);
+                } else{
+                    activeRequest.setException(exception);
+
+                }
 			}
 		}
 		for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext();) {
@@ -433,7 +431,6 @@ public abstract class AbstractDbSession implements DbSession {
 		private final ResultEventHandler<T> eventHandler;
 		private final T accumulator;
 
-		private volatile Object payload;
 		private volatile Transaction transaction;
 
 		private boolean cancelled; // Access must be synchronized on this
@@ -502,24 +499,12 @@ public abstract class AbstractDbSession implements DbSession {
 			return true;
 		}
 
-		public Object getPayload() {
-			return payload;
-		}
-
-		public void setPayload(Object payload) {
-			this.payload = payload;
-		}
-
 		public T getAccumulator() {
 			return accumulator;
 		}
 
 		public ResultEventHandler<T> getEventHandler() {
 			return eventHandler;
-		}
-
-		public Transaction getTransaction() {
-			return transaction;
 		}
 
 		public void setTransaction(Transaction transaction) {

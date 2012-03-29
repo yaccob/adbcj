@@ -16,14 +16,12 @@
  */
 package org.adbcj.mysql.mina;
 
-import java.net.InetSocketAddress;
-import java.util.Properties;
-
 import org.adbcj.Connection;
 import org.adbcj.mysql.codec.AbstractMySqlConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.future.IoFutureListener;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.session.IoSessionInitializer;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -33,6 +31,9 @@ import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
+import java.util.Properties;
 
 public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 
@@ -73,14 +74,20 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 
 	@Override
 	protected DefaultDbFuture<Connection> createConnectionFuture() {
-		MysqlConnectFuture future = new MysqlConnectFuture();
-		socketConnector.connect(future);
+		final MysqlConnectFuture futureToComplete = new MysqlConnectFuture();
+		socketConnector.connect(futureToComplete).addListener(new IoFutureListener<ConnectFuture>() {
+            @Override
+            public void operationComplete(ConnectFuture future) {
+                if(future.getException()!=null){
+                    futureToComplete.setException(future.getException());
+                }
+            }
+        });
 
-		return future;
+		return futureToComplete;
 	}
 
 	class MysqlConnectFuture extends DefaultDbFuture<Connection> implements IoSessionInitializer<ConnectFuture> {
-		private boolean done = false;
 		private boolean cancelled = false;
 		public synchronized void initializeSession(IoSession session, ConnectFuture future) {
 			logger.trace("Initializing IoSession");
@@ -97,7 +104,7 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 		}
 		@Override
 		protected synchronized boolean doCancel(boolean mayInterruptIfRunning) {
-			if (done) {
+			if (isDone()) {
 				return false;
 			}
 			logger.trace("Cancelling connect");

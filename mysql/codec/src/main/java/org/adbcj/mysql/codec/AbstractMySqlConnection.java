@@ -1,21 +1,13 @@
 package org.adbcj.mysql.codec;
 
-import java.util.EnumSet;
-import java.util.Set;
-
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.DbSessionClosedException;
-import org.adbcj.DbSessionFuture;
-import org.adbcj.PreparedStatement;
-import org.adbcj.Result;
-import org.adbcj.ResultEventHandler;
+import org.adbcj.*;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultDbFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 public abstract class AbstractMySqlConnection extends AbstractDbSession implements Connection {
 
@@ -90,22 +82,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 				};
 			} else {
 				// If the close is NOT immediate, schedule the close
-				closeRequest = new Request<Void>() {
-					@Override
-					public boolean cancelRequest(boolean mayInterruptIfRunning) {
-						logger.debug("Cancelling close");
-						unclose();
-						return true;
-					}
-					public synchronized void execute() {
-						logger.debug("Sending QUIT to server");
-						write(new CommandRequest(Command.QUIT));
-					}
-					@Override
-					public String toString() {
-						return "MySQL deferred close";
-					}
-				};
+				closeRequest = new CloseRequest();
 				enqueueRequest(closeRequest);
 			}
 		}
@@ -288,5 +265,22 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		}
 	}
 
+    private class CloseRequest extends Request<Void> implements org.adbcj.support.ClosingRequest{
+
+        @Override
+        public boolean cancelRequest(boolean mayInterruptIfRunning) {
+            logger.debug("Cancelling close");
+            unclose();
+            return true;
+        }
+        public synchronized void execute() {
+            logger.debug("Sending QUIT to server");
+            write(new CommandRequest(Command.QUIT));
+        }
+        @Override
+        public String toString() {
+            return "MySQL deferred close";
+        }
+    }
 
 }
