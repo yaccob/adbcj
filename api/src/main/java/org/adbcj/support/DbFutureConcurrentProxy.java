@@ -16,12 +16,12 @@
  */
 package org.adbcj.support;
 
+import org.adbcj.DbException;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.adbcj.DbException;
 
 public class DbFutureConcurrentProxy<T> extends AbstractDbFutureListenerSupport<T> {
 
@@ -43,6 +43,10 @@ public class DbFutureConcurrentProxy<T> extends AbstractDbFutureListenerSupport<
 			if (isDone() && set) {
 				return value;
 			}
+            DbException potentialFailure = getException();
+            if(isDone() && potentialFailure!=null){
+                throw potentialFailure;
+            }
 			return future.get();
 		} catch (ExecutionException e) {
 			throw new DbException(e);
