@@ -148,12 +148,7 @@ public abstract class AbstractDbSession implements DbSession {
 	public void errorPendingRequests(Throwable exception) {
 		synchronized (lock) {
 			if (activeRequest != null && !activeRequest.isDone()) {
-                if(activeRequest instanceof ClosingRequest){
-                    activeRequest.complete(null);
-                } else{
-                    activeRequest.setException(exception);
-
-                }
+                activeRequest.setException(exception);
 			}
 		}
 		for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext();) {

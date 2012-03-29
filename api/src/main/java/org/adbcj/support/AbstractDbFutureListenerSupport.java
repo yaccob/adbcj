@@ -16,15 +16,15 @@
  */
 package org.adbcj.support;
 
+import org.adbcj.DbException;
+import org.adbcj.DbFuture;
+import org.adbcj.DbListener;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
 
 // TODO Copy future logic from Mina's DefaultIoFuture
 public abstract class AbstractDbFutureListenerSupport<T> implements DbFuture<T> {
@@ -105,10 +105,6 @@ public abstract class AbstractDbFutureListenerSupport<T> implements DbFuture<T> 
 
 	protected Lock getLock() {
 		return lock;
-	}
-
-	protected Condition getCondition() {
-		return condition;
 	}
 	
 	protected List<DbListener<T>> getListeners() {

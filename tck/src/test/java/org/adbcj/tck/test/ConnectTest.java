@@ -123,12 +123,12 @@ public class ConnectTest {
 				}
 			});
 			assertTrue(connectionToClose.isClosed(), "This connection should be flagged as closed now");
-            if(!(closeFuture.isDone() || closeFuture.cancel(false))){
-                while(!closeFuture.cancel(false)){
-                    System.out.println("wtf");
-                }
-                System.out.println("wtf2");
-            }
+//            if(!(closeFuture.isDone() || closeFuture.cancel(false))){
+//                while(!closeFuture.cancel(false)){
+//                    System.out.println("wtf");
+//                }
+//                System.out.println("wtf2");
+//            }
 			assertTrue(closeFuture.isDone() || closeFuture.cancel(false), "The connection finalizeClose should have cancelled properly");
 			assertFalse(connectionToClose.isClosed(), "This connection should not be closed because we canceled the finalizeClose");
 

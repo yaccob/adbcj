@@ -16,27 +16,19 @@
  */
 package org.adbcj.tck.test;
 
+import org.adbcj.*;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
-import org.adbcj.DbSessionFuture;
-import org.adbcj.ResultSet;
-import org.adbcj.Row;
-import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
-import org.testng.annotations.Test;
 
 
 // TODO Write test for result set metadata
@@ -119,7 +111,7 @@ public class SelectTest {
 		Connection connection = connectionManager.connect().get();
 		
 		List<DbFuture<ResultSet>> futures = new LinkedList<DbFuture<ResultSet>>();
-		for (int i = 0; i < 1000; i++) {
+		for (int i = 0; i < 500; i++) {
 			futures.add(
 					connection.executeQuery(String.format("SELECT *, %d FROM simple_values", i))
 					);

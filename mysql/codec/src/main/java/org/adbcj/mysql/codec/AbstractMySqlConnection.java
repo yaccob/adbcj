@@ -257,7 +257,10 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		if (!getConnectFuture().isDone() ) {
 			getConnectFuture().setException(closedException);
 		}
-		errorPendingRequests(closedException);
+        Request<Object> closeRequestAsObject = (Request)closeRequest;
+        if (getActiveRequest() != closeRequestAsObject) {
+            errorPendingRequests(closedException);
+        }
 		synchronized (this) {
 			if (closeRequest != null) {
 				closeRequest.complete(null);
@@ -265,7 +268,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		}
 	}
 
-    private class CloseRequest extends Request<Void> implements org.adbcj.support.ClosingRequest{
+    private class CloseRequest extends Request<Void>{
 
         @Override
         public boolean cancelRequest(boolean mayInterruptIfRunning) {
