@@ -91,6 +91,11 @@ public class JdbcConnectionManager implements ConnectionManager {
 				} catch (Exception e) {
 					future.setException(new DbException(e));
 					throw e;
+				} catch (Throwable e) {
+					future.setException(new DbException(e));
+                    // We throw the original exception here.
+                    // No nesting is used.
+                    throw UncheckedThrow.throwUnchecked(e);
 				} finally {
 					future.setDone();
 				}
