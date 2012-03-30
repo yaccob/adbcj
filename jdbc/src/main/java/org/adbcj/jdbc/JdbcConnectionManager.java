@@ -16,25 +16,18 @@
  */
 package org.adbcj.jdbc;
 
+import org.adbcj.*;
+import org.adbcj.support.DbFutureConcurrentProxy;
+import org.adbcj.support.DefaultDbFuture;
+
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
-import org.adbcj.support.DbFutureConcurrentProxy;
-import org.adbcj.support.DefaultDbFuture;
 
 public class JdbcConnectionManager implements ConnectionManager {
 
@@ -54,7 +47,16 @@ public class JdbcConnectionManager implements ConnectionManager {
 
 	public JdbcConnectionManager(String jdbcUrl, String username,
 			String password, Properties properties) {
-		this(jdbcUrl, username, password, Executors.newCachedThreadPool(), properties);
+		this(jdbcUrl, username, password, Executors.newCachedThreadPool(new ThreadFactory() {
+            private final AtomicInteger threadNumber = new AtomicInteger(1);
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = Executors.defaultThreadFactory().newThread(r);
+                thread.setName("ADBC to JDBC bridge "+threadNumber.incrementAndGet());
+                thread.setDaemon(true);
+                return thread;
+            }
+        }), properties);
 	}
 
 	public JdbcConnectionManager(String jdbcUrl, String username,
