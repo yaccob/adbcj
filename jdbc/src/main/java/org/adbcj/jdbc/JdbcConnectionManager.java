@@ -21,7 +21,6 @@ import org.adbcj.support.DbFutureConcurrentProxy;
 import org.adbcj.support.DefaultDbFuture;
 
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -89,7 +88,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 						}
 					}
 					return connection;
-				} catch (SQLException e) {
+				} catch (Exception e) {
 					future.setException(new DbException(e));
 					throw e;
 				} finally {
