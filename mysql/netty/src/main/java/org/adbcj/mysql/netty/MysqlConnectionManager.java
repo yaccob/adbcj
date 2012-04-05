@@ -25,9 +25,9 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 
 	private static final Logger logger = LoggerFactory.getLogger(MysqlConnectionManager.class);
 
-	private static final String QUEUE_HANDLER = MysqlConnectionManager.class.getName() + ".queueHandler";
 	private static final String ENCODER = MysqlConnectionManager.class.getName() + ".encoder";
 	private static final String DECODER = MysqlConnectionManager.class.getName() + ".decoder";
+	private static final String MESSAGE_QUEUE = MysqlConnectionManager.class.getName() + ".queue";
 
 	private final ExecutorService executorService;
 	private final ClientBootstrap bootstrap;
@@ -55,7 +55,7 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = Channels.pipeline();
 
-
+                pipeline.addFirst(MESSAGE_QUEUE,new MessageQueuingHandler());
 				pipeline.addLast(DECODER, new Decoder());
 				pipeline.addLast(ENCODER, new Encoder());
 
@@ -93,8 +93,17 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 					Channel channel = future.getChannel();
 					MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, getCredentials(), channel, MysqlConnectFuture.this);
 					channel.getPipeline().addLast("handler", new Handler(connection));
+
+                    MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
+                    synchronized (queuingHandler) {
+                        queuingHandler.flush();
+                        channel.getPipeline().remove(queuingHandler);
+                    }
+
                     Decoder decoder = channel.getPipeline().get(Decoder.class);
                     decoder.initializeWithSession(connection);
+
+
                     if(future.getCause()!=null){
                         setException(future.getCause());
                     }

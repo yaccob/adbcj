@@ -65,7 +65,7 @@ public class ConnectTest {
 				latch.countDown();
 			}
 		});
-		Connection connection = connectFuture.get(5, TimeUnit.SECONDS);
+		Connection connection = connectFuture.get(10, TimeUnit.SECONDS);
 		assertTrue(!connection.isClosed());
 		DbFuture<Void> closeFuture = connection.close(true).addListener(new DbListener<Void>() {
 			public void onCompletion(DbFuture<Void> future) throws Exception {
@@ -74,7 +74,7 @@ public class ConnectTest {
 				latch.countDown();
 			}
 		});
-		closeFuture.get(5, TimeUnit.SECONDS);
+		closeFuture.get(10, TimeUnit.SECONDS);
 		assertTrue(connection.isClosed());
 		latch.await(1, TimeUnit.SECONDS);
 		assertTrue(callbacks[0], "Callback on connection future was not invoked");
@@ -82,7 +82,6 @@ public class ConnectTest {
 	}
 
 	public void testConnectNonImmediateClose() throws DbException, InterruptedException {
-		final boolean[] callbacks = {false};
 		final CountDownLatch latch = new CountDownLatch(1);
 
 		Connection connection = connectionManager.connect().get();
@@ -90,13 +89,11 @@ public class ConnectTest {
 		connection.close(true).addListener(new DbListener<Void>() {
 			public void onCompletion(DbFuture<Void> future) throws Exception {
 				// Indicate that finalizeClose callback has been invoked
-				callbacks[0] = true;
 				latch.countDown();
 			}
 		}).get();
 		assertTrue(connection.isClosed());
 		latch.await(1, TimeUnit.SECONDS);
-		assertTrue(callbacks[0], "Callback on finalizeClose future was not invoked");
 	}
 
 	public void testCancelClose() throws DbException, InterruptedException {
