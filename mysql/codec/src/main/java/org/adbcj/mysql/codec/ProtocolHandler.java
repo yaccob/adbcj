@@ -1,18 +1,14 @@
 package org.adbcj.mysql.codec;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import org.adbcj.Connection;
-import org.adbcj.DbException;
-import org.adbcj.Result;
-import org.adbcj.ResultSet;
-import org.adbcj.Value;
+import org.adbcj.*;
+import org.adbcj.support.AbstractDbSession.Request;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResult;
-import org.adbcj.support.AbstractDbSession.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Asynchronous protocol handler suitable for use with frameworks like MINA or Netty.
@@ -119,7 +115,7 @@ public class ProtocolHandler {
 	}
 
 	private void handleErrorResponse(AbstractMySqlConnection connection, ErrorResponse message) {
-		throw new MysqlException(connection, message.getMessage());
+		throw new MysqlException(connection,message.getSqlState() +":"+ message.getMessage());
 	}
 
 	private void handleResultSetResponse(AbstractMySqlConnection connection, ResultSetResponse message) {

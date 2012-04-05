@@ -129,7 +129,7 @@ class Decoder extends FrameDecoder {
 
 }
 
-@ChannelPipelineCoverage("all")
+@ChannelHandler.Sharable
 class Encoder implements ChannelDownstreamHandler {
 
 	private final MySqlClientEncoder encoder = new MySqlClientEncoder();
@@ -153,7 +153,6 @@ class Encoder implements ChannelDownstreamHandler {
 	}
 }
 
-@ChannelPipelineCoverage("one")
 class Handler extends SimpleChannelHandler {
 
 	private final MysqlConnection connection;

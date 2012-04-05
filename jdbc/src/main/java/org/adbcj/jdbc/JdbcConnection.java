@@ -171,12 +171,6 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
 
     }
 
-    public DbSessionFuture<PreparedStatement> prepareStatement(Object key, String sql) {
-        checkClosed();
-        // TODO Implement JDBC prepareStatement(Object key, String sql)
-        throw new IllegalStateException("Not yet implemented");
-    }
-
     public DbFuture<Void> ping() {
         checkClosed();
         // TODO Implement JDBC ping()

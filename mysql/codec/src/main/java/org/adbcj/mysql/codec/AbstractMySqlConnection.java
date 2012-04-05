@@ -21,7 +21,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	private Request<Void> closeRequest; // Access must by synchronized on 'this'
 
-	private MysqlCharacterSet charset = MysqlCharacterSet.LATIN1_SWEDISH_CI;
+	private final MysqlCharacterSet charset = MysqlCharacterSet.LATIN1_SWEDISH_CI;
 
 	protected AbstractMySqlConnection(AbstractMySqlConnectionManager connectionManager, LoginCredentials credentials) {
 		super(connectionManager.isPipeliningEnabled());
@@ -131,16 +131,20 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		});
 	}
 
-	public DbSessionFuture<PreparedStatement> prepareStatement(String sql) {
+	public DbSessionFuture<PreparedStatement> prepareStatement(final String sql) {
 		checkClosed();
-		// TODO Implement MySQL prepareStatement(String sql)
-		throw new IllegalStateException("Not yet implemented");
-	}
-
-	public DbSessionFuture<PreparedStatement> prepareStatement(Object key, String sql) {
-		checkClosed();
-		// TODO Implement MySQL prepareStatement(Object key, String sql)
-		throw new IllegalStateException("Not yet implemented");
+        return enqueueTransactionalRequest(new Request<PreparedStatement>() {
+            @Override
+            public void execute() throws Exception {
+                logger.debug("Sending prepared query '{}'", sql);
+                CommandRequest request = new CommandRequest(Command.STATEMENT_PREPARE, sql);
+                write(request);
+            }
+            @Override
+            public String toString() {
+                return "SELECT PREPARE request: " + sql;
+            }
+        });
 	}
 
 	public DbFuture<Void> ping() {
