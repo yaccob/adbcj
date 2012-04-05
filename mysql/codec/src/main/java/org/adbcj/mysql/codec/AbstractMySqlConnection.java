@@ -107,7 +107,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 				logger.debug("Sending query '{}'", sql);
 				CommandRequest request = new CommandRequest(Command.QUERY, sql);
 				write(request);
-			}
+        }
 			@Override
 			public String toString() {
 				return "SELECT request: " + sql;

@@ -17,14 +17,14 @@
 	Copyright 2008  Mike Heath
  */
 package org.adbcj.mysql.codec;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Set;
-
 import org.adbcj.Value;
 import org.adbcj.support.DefaultValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Set;
 
 /**
  * Client stateful decoder.  Being stateful, each client connection must have its own decoder instance to function
@@ -50,8 +50,6 @@ public class MySqlClientDecoder {
 	 * Number of unused bytes in server greeting
 	 */
 	public static final int GREETING_UNUSED_SIZE = 13;
-
-	public static final int SQL_STATE_LENGTH = 5;
 
 	public static final int RESPONSE_OK = 0x00;
 	public static final int RESPONSE_EOF = 0xfe;

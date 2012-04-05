@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 
@@ -40,7 +41,8 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 		init(host, port);
 	}
 
-	public MysqlConnectionManager(String host, int port, String username, String password, String schema, Properties properties, ChannelFactory factory) {
+	public MysqlConnectionManager(String host, int port, String username, String password,
+                                  String schema, Properties properties, ChannelFactory factory) {
 		super(username, password, schema, properties);
 		executorService = null;
 		bootstrap = new ClientBootstrap(factory);
@@ -53,7 +55,6 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = Channels.pipeline();
 
-				pipeline.addFirst(QUEUE_HANDLER, new MessageQueuingHandler());
 
 				pipeline.addLast(DECODER, new Decoder());
 				pipeline.addLast(ENCODER, new Encoder());
@@ -92,11 +93,8 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 					Channel channel = future.getChannel();
 					MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, getCredentials(), channel, MysqlConnectFuture.this);
 					channel.getPipeline().addLast("handler", new Handler(connection));
-					MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
-					synchronized (queuingHandler) {
-						queuingHandler.flush();
-						channel.getPipeline().remove(queuingHandler);
-					}
+                    Decoder decoder = channel.getPipeline().get(Decoder.class);
+                    decoder.initializeWithSession(connection);
                     if(future.getCause()!=null){
                         setException(future.getCause());
                     }
@@ -112,10 +110,11 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 	}
 }
 
-@ChannelPipelineCoverage("one")
 class Decoder extends FrameDecoder {
 
 	private final MySqlClientDecoder decoder = new MySqlClientDecoder();
+
+    private final AtomicReference<AbstractMySqlConnection> connection = new AtomicReference<AbstractMySqlConnection>(null);
 
 	@Override
 	protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
@@ -126,6 +125,12 @@ class Decoder extends FrameDecoder {
 			 in.close();
 		 }
 	}
+
+    void initializeWithSession(AbstractMySqlConnection session){
+        if(connection.getAndSet(session)!=null){
+            throw new IllegalStateException("Expect that the initialisation is called only once");
+        }
+    }
 
 }
 
