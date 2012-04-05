@@ -60,8 +60,6 @@ public interface DbSession {
 	DbSessionFuture<Result> executeUpdate(String sql);
 	
 	DbSessionFuture<PreparedStatement> prepareStatement(String sql);
-	
-	DbSessionFuture<PreparedStatement> prepareStatement(Object key, String sql);
 
 	DbSessionFuture<Void> close(boolean immediate) throws DbException;
 	

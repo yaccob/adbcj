@@ -23,8 +23,6 @@ public interface PreparedStatement {
 
 	List<Object> getParameterKeys();
 	
-	String getNativeSQL();
-	
 	DbFuture<ResultSet> executeQuery(Object... params);
 	
 	DbFuture<ResultSet> executeQuery(Map<Object, Object> params);

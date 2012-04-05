@@ -87,10 +87,6 @@ public abstract class AbstractDbFutureListenerSupport<T> implements DbFuture<T> 
 		}
 	}
 
-	protected DbException getException() {
-		return exception;
-	}
-
 	public void setException(DbException exception) {
 		lock.lock();
 		try {
@@ -103,7 +99,11 @@ public abstract class AbstractDbFutureListenerSupport<T> implements DbFuture<T> 
 		}
 	}
 
-	protected Lock getLock() {
+    public DbException getException() {
+        return exception;
+    }
+
+    protected Lock getLock() {
 		return lock;
 	}
 	

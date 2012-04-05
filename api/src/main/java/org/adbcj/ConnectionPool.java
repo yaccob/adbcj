@@ -89,11 +89,6 @@ public class ConnectionPool implements DbSessionProvider {
 			}
 
 			@Override
-			public DbSessionFuture<PreparedStatement> prepareStatement(Object key, String sql) {
-				return session.prepareStatement(key, sql);
-			}
-
-			@Override
 			public DbSessionFuture<Void> close(boolean immediate) throws DbException {
 				sessions.add(session);
 				return DefaultDbSessionFuture.createCompletedFuture(this, null);

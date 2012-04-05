@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class AbstractDbSession implements DbSession {
 
-	private final Logger logger = LoggerFactory.getLogger(AbstractDbSession.class);
+	private static final Logger logger = LoggerFactory.getLogger(AbstractDbSession.class);
 
 	protected final Object lock = this;
 
@@ -171,46 +171,7 @@ public abstract class AbstractDbSession implements DbSession {
 	protected abstract void checkClosed() throws DbSessionClosedException;
 
 	public DbSessionFuture<ResultSet> executeQuery(String sql) {
-		ResultEventHandler<DefaultResultSet> eventHandler = new ResultEventHandler<DefaultResultSet>() {
-
-			private Value[] currentRow;
-
-			public void startFields(DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: startFields");
-			}
-			public void field(Field field, DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: field");
-				accumulator.addField(field);
-			}
-			public void endFields(DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: endFields");
-			}
-			public void startResults(DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: startResults");
-			}
-			public void startRow(DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: startRow");
-
-				int columnCount = accumulator.getFields().size();
-				currentRow = new Value[columnCount];
-			}
-			public void value(Value value, DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: value");
-
-				currentRow[value.getField().getIndex()] = value;
-			}
-			public void endRow(DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: endRow");
-				DefaultRow row = new DefaultRow(accumulator, currentRow);
-				accumulator.addResult(row);
-				currentRow = null;
-			}
-			public void endResults(DefaultResultSet accumulator) {
-				logger.trace("ResultSetEventHandler: endResults");
-			}
-			public void exception(Throwable t, DefaultResultSet accumulator) {
-			}
-		};
+		ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
 		DefaultResultSet resultSet = new DefaultResultSet(this);
 		return executeQuery0(sql, eventHandler, resultSet);
 	}
@@ -583,4 +544,52 @@ public abstract class AbstractDbSession implements DbSession {
 
 	}
 
+    public static class DefaultResultEventsHandler implements ResultEventHandler<DefaultResultSet> {
+
+        private Value[] currentRow;
+
+        public void startFields(DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: startFields");
+        }
+
+        public void field(Field field, DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: field");
+            accumulator.addField(field);
+        }
+
+        public void endFields(DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: endFields");
+        }
+
+        public void startResults(DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: startResults");
+        }
+
+        public void startRow(DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: startRow");
+
+            int columnCount = accumulator.getFields().size();
+            currentRow = new Value[columnCount];
+        }
+
+        public void value(Value value, DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: value");
+
+            currentRow[value.getField().getIndex()] = value;
+        }
+
+        public void endRow(DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: endRow");
+            DefaultRow row = new DefaultRow(accumulator, currentRow);
+            accumulator.addResult(row);
+            currentRow = null;
+        }
+
+        public void endResults(DefaultResultSet accumulator) {
+            logger.trace("ResultSetEventHandler: endResults");
+        }
+
+        public void exception(Throwable t, DefaultResultSet accumulator) {
+        }
+    }
 }

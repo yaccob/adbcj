@@ -16,29 +16,17 @@
  */
 package org.adbcj.postgresql.codec;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.adbcj.Connection;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.DbSessionClosedException;
-import org.adbcj.DbSessionFuture;
-import org.adbcj.PreparedStatement;
-import org.adbcj.Result;
-import org.adbcj.ResultEventHandler;
-import org.adbcj.postgresql.codec.frontend.AbstractFrontendMessage;
-import org.adbcj.postgresql.codec.frontend.BindMessage;
-import org.adbcj.postgresql.codec.frontend.DescribeMessage;
-import org.adbcj.postgresql.codec.frontend.ExecuteMessage;
-import org.adbcj.postgresql.codec.frontend.SimpleFrontendMessage;
-import org.adbcj.postgresql.codec.frontend.ParseMessage;
+import org.adbcj.*;
+import org.adbcj.postgresql.codec.frontend.*;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultDbFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class AbstractConnection extends AbstractDbSession implements Connection {
 
@@ -220,11 +208,6 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 	}
 
 	public DbSessionFuture<PreparedStatement> prepareStatement(String sql) {
-		// TODO Implement prepareStatement
-		throw new IllegalStateException();
-	}
-
-	public DbSessionFuture<PreparedStatement> prepareStatement(Object key, String sql) {
 		// TODO Implement prepareStatement
 		throw new IllegalStateException();
 	}

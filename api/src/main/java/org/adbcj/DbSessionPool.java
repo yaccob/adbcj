@@ -94,10 +94,6 @@ public class DbSessionPool implements DbSessionProvider {
 				return nextEntry().nextSession().prepareStatement(sql);
 			}
 
-			public DbSessionFuture<PreparedStatement> prepareStatement(Object key, String sql) {
-				return nextEntry().nextSession().prepareStatement(key, sql);
-			}
-
 			public DbSessionFuture<Void> close(boolean immediate) throws DbException {
 				closed = true;
 				return DefaultDbSessionFuture.createCompletedFuture(this, null);
