@@ -3,7 +3,7 @@ package org.adbcj.mysql.codec;
 import java.io.IOException;
 import java.io.InputStream;
 
-class BoundedInputStream extends InputStream {
+public class BoundedInputStream extends InputStream {
 
     private final InputStream in;
     private int remaining;

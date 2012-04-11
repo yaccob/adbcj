@@ -16,7 +16,11 @@
 
 	Copyright 2008  Mike Heath
  */
-package org.adbcj.mysql.codec;
+package org.adbcj.mysql.codec.packets;
+
+import org.adbcj.mysql.codec.BoundedInputStream;
+import org.adbcj.mysql.codec.IoUtils;
+import org.adbcj.mysql.codec.ServerStatus;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

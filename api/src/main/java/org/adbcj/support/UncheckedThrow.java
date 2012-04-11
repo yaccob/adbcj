@@ -1,10 +1,10 @@
-package org.adbcj.jdbc;
+package org.adbcj.support;
 
 /**
  * @author roman.stoffel@gamlor.info
  * @since 30.03.12
  */
-final class UncheckedThrow {
+public final class UncheckedThrow {
     private UncheckedThrow(){}
 
     public static RuntimeException throwUnchecked(final Throwable ex){

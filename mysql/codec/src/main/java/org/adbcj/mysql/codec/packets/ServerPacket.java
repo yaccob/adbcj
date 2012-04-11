@@ -15,32 +15,31 @@
 	along with ADBCJ.  If not, see <http://www.gnu.org/licenses/>.
 
 	Copyright 2008  Mike Heath
+*/
+package org.adbcj.mysql.codec.packets;
+
+/**
+ *
+ *
+ * @author Mike Heath <mheath@apache.org>
+ *
  */
-package org.adbcj.mysql.codec;
+public abstract class ServerPacket {
 
-public class ErrorResponse extends ServerPacket {
+	private final int packetLength;
+	private final int packetNumber;
 
-	private final int errorNumber;
-	private final String sqlState;
-	private final String message;
-
-	public ErrorResponse(int length, int packetNumber, int errorNumber, String sqlState, String message) {
-		super(length, packetNumber);
-		this.errorNumber = errorNumber;
-		this.sqlState = sqlState;
-		this.message = message;
+	public ServerPacket(int packetLength, int packetNumber) {
+		this.packetLength = packetLength;
+		this.packetNumber = packetNumber;
 	}
 
-	public int getErrorNumber() {
-		return errorNumber;
+	public int getPacketLength() {
+		return packetLength;
 	}
 
-	public String getSqlState() {
-		return sqlState;
-	}
-
-	public String getMessage() {
-		return message;
+	public int getPacketNumber() {
+		return packetNumber;
 	}
 
 }

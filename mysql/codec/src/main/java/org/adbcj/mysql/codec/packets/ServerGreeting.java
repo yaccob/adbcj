@@ -16,7 +16,11 @@
 
 	Copyright 2008  Mike Heath
 */
-package org.adbcj.mysql.codec;
+package org.adbcj.mysql.codec.packets;
+
+import org.adbcj.mysql.codec.ClientCapabilities;
+import org.adbcj.mysql.codec.MysqlCharacterSet;
+import org.adbcj.mysql.codec.ServerStatus;
 
 import java.util.Collections;
 import java.util.Set;

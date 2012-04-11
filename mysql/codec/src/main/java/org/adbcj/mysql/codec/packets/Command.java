@@ -16,7 +16,7 @@
 
 	Copyright 2008  Mike Heath
 */
-package org.adbcj.mysql.codec;
+package org.adbcj.mysql.codec.packets;
 
 public enum Command {
 	SLEEP(0x00),

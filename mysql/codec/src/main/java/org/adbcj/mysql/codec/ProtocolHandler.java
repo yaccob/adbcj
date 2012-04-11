@@ -1,9 +1,11 @@
 package org.adbcj.mysql.codec;
 
 import org.adbcj.*;
+import org.adbcj.mysql.codec.packets.*;
 import org.adbcj.support.AbstractDbSession.Request;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResult;
+import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +126,7 @@ public class ProtocolHandler {
 	}
 
 	private void handleResultSetResponse(AbstractMySqlConnection connection, ResultSetResponse message) {
-		Request<ResultSet> activeRequest = connection.getActiveRequest();
+        ExpectResultRequest<ResultSet> activeRequest = (ExpectResultRequest<ResultSet>)connection.<ResultSet>getActiveRequest();
 
 		if (activeRequest == null) {
 			throw new IllegalStateException("No active request for response: " + message);
@@ -135,14 +137,14 @@ public class ProtocolHandler {
 	}
 
 	private void handleResultSetFieldResponse(AbstractMySqlConnection connection, ResultSetFieldResponse message) {
-		Request<ResultSet> activeRequest = connection.getActiveRequest();
+        ExpectResultRequest<ResultSet> activeRequest = (ExpectResultRequest<ResultSet>)connection.<ResultSet>getActiveRequest();
 
 		ResultSetFieldResponse fieldResponse = (ResultSetFieldResponse)message;
 		activeRequest.getEventHandler().field(fieldResponse.getField(), activeRequest.getAccumulator());
 	}
 
 	private void handleResultSetRowResponse(AbstractMySqlConnection connection, ResultSetRowResponse message) {
-		Request<ResultSet> activeRequest = connection.getActiveRequest();
+        ExpectResultRequest<ResultSet> activeRequest = (ExpectResultRequest<ResultSet>)connection.<ResultSet>getActiveRequest();
 
 		ResultSetRowResponse rowResponse = (ResultSetRowResponse)message;
 
@@ -155,7 +157,7 @@ public class ProtocolHandler {
 
 	private void handleEofResponse(AbstractMySqlConnection connection, EofResponse message) {
 		logger.trace("Fetching active request in handleEofResponse()");
-		Request<ResultSet> activeRequest = connection.getActiveRequest();
+        ExpectResultRequest<ResultSet> activeRequest = (ExpectResultRequest<ResultSet>)connection.<ResultSet>getActiveRequest();
 
 		if (activeRequest == null) {
 			throw new IllegalStateException("No active request for response: " + message);

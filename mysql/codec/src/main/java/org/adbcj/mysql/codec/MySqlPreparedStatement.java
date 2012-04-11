@@ -2,7 +2,13 @@ package org.adbcj.mysql.codec;
 
 import org.adbcj.DbFuture;
 import org.adbcj.PreparedStatement;
+import org.adbcj.ResultEventHandler;
 import org.adbcj.ResultSet;
+import org.adbcj.mysql.codec.packets.OkResponse;
+import org.adbcj.mysql.codec.packets.PreparedStatementRequest;
+import org.adbcj.support.AbstractDbSession;
+import org.adbcj.support.DefaultResultSet;
+import org.adbcj.support.ExpectResultRequest;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -18,14 +24,26 @@ public class MySqlPreparedStatement implements PreparedStatement {
     }
 
     @Override
-    public DbFuture<ResultSet> executeQuery(Object... params) {
+    public DbFuture<ResultSet> executeQuery(final Object... params) {
         if(params.length!=statementInfo.getParams()){
             throw new IllegalArgumentException("Expect "+statementInfo.getParams()+" paramenters " +
                     "but got "+params.length+" parameters");
         }
+        ResultEventHandler<DefaultResultSet> eventHandler = new AbstractDbSession.DefaultResultEventsHandler();
+        DefaultResultSet resultSet = new DefaultResultSet(connection);
 
-        new CommandRequest(Command.STATEMENT_EXECUTE);
 
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return connection.enqueueTransactionalRequest(new ExpectResultRequest(connection,eventHandler, resultSet) {
+            @Override
+            public void execute() throws Exception {
+                PreparedStatementRequest request = new PreparedStatementRequest(statementInfo.getHandlerId(), params);
+                connection.write(request);
+            }
+
+            @Override
+            public String toString() {
+                return "Prepared statement execute";
+            }
+        });
     }
 }

@@ -16,9 +16,10 @@
 
 	Copyright 2008  Mike Heath
  */
-package org.adbcj.mysql.codec;
+package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.Value;
+import org.adbcj.mysql.codec.packets.ServerPacket;
 
 public class ResultSetRowResponse extends ServerPacket {
 

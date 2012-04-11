@@ -15,39 +15,30 @@
 	along with ADBCJ.  If not, see <http://www.gnu.org/licenses/>.
 
 	Copyright 2008  Mike Heath
- */
-package org.adbcj.mysql.codec;
+*/
+package org.adbcj.mysql.codec.packets;
 
-import java.util.Set;
+import org.adbcj.mysql.codec.ClientRequest;
 
-public class EofResponse extends ServerPacket {
+import java.io.UnsupportedEncodingException;
 
-	public enum Type {
-		FIELD,
-		ROW
-	}
 
-	private final int warnings;
-	private final Set<ServerStatus> serverStatus;
-	private final Type type;
+public class CommandRequest extends ClientRequest {
 
-	public EofResponse(int packetLength, int packetNumber, int warnings, Set<ServerStatus> serverStatus, Type type) {
-		super(packetLength, packetNumber);
-		this.warnings = warnings;
-		this.serverStatus = serverStatus;
-		this.type = type;
-	}
+    private final Command command;
 
-	public int getWarnings() {
-		return warnings;
-	}
+    public CommandRequest(Command command) {
+        this.command = command;
+    }
 
-	public Set<ServerStatus> getServerStatus() {
-		return serverStatus;
-	}
+    public Command getCommand() {
+        return command;
+    }
 
-	public Type getType() {
-		return type;
-	}
+    @Override
+    public int getLength(String charset) throws UnsupportedEncodingException {
+        return 1;
+    }
 
 }
+

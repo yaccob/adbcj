@@ -19,7 +19,7 @@ package org.adbcj.mysql.mina;
 import java.io.InputStream;
 
 import org.adbcj.mysql.codec.MySqlClientDecoder;
-import org.adbcj.mysql.codec.ServerPacket;
+import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;

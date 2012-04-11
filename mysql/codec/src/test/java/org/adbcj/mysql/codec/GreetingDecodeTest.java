@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.EnumSet;
 
+import org.adbcj.mysql.codec.packets.ServerGreeting;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

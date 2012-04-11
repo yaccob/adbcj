@@ -19,6 +19,7 @@ package org.adbcj.jdbc;
 import org.adbcj.*;
 import org.adbcj.support.DbFutureConcurrentProxy;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.UncheckedThrow;
 
 import java.sql.DriverManager;
 import java.util.HashSet;

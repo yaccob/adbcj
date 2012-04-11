@@ -298,6 +298,10 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     private abstract class CallableRequest<E> extends Request<E> implements Callable<E> {
         private Future<E> future = null;
 
+        protected CallableRequest() {
+            super(JdbcConnection.this);
+        }
+
         @Override
         public boolean cancelRequest(boolean mayInterruptIfRunning) {
             if (future == null) {
@@ -380,7 +384,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
 
         @Override
         public DbFuture<ResultSet> executeQuery(final Object... params) {
-            return enqueueTransactionalRequest(new Request<ResultSet>() {
+            return enqueueTransactionalRequest(new Request<ResultSet>(JdbcConnection.this) {
                 @Override
                 protected void execute() throws Exception {
                     int index = 1;

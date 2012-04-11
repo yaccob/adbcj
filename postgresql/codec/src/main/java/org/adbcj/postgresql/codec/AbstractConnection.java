@@ -20,6 +20,7 @@ import org.adbcj.*;
 import org.adbcj.postgresql.codec.frontend.*;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		synchronized (lock) {
 			if (isClosed()) {
 				if (closeRequest == null) {
-					closeRequest = new Request<Void>() {
+					closeRequest = new Request<Void>(this) {
 						@Override
 						public void execute() throws Exception {
 							// Do nothing since finalizeClose has already occurred
@@ -91,7 +92,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 					// If the finalizeClose is immediate, cancel pending requests and send request to server
 					cancelPendingRequests(true);
 					write(SimpleFrontendMessage.TERMINATE);
-					closeRequest = new Request<Void>() {
+					closeRequest = new Request<Void>(this) {
 						@Override
 						protected boolean cancelRequest(boolean mayInterruptIfRunning) {
 							// Immediate finalizeClose can not be cancelled
@@ -108,7 +109,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 					};
 				} else {
 					// If the finalizeClose is NOT immediate, schedule the finalizeClose
-					closeRequest = new Request<Void>() {
+					closeRequest = new Request<Void>(this) {
 						@Override
 						public boolean cancelRequest(boolean mayInterruptIfRunning) {
 							logger.debug("Cancelling finalizeClose");
@@ -161,7 +162,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 
 	public <T> DbSessionFuture<T> executeQuery(final String sql, ResultEventHandler<T> eventHandler, T accumulator) {
 		checkClosed();
-		Request<T> request = new Request<T>(eventHandler, accumulator) {
+		Request<T> request = new ExpectResultRequest<T>(this,eventHandler, accumulator) {
 			@Override
 			public void execute() throws Exception {
 				logger.debug("Issuing query: {}", sql);
@@ -185,7 +186,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 
 	public DbSessionFuture<Result> executeUpdate(final String sql) {
 		checkClosed();
-		return enqueueTransactionalRequest(new Request<Result>() {
+		return enqueueTransactionalRequest(new Request<Result>(this) {
 			@Override
 			public void execute() throws Exception {
 				logger.debug("Issuing update query: {}", sql);

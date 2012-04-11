@@ -1,8 +1,12 @@
 package org.adbcj.mysql.codec;
 
 import org.adbcj.*;
+import org.adbcj.mysql.codec.packets.Command;
+import org.adbcj.mysql.codec.packets.CommandRequest;
+import org.adbcj.mysql.codec.packets.StringCommandRequest;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +50,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		logger.debug("Closing");
 		if (isClosed()) {
 			if (closeRequest == null) {
-				closeRequest = new Request<Void>() {
+				closeRequest = new Request<Void>(this) {
 					@Override
 					public void execute() throws Exception {
 						// Do nothing, close already occurred
@@ -65,7 +69,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 				// If the close is immediate, cancel pending requests and send request to server
 				cancelPendingRequests(true);
 				write(new CommandRequest(Command.QUIT));
-				closeRequest = new Request<Void>() {
+				closeRequest = new Request<Void>(this) {
 					@Override
 					protected boolean cancelRequest(boolean mayInterruptIfRunning) {
 						// Canceling is not possible when an immediate close
@@ -101,7 +105,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	public <T> DbSessionFuture<T> executeQuery(final String sql, ResultEventHandler<T> eventHandler, T accumulator) {
 		checkClosed();
-		return enqueueTransactionalRequest(new Request<T>(eventHandler, accumulator) {
+		return enqueueTransactionalRequest(new ExpectResultRequest<T>(this,eventHandler, accumulator) {
 			@Override
 			public void execute() throws Exception {
 				logger.debug("Sending query '{}'", sql);
@@ -118,7 +122,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	public DbSessionFuture<Result> executeUpdate(final String sql) {
 		checkClosed();
 		logger.debug("Scheduling update '{}'", sql);
-		return enqueueTransactionalRequest(new Request<Result>() {
+		return enqueueTransactionalRequest(new Request<Result>(this) {
 			public void execute() {
 				logger.debug("Sending update '{}'", sql);
 				CommandRequest request = new StringCommandRequest(Command.QUERY, sql);
@@ -204,8 +208,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	//
 	//
 	// Queuing methods
-	//
-	//
+	////
 
 	/*
 	 * Make this method public.
@@ -261,7 +264,14 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		}
 	}
 
+    @Override
+    public <E> DbSessionFuture<E> enqueueTransactionalRequest(Request<E> request) {
+        return super.enqueueTransactionalRequest(request);}
+
     private class CloseRequest extends Request<Void>{
+        private CloseRequest() {
+            super(AbstractMySqlConnection.this);
+        }
 
         @Override
         public boolean cancelRequest(boolean mayInterruptIfRunning) {
@@ -283,6 +293,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         private final String sql;
 
         public PreparedStatementRequest(String sql) {
+            super(AbstractMySqlConnection.this);
             this.sql = sql;
         }
 

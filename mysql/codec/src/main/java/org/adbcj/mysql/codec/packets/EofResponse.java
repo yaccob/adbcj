@@ -16,19 +16,40 @@
 
 	Copyright 2008  Mike Heath
  */
-package org.adbcj.mysql.codec;
+package org.adbcj.mysql.codec.packets;
 
-public class ResultSetFieldResponse extends ServerPacket {
+import org.adbcj.mysql.codec.ServerStatus;
 
-	private final MysqlField field;
+import java.util.Set;
 
-	public ResultSetFieldResponse(int packetLength, int packetNumber, MysqlField field) {
-		super(packetLength, packetNumber);
-		this.field = field;
+public class EofResponse extends ServerPacket {
+
+	public enum Type {
+		FIELD,
+		ROW
 	}
 
-	public MysqlField getField() {
-		return field;
+	private final int warnings;
+	private final Set<ServerStatus> serverStatus;
+	private final Type type;
+
+	public EofResponse(int packetLength, int packetNumber, int warnings, Set<ServerStatus> serverStatus, Type type) {
+		super(packetLength, packetNumber);
+		this.warnings = warnings;
+		this.serverStatus = serverStatus;
+		this.type = type;
+	}
+
+	public int getWarnings() {
+		return warnings;
+	}
+
+	public Set<ServerStatus> getServerStatus() {
+		return serverStatus;
+	}
+
+	public Type getType() {
+		return type;
 	}
 
 }

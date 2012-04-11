@@ -28,521 +28,515 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class AbstractDbSession implements DbSession {
 
-	private static final Logger logger = LoggerFactory.getLogger(AbstractDbSession.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractDbSession.class);
 
-	protected final Object lock = this;
+    protected final Object lock = this;
 
-	protected final Queue<Request<?>> requestQueue = new ConcurrentLinkedQueue<Request<?>>();
+    protected final Queue<Request<?>> requestQueue = new ConcurrentLinkedQueue<Request<?>>();
 
-	private Request<?> activeRequest; // Access must by synchronized on lock
+    private Request<?> activeRequest; // Access must by synchronized on lock
 
-	private Transaction transaction; // Access must by synchronized on lock
+    private Transaction transaction; // Access must by synchronized on lock
 
-	private final boolean pipelined;
+    private final boolean pipelined;
 
-	private boolean pipelining = false; // Access must be synchronized on lock
+    private boolean pipelining = false; // Access must be synchronized on lock
 
-	protected AbstractDbSession(boolean pipelined) {
-		this.pipelined = pipelined;
-	}
+    protected AbstractDbSession(boolean pipelined) {
+        this.pipelined = pipelined;
+    }
 
-	protected <E> void enqueueRequest(final Request<E> request) {
-		// Check to see if the request can be pipelined
-		synchronized (lock) {
-			if (request.isPipelinable()) {
-				// Check to see if we're in a piplinging state
-				if (pipelining) {
-					invokeExecuteWithCatch(request);
-					// If the request errors out on execution, return
-					if (request.isDone()) {
-						return;
-					}
+    protected <E> void enqueueRequest(final Request<E> request) {
+        // Check to see if the request can be pipelined
+        synchronized (lock) {
+            if (request.isPipelinable()) {
+                // Check to see if we're in a piplinging state
+                if (pipelining) {
+                    invokeExecuteWithCatch(request);
+                    // If the request errors out on execution, return
+                    if (request.isDone()) {
+                        return;
+                    }
 
-				}
-			} else {
-				pipelining = false;
-			}
-			requestQueue.add(request);
-			if (activeRequest == null) {
-				makeNextRequestActive();
-			}
-		}
-	}
+                }
+            } else {
+                pipelining = false;
+            }
+            requestQueue.add(request);
+            if (activeRequest == null) {
+                makeNextRequestActive();
+            }
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	protected final <E> Request<E> makeNextRequestActive() {
-		Request<E> request;
-		boolean executePipelining = false;
-		synchronized (lock) {
-			if (activeRequest != null && !activeRequest.isDone()) {
-				throw new ActiveRequestIncomplete(this, "Active request is not done: " + activeRequest);
-			}
-			request = (Request<E>)requestQueue.poll();
+    @SuppressWarnings("unchecked")
+    protected final <E> Request<E> makeNextRequestActive() {
+        Request<E> request;
+        boolean executePipelining = false;
+        synchronized (lock) {
+            if (activeRequest != null && !activeRequest.isDone()) {
+                throw new ActiveRequestIncomplete(this, "Active request is not done: " + activeRequest);
+            }
+            request = (Request<E>) requestQueue.poll();
 
-			// Determine if we need to execute pipelinable requests
-			if (pipelined && request != null) {
-				if (request.isPipelinable()) {
-					executePipelining = !pipelining;
-				} else {
-					pipelining = false;
-				}
-			}
+            // Determine if we need to execute pipelinable requests
+            if (pipelined && request != null) {
+                if (request.isPipelinable()) {
+                    executePipelining = !pipelining;
+                } else {
+                    pipelining = false;
+                }
+            }
 
-			activeRequest = request;
-		}
-		if (request != null) {
-			invokeExecuteWithCatch(request);
-		}
+            activeRequest = request;
+        }
+        if (request != null) {
+            invokeExecuteWithCatch(request);
+        }
 
-		// Check if we need to execute pending pipelinable requests
-		if (executePipelining) {
-			synchronized (lock) {
-				// Iterate over queue
-				Iterator<Request<?>> iterator = requestQueue.iterator();
-				while (iterator.hasNext()) {
-					Request<?> next = iterator.next();
-					if (next.isPipelinable()) {
-						invokeExecuteWithCatch(next);
+        // Check if we need to execute pending pipelinable requests
+        if (executePipelining) {
+            synchronized (lock) {
+                // Iterate over queue
+                Iterator<Request<?>> iterator = requestQueue.iterator();
+                while (iterator.hasNext()) {
+                    Request<?> next = iterator.next();
+                    if (next.isPipelinable()) {
+                        invokeExecuteWithCatch(next);
 
-						// If there are nore more requests to iterate over, put DbSession in pipelining enabled state
-						if (!iterator.hasNext()) {
-							pipelining = true;
-						}
-					} else {
-						// Stop looping once we find a non pipelinable request.
-						break;
-					}
-				}
-			}
+                        // If there are nore more requests to iterate over, put DbSession in pipelining enabled state
+                        if (!iterator.hasNext()) {
+                            pipelining = true;
+                        }
+                    } else {
+                        // Stop looping once we find a non pipelinable request.
+                        break;
+                    }
+                }
+            }
 
-		}
+        }
 
-		return request;
-	}
+        return request;
+    }
 
-	private <E> void invokeExecuteWithCatch(Request<E> request) {
-		try {
-			request.invokeExecute();
-		} catch (Throwable e) {
-			request.error(DbException.wrap(this, e));
-		}
-	}
+    private <E> void invokeExecuteWithCatch(Request<E> request) {
+        try {
+            request.invokeExecute();
+        } catch (Throwable e) {
+            request.error(DbException.wrap(this, e));
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	protected <E> Request<E> getActiveRequest() {
-		synchronized (lock) {
-			return (Request<E>)activeRequest;
-		}
-	}
+    @SuppressWarnings("unchecked")
+    protected <E> Request<E> getActiveRequest() {
+        synchronized (lock) {
+            return (Request<E>) activeRequest;
+        }
+    }
 
-	protected void cancelPendingRequests(boolean mayInterruptIfRunning) {
-		for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext();) {
-			Request<?> request = i.next();
-			request.cancel(mayInterruptIfRunning);
-		}
-	}
+    protected void cancelPendingRequests(boolean mayInterruptIfRunning) {
+        for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext(); ) {
+            Request<?> request = i.next();
+            request.cancel(mayInterruptIfRunning);
+        }
+    }
 
-	/**
-	 * This will error out any pending requests.
-	 */
-	public void errorPendingRequests(Throwable exception) {
-		synchronized (lock) {
-			if (activeRequest != null && !activeRequest.isDone()) {
+    /**
+     * This will error out any pending requests.
+     */
+    public void errorPendingRequests(Throwable exception) {
+        synchronized (lock) {
+            if (activeRequest != null && !activeRequest.isDone()) {
                 activeRequest.setException(exception);
-			}
-		}
-		for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext();) {
-			Request<?> request = i.next();
-			if (!request.isDone()) {
-				try {
-					request.setException(exception);
-				} catch (IllegalStateException e) {
-					// Disregard exception
-				}
-			}
-		}
-	}
+            }
+        }
+        for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext(); ) {
+            Request<?> request = i.next();
+            if (!request.isDone()) {
+                try {
+                    request.setException(exception);
+                } catch (IllegalStateException e) {
+                    // Disregard exception
+                }
+            }
+        }
+    }
 
-	/**
-	 * Throws {@link DbSessionClosedException} if session is closed
-	 *
-	 * @throws  if {@link DbSession} is closed.
-	 */
-	protected abstract void checkClosed() throws DbSessionClosedException;
+    /**
+     * Throws {@link DbSessionClosedException} if session is closed
+     *
+     * @throws if {@link DbSession} is closed.
+     */
+    protected abstract void checkClosed() throws DbSessionClosedException;
 
-	public DbSessionFuture<ResultSet> executeQuery(String sql) {
-		ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
-		DefaultResultSet resultSet = new DefaultResultSet(this);
-		return executeQuery0(sql, eventHandler, resultSet);
-	}
+    public DbSessionFuture<ResultSet> executeQuery(String sql) {
+        ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
+        DefaultResultSet resultSet = new DefaultResultSet(this);
+        return executeQuery0(sql, eventHandler, resultSet);
+    }
 
-	@SuppressWarnings("unchecked")
-	private <T extends ResultSet> DbSessionFuture<ResultSet> executeQuery0(String sql, ResultEventHandler<T> eventHandler, T accumulator) {
-		return (DbSessionFuture<ResultSet>)executeQuery(sql, eventHandler, accumulator);
-	}
+    @SuppressWarnings("unchecked")
+    private <T extends ResultSet> DbSessionFuture<ResultSet> executeQuery0(String sql, ResultEventHandler<T> eventHandler, T accumulator) {
+        return (DbSessionFuture<ResultSet>) executeQuery(sql, eventHandler, accumulator);
+    }
 
-	//*****************************************************************************************************************
-	//
-	//  Transaction methods
-	//
-	//*****************************************************************************************************************
+    //*****************************************************************************************************************
+    //
+    //  Transaction methods
+    //
+    //*****************************************************************************************************************
 
-	public boolean isInTransaction() {
-		checkClosed();
-		synchronized (lock) {
-			return transaction != null;
-		}
-	}
+    public boolean isInTransaction() {
+        checkClosed();
+        synchronized (lock) {
+            return transaction != null;
+        }
+    }
 
-	public void beginTransaction() {
-		checkClosed();
-		synchronized (lock) {
-			if (isInTransaction()) {
-				throw new DbException(this, "Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
-			}
-			transaction = new Transaction();
-		}
-	}
+    public void beginTransaction() {
+        checkClosed();
+        synchronized (lock) {
+            if (isInTransaction()) {
+                throw new DbException(this, "Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
+            }
+            transaction = new Transaction();
+        }
+    }
 
-	public DbSessionFuture<Void> commit() {
-		checkClosed();
-		if (!isInTransaction()) {
-			throw new DbException(this, "Not currently in a transaction, cannot commit");
-		}
-		DbSessionFuture<Void> future;
-		synchronized (lock) {
-			if (transaction.isBeginScheduled()) {
-				future = enqueueCommit(transaction);
-				return future;
-			} else {
-				// If transaction was not started, don't worry about committing transaction
-				future = DefaultDbSessionFuture.createCompletedFuture(this, null);
-			}
-			transaction = null;
-		}
-		return future;
-	}
+    public DbSessionFuture<Void> commit() {
+        checkClosed();
+        if (!isInTransaction()) {
+            throw new DbException(this, "Not currently in a transaction, cannot commit");
+        }
+        DbSessionFuture<Void> future;
+        synchronized (lock) {
+            if (transaction.isBeginScheduled()) {
+                future = enqueueCommit(transaction);
+                return future;
+            } else {
+                // If transaction was not started, don't worry about committing transaction
+                future = DefaultDbSessionFuture.createCompletedFuture(this, null);
+            }
+            transaction = null;
+        }
+        return future;
+    }
 
-	public DbSessionFuture<Void> rollback() {
-		checkClosed();
-		if (!isInTransaction()) {
-			throw new DbException(this, "Not currently in a transaction, cannot rollback");
-		}
-		DbSessionFuture<Void> future;
-		synchronized (lock) {
-			if (transaction.isBeginScheduled()) {
-				transaction.cancelPendingRequests();
-				future = enqueueRollback(transaction);
-			} else {
-				future = DefaultDbSessionFuture.createCompletedFuture(this, null);
-			}
-			transaction = null;
-		}
-		return future;
-	}
+    public DbSessionFuture<Void> rollback() {
+        checkClosed();
+        if (!isInTransaction()) {
+            throw new DbException(this, "Not currently in a transaction, cannot rollback");
+        }
+        DbSessionFuture<Void> future;
+        synchronized (lock) {
+            if (transaction.isBeginScheduled()) {
+                transaction.cancelPendingRequests();
+                future = enqueueRollback(transaction);
+            } else {
+                future = DefaultDbSessionFuture.createCompletedFuture(this, null);
+            }
+            transaction = null;
+        }
+        return future;
+    }
 
-	protected <E> DbSessionFuture<E> enqueueTransactionalRequest(Request<E> request) {
-		// Check to see if we're in a transaction
-		synchronized (lock) {
-			if (transaction != null) {
-				if (transaction.isCanceled()) {
-					return DefaultDbSessionFuture.createCompletedErrorFuture(
-							this, new DbException(this, "Could not execute request; transaction is in failed state"));
-				}
-				// Schedule starting transaction with database if possible
-				if (!transaction.isBeginScheduled()) {
-					// Set isolation level if necessary
-					enqueueStartTransaction(transaction);
-					transaction.setBeginScheduled(true);
-				}
-				transaction.addRequest(request);
-			}
-		}
-		enqueueRequest(request);
-		return request;
-	}
+    protected <E> DbSessionFuture<E> enqueueTransactionalRequest(Request<E> request) {
+        // Check to see if we're in a transaction
+        synchronized (lock) {
+            if (transaction != null) {
+                if (transaction.isCanceled()) {
+                    return DefaultDbSessionFuture.createCompletedErrorFuture(
+                            this, new DbException(this, "Could not execute request; transaction is in failed state"));
+                }
+                // Schedule starting transaction with database if possible
+                if (!transaction.isBeginScheduled()) {
+                    // Set isolation level if necessary
+                    enqueueStartTransaction(transaction);
+                    transaction.setBeginScheduled(true);
+                }
+                transaction.addRequest(request);
+            }
+        }
+        enqueueRequest(request);
+        return request;
+    }
 
-	private Request<Void> enqueueStartTransaction(final Transaction transaction) {
-		Request<Void> request = createBeginRequest(transaction);
-		enqueueTransactionalRequest(transaction, request);
-		return request;
-	}
+    private Request<Void> enqueueStartTransaction(final Transaction transaction) {
+        Request<Void> request = createBeginRequest(transaction);
+        enqueueTransactionalRequest(transaction, request);
+        return request;
+    }
 
-	private Request<Void> enqueueCommit(final Transaction transaction) {
-		Request<Void> request = createCommitRequest(transaction);
-		enqueueTransactionalRequest(transaction, request);
-		return request;
+    private Request<Void> enqueueCommit(final Transaction transaction) {
+        Request<Void> request = createCommitRequest(transaction);
+        enqueueTransactionalRequest(transaction, request);
+        return request;
 
-	}
+    }
 
-	private Request<Void> enqueueRollback(Transaction transaction) {
-		Request<Void> request = createRollbackRequest();
-		enqueueTransactionalRequest(transaction, request);
-		return request;
-	}
+    private Request<Void> enqueueRollback(Transaction transaction) {
+        Request<Void> request = createRollbackRequest();
+        enqueueTransactionalRequest(transaction, request);
+        return request;
+    }
 
-	private void enqueueTransactionalRequest(final Transaction transaction, Request<Void> request) {
-		enqueueRequest(request);
-		transaction.addRequest(request);
-	}
+    private void enqueueTransactionalRequest(final Transaction transaction, Request<Void> request) {
+        enqueueRequest(request);
+        transaction.addRequest(request);
+    }
 
-	// Rollback cannot be cancelled or removed
-	protected Request<Void> createRollbackRequest() {
-		return new RollbackRequest();
-	}
+    // Rollback cannot be cancelled or removed
+    protected Request<Void> createRollbackRequest() {
+        return new RollbackRequest();
+    }
 
-	protected abstract void sendBegin() throws Exception;
+    protected abstract void sendBegin() throws Exception;
 
-	protected abstract void sendCommit() throws Exception;
+    protected abstract void sendCommit() throws Exception;
 
-	protected abstract void sendRollback() throws Exception;
+    protected abstract void sendRollback() throws Exception;
 
-	protected Request<Void> createBeginRequest(final Transaction transaction) {
-		return new BeginRequest(transaction);
-	}
+    protected Request<Void> createBeginRequest(final Transaction transaction) {
+        return new BeginRequest(AbstractDbSession.this, transaction);
+    }
 
-	protected Request<Void> createCommitRequest(final Transaction transaction) {
-		return new CommitRequest(transaction);
-	}
+    protected Request<Void> createCommitRequest(final Transaction transaction) {
+        return new CommitRequest(this, transaction);
+    }
 
-	/**
-	 * Default request for starting a transaction.
-	 */
-	protected class BeginRequest extends Request<Void> {
-		private final Transaction transaction;
+    /**
+     * Default request for starting a transaction.
+     */
+    protected class BeginRequest extends Request<Void> {
+        private final Transaction transaction;
 
-		private BeginRequest(Transaction transaction) {
-			if (transaction == null) {
-				throw new IllegalArgumentException("transaction can NOT be null");
-			}
-			this.transaction = transaction;
-		}
+        private BeginRequest(AbstractDbSession session, Transaction transaction) {
+            super(session);
+            if (transaction == null) {
+                throw new IllegalArgumentException("transaction can NOT be null");
+            }
+            this.transaction = transaction;
+        }
 
-		@Override
-		public void execute() throws Exception {
-			transaction.setStarted(true);
-			sendBegin();
-		}
-	}
+        @Override
+        public void execute() throws Exception {
+            transaction.setStarted(true);
+            sendBegin();
+        }
+    }
 
-	/**
-	 * Default request for committing a transaction.
-	 */
-	protected class CommitRequest extends Request<Void> {
-		private final Transaction transaction;
+    /**
+     * Default request for committing a transaction.
+     */
+    protected class CommitRequest extends Request<Void> {
+        private final Transaction transaction;
 
-		private CommitRequest(Transaction transaction) {
-			if (transaction == null) {
-				throw new IllegalArgumentException("transaction can NOT be null");
-			}
-			this.transaction = transaction;
-		}
+        private CommitRequest(AbstractDbSession session, Transaction transaction) {
+            super(session);
+            if (transaction == null) {
+                throw new IllegalArgumentException("transaction can NOT be null");
+            }
+            this.transaction = transaction;
+        }
 
-		public void execute() throws Exception {
-			if (isCancelled()) {
-				// If the transaction has started, send a rollback
-				if (transaction.isStarted()) {
-					sendRollback();
-				}
-			} else {
-				sendCommit();
-			}
-		}
+        public void execute() throws Exception {
+            if (isCancelled()) {
+                // If the transaction has started, send a rollback
+                if (transaction.isStarted()) {
+                    sendRollback();
+                }
+            } else {
+                sendCommit();
+            }
+        }
 
-		@Override
-		public boolean cancelRequest(boolean mayInterruptIfRunning) {
-			transaction.cancelPendingRequests();
-			return true;
-		}
+        @Override
+        public boolean cancelRequest(boolean mayInterruptIfRunning) {
+            transaction.cancelPendingRequests();
+            return true;
+        }
 
-		@Override
-		public boolean canRemove() {
-			return false;
-		}
+        @Override
+        public boolean canRemove() {
+            return false;
+        }
 
-		@Override
-		public boolean isPipelinable() {
-			return false;
-		}
-	}
+        @Override
+        public boolean isPipelinable() {
+            return false;
+        }
+    }
 
-	/**
-	 * Default request for rolling back a transaction.
-	 */
-	protected class RollbackRequest extends Request<Void> {
-		@Override
-		public void execute() throws Exception {
-			sendRollback();
-		}
+    /**
+     * Default request for rolling back a transaction.
+     */
+    protected class RollbackRequest extends Request<Void> {
+        public RollbackRequest() {
+            super(AbstractDbSession.this);
+        }
 
-		@Override
-		// Return false because a rollback cannot be cancelled
-		public boolean cancelRequest(boolean mayInterruptIfRunning) {
-			return false;
-		}
-	}
+        @Override
+        public void execute() throws Exception {
+            sendRollback();
+        }
 
-	public abstract class Request<T> extends DefaultDbSessionFuture<T> {
+        @Override
+        // Return false because a rollback cannot be cancelled
+        public boolean cancelRequest(boolean mayInterruptIfRunning) {
+            return false;
+        }
+    }
 
-		private final ResultEventHandler<T> eventHandler;
-		private final T accumulator;
+    public static abstract class Request<T> extends DefaultDbSessionFuture<T> {
+        private volatile Transaction transaction;
 
-		private volatile Transaction transaction;
+        private boolean cancelled; // Access must be synchronized on this
+        private boolean executed; // Access must be synchronized on this
 
-		private boolean cancelled; // Access must be synchronized on this
-		private boolean executed; // Access must be synchronized on this
 
-		public Request() {
-			this(null, null);
-		}
+        public Request(AbstractDbSession session) {
+            super(session);
+        }
 
-		public Request(ResultEventHandler<T> eventHandler, T accumulator) {
-			super(AbstractDbSession.this);
-			this.eventHandler = eventHandler;
-			this.accumulator = accumulator;
-		}
+        /**
+         * Checks to see if the request has been cancelled, if not invokes the execute method.  If pipelining, this
+         * method ensures the request does not get executed twice.
+         *
+         * @throws Exception
+         */
+        public final synchronized void invokeExecute() throws Exception {
+            if (cancelled || executed) {
+                synchronized (getSession().lock) {
+                    if (isDone() && getSession().getActiveRequest() == this) {
+                        getSession().makeNextRequestActive();
+                    }
+                }
+            } else {
+                executed = true;
+                execute();
+            }
+        }
 
-		/**
-		 * Checks to see if the request has been cancelled, if not invokes the execute method.  If pipelining, this
-		 * method ensures the request does not get executed twice.
-		 *
-		 * @throws Exception
-		 */
-		public final synchronized void invokeExecute() throws Exception {
-			if (cancelled || executed) {
-				synchronized (lock) {
-					if (isDone() && activeRequest == this) {
-						makeNextRequestActive();
-					}
-				}
-			} else {
-				executed = true;
-				execute();
-			}
-		}
+        public final synchronized boolean doCancel(boolean mayInterruptIfRunning) {
+            if (executed) {
+                return false;
+            }
+            cancelled = cancelRequest(mayInterruptIfRunning);
 
-		public final synchronized boolean doCancel(boolean mayInterruptIfRunning) {
-			if (executed) {
-				return false;
-			}
-			cancelled = cancelRequest(mayInterruptIfRunning);
+            // The the request was cancelled and it can be removed
+            if (cancelled && canRemove()) {
+                // Remove the quest and if the removal was successful and this request is active, go to the next request
+                if (canRemove() && getSession().requestQueue.remove(this)) {
+                    synchronized (getSession().lock) {
+                        if (this == getSession().activeRequest) {
+                            getSession().makeNextRequestActive();
+                        }
+                    }
+                }
+            }
+            return cancelled;
+        }
 
-			// The the request was cancelled and it can be removed
-			if (cancelled && canRemove()) {
-				// Remove the quest and if the removal was successful and this request is active, go to the next request
-				if (canRemove() && requestQueue.remove(this)) {
-					synchronized (lock) {
-						if (this == activeRequest) {
-							makeNextRequestActive();
-						}
-					}
-				}
-			}
-			return cancelled;
-		}
+        protected abstract void execute() throws Exception;
 
-		protected abstract void execute() throws Exception;
+        protected boolean cancelRequest(boolean mayInterruptIfRunning) {
+            return true;
+        }
 
-		protected boolean cancelRequest(boolean mayInterruptIfRunning) {
-			return true;
-		}
+        public boolean canRemove() {
+            return true;
+        }
 
-		public boolean canRemove() {
-			return true;
-		}
+        public boolean isPipelinable() {
+            return true;
+        }
 
-		public boolean isPipelinable() {
-			return true;
-		}
+        public void setTransaction(Transaction transaction) {
+            this.transaction = transaction;
+        }
 
-		public T getAccumulator() {
-			return accumulator;
-		}
+        public AbstractDbSession getSession() {
+            return (AbstractDbSession) super.getSession();
+        }
 
-		public ResultEventHandler<T> getEventHandler() {
-			return eventHandler;
-		}
+        public void complete(T result) {
+            setResult(result);
+            synchronized (getSession().lock) {
+                if (getSession().activeRequest == this) {
+                    getSession().makeNextRequestActive();
+                }
+            }
+        }
 
-		public void setTransaction(Transaction transaction) {
-			this.transaction = transaction;
-		}
+        public void error(DbException exception) {
+            super.setException(exception);
+            if (transaction != null) {
+                transaction.cancelPendingRequests();
+            }
+            synchronized (getSession().lock) {
+                if (getSession().activeRequest == this) {
+                    getSession().makeNextRequestActive();
+                }
+            }
+        }
+    }
 
-		public void complete(T result) {
-			setResult(result);
-			synchronized (lock) {
-				if (activeRequest == this) {
-					makeNextRequestActive();
-				}
-			}
-		}
 
-		public void error(DbException exception) {
-			super.setException(exception);
-			if (transaction != null) {
-				transaction.cancelPendingRequests();
-			}
-			synchronized (lock) {
-				if (activeRequest == this) {
-					makeNextRequestActive();
-				}
-			}
-		}
-	}
+    public static class Transaction {
 
-	public static class Transaction {
+        private volatile boolean started = false;
+        private volatile boolean beginScheduled = false;
+        private volatile boolean canceled = false;
+        private final List<Request<?>> requests = new LinkedList<Request<?>>();
 
-		private volatile boolean started = false;
-		private volatile boolean beginScheduled = false;
-		private volatile boolean canceled = false;
-		private List<Request<?>> requests = new LinkedList<Request<?>>();
+        /**
+         * Indicates if the transaction has been started on the server (i.e. if 'begin' has been sent to server)
+         *
+         * @return true if 'begin' has been sent to the server, false otherwise
+         */
+        public boolean isStarted() {
+            return started;
+        }
 
-		/**
-		 * Indicates if the transaction has been started on the server (i.e. if 'begin' has been sent to server)
-		 *
-		 * @return  true if 'begin' has been sent to the server, false otherwise
-		 */
-		public boolean isStarted() {
-			return started;
-		}
+        public void setStarted(boolean started) {
+            this.started = started;
+        }
 
-		public void setStarted(boolean started) {
-			this.started = started;
-		}
+        /**
+         * Indicates if 'begin' has been scheduled to be sent to remote database server but not necessarily sent.
+         *
+         * @return true if 'begin' has been queued to be sent to the remote database server, false otherwise.
+         */
+        public boolean isBeginScheduled() {
+            return beginScheduled;
+        }
 
-		/**
-		 * Indicates if 'begin' has been scheduled to be sent to remote database server but not necessarily sent.
-		 *
-		 * @return true if 'begin' has been queued to be sent to the remote database server, false otherwise.
-		 */
-		public boolean isBeginScheduled() {
-			return beginScheduled;
-		}
+        public void setBeginScheduled(boolean beginScheduled) {
+            this.beginScheduled = beginScheduled;
+        }
 
-		public void setBeginScheduled(boolean beginScheduled) {
-			this.beginScheduled = beginScheduled;
-		}
+        public void addRequest(Request<?> request) {
+            request.setTransaction(this);
+            synchronized (requests) {
+                requests.add(request);
+            }
+        }
 
-		public void addRequest(Request<?> request) {
-			request.setTransaction(this);
-			synchronized (requests) {
-				requests.add(request);
-			}
-		}
+        public boolean isCanceled() {
+            return canceled;
+        }
 
-		public boolean isCanceled() {
-			return canceled;
-		}
+        public void cancelPendingRequests() {
+            canceled = true;
+            synchronized (requests) {
+                for (Request<?> request : requests) {
+                    request.cancel(false);
+                }
+            }
+        }
 
-		public void cancelPendingRequests() {
-			canceled = true;
-			synchronized (requests) {
-				for (Request<?> request : requests) {
-					request.cancel(false);
-				}
-			}
-		}
-
-	}
+    }
 
     public static class DefaultResultEventsHandler implements ResultEventHandler<DefaultResultSet> {
 

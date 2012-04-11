@@ -18,6 +18,7 @@ import org.adbcj.Connection;
 import org.adbcj.DbException;
 import org.adbcj.Value;
 import org.adbcj.Field;
+import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +147,7 @@ public class ProtocolHandler {
 	}
 
 	private void doCommandComplete(AbstractConnection connection, CommandCompleteMessage commandCompleteMessage) {
-		AbstractDbSession.Request<Object> request = connection.getActiveRequest();
+		ExpectResultRequest<Object> request = (ExpectResultRequest)connection.getActiveRequest();
 		if (request == null) {
 			throw new IllegalStateException("Received a data row without an active request");
 		}
@@ -174,7 +175,7 @@ public class ProtocolHandler {
 	}
 
 	private void doDataRow(AbstractConnection connection, DataRowMessage dataRowMessage) {
-		AbstractDbSession.Request<Object> request = connection.getActiveRequest();
+        ExpectResultRequest<Object> request = (ExpectResultRequest)connection.getActiveRequest();
 		if (request == null) {
 			throw new IllegalStateException("Received a data row without an active request");
 		}
@@ -233,7 +234,7 @@ public class ProtocolHandler {
 	}
 
 	private void doRowDescription(AbstractConnection connection, RowDescriptionMessage rowDescriptionMessage) {
-		AbstractDbSession.Request<Object> request = connection.getActiveRequest();
+        ExpectResultRequest<Object> request = (ExpectResultRequest)connection.getActiveRequest();
 		if (request == null) {
 			throw new IllegalStateException("Received a row description without an active request");
 		}

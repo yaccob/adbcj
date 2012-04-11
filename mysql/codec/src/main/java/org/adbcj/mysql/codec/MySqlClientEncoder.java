@@ -18,6 +18,9 @@
 */
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.codec.packets.CommandRequest;
+import org.adbcj.mysql.codec.packets.StringCommandRequest;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;

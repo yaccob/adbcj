@@ -26,7 +26,7 @@ import java.io.OutputStream;
 import java.util.EnumSet;
 import java.util.Set;
 
-final class IoUtils {
+public final class IoUtils {
 
 	public static final int NULL_VALUE = 0xfb;
 

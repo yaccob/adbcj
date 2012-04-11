@@ -15,31 +15,22 @@
 	along with ADBCJ.  If not, see <http://www.gnu.org/licenses/>.
 
 	Copyright 2008  Mike Heath
-*/
-package org.adbcj.mysql.codec;
-
-/**
- *
- *
- * @author Mike Heath <mheath@apache.org>
- *
  */
-public abstract class ServerPacket {
+package org.adbcj.mysql.codec.packets;
 
-	private final int packetLength;
-	private final int packetNumber;
+import org.adbcj.mysql.codec.MysqlField;
 
-	public ServerPacket(int packetLength, int packetNumber) {
-		this.packetLength = packetLength;
-		this.packetNumber = packetNumber;
+public class ResultSetFieldResponse extends ServerPacket {
+
+	private final MysqlField field;
+
+	public ResultSetFieldResponse(int packetLength, int packetNumber, MysqlField field) {
+		super(packetLength, packetNumber);
+		this.field = field;
 	}
 
-	public int getPacketLength() {
-		return packetLength;
-	}
-
-	public int getPacketNumber() {
-		return packetNumber;
+	public MysqlField getField() {
+		return field;
 	}
 
 }

@@ -16,27 +16,33 @@
 
 	Copyright 2008  Mike Heath
  */
-package org.adbcj.mysql.codec;
+package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.mysql.codec.packets.ServerPacket;
 
-public class ResultSetResponse extends ServerPacket {
+public class ErrorResponse extends ServerPacket {
 
-	private final int fieldCount;
-	private final Long extra;
+	private final int errorNumber;
+	private final String sqlState;
+	private final String message;
 
-	public ResultSetResponse(int length, int packetNumber, int fieldCount, Long extra) {
+	public ErrorResponse(int length, int packetNumber, int errorNumber, String sqlState, String message) {
 		super(length, packetNumber);
-		this.fieldCount = fieldCount;
-		this.extra = extra;
+		this.errorNumber = errorNumber;
+		this.sqlState = sqlState;
+		this.message = message;
 	}
 
-	public int getFieldCount() {
-		return fieldCount;
+	public int getErrorNumber() {
+		return errorNumber;
 	}
 
-	public Long getExtra() {
-		return extra;
+	public String getSqlState() {
+		return sqlState;
+	}
+
+	public String getMessage() {
+		return message;
 	}
 
 }
