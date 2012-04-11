@@ -40,6 +40,21 @@ public class CommandRequest extends ClientRequest {
 
 }
 
+class PreparedStatementRequest extends CommandRequest {
+    private final int statementId;
+
+    PreparedStatementRequest() {
+        super(Command.STATEMENT_EXECUTE);
+    }
+
+    @Override
+    public int getLength(String charset) throws UnsupportedEncodingException {
+        return 1;
+    }
+
+
+}
+
 class StringCommandRequest extends CommandRequest {
     private final String payload;
 
