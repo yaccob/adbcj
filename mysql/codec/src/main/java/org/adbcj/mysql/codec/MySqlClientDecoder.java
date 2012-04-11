@@ -268,14 +268,12 @@ public class MySqlClientDecoder {
 	}
 
 	protected OkResponse decodeOkResponse(BoundedInputStream in, int length, int packetNumber) throws IOException {
-		long affectedRows = IoUtils.readBinaryLengthEncoding(in);
-		long insertId = IoUtils.readBinaryLengthEncoding(in);
-		Set<ServerStatus> serverStatus = IoUtils.readEnumSetShort(in, ServerStatus.class);
-		int warningCount = IoUtils.readUnsignedShort(in);
-		String message = IoUtils.readFixedLengthString(in, in.getRemaining(), charset);
-
-		return new OkResponse(length, packetNumber, affectedRows, insertId, serverStatus,
-				warningCount, message);
+        byte[] data = new byte[in.getRemaining()];
+        int readBytes = in.read(data);
+        if(readBytes!=data.length){
+            throw new IllegalStateException("Didn't read as much as expected. Expected to read "+data.length);
+        }
+		return new OkResponse(length, packetNumber,data);
 	}
 
 	protected ErrorResponse decodeErrorResponse(InputStream in, int length, int packetNumber) throws IOException {
@@ -318,56 +316,7 @@ public class MySqlClientDecoder {
 		return new ResultSetFieldResponse(packetLength, packetNumber, field);
 	}
 
-	// TODO: This stream implementation doesn't even work b ecause it doesn't delegate all InputStream methods
-	private static class BoundedInputStream extends InputStream {
-
-		private final InputStream in;
-		private int remaining;
-
-		public BoundedInputStream(InputStream in, int length) {
-			this.in = in;
-			this.remaining = length;
-		}
-
-		@Override
-		public int read() throws IOException {
-			int i = in.read();
-			if (i >= 0) {
-				remaining --;
-			}
-			if (remaining < 0) {
-				throw new IllegalStateException("Buffer overrun");
-			}
-			return i;
-		}
-
-		@Override
-		public int read(byte[] b, int off, int len) throws IOException {
-			int i = in.read(b, off, len);
-			remaining -= i;
-			if (remaining < 0) {
-				throw new IllegalStateException("Read too many bytes");
-			}
-			return i;
-		}
-
-		@Override
-		public long skip(long n) throws IOException {
-			long i = in.skip(n);
-			remaining -= i;
-			if (remaining < 0) {
-				throw new IllegalStateException("Read too many bytes");
-			}
-			return i;
-		}
-
-		public int getRemaining() {
-			return remaining;
-		}
-
-	}
-
-	/**
+    /**
 	 * Sets the state, used for testing.
 	 *
 	 * @param state

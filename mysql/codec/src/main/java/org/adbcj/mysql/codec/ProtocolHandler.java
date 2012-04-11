@@ -24,11 +24,7 @@ public class ProtocolHandler {
 	}
 
 	/**
-	 * Handles an exception
-	 *
-	 * @param connection
-	 * @param cause
-	 * @return  any exception that couldn't be handled, null if the exception was succesfully handled
+	 * @return  any exception that couldn't be handled, null if the exception was successfully handled
 	 * @throws Exception
 	 */
 	public Throwable handleException(AbstractMySqlConnection connection, Throwable cause) throws Exception {
@@ -62,7 +58,11 @@ public class ProtocolHandler {
 		if (message instanceof ServerGreeting) {
 			handleServerGreeting(connection, (ServerGreeting)message);
 		} else if (message instanceof OkResponse) {
-			handleOkResponse(connection, (OkResponse)message);
+            if(((Request)connection.getActiveRequest()) instanceof AbstractMySqlConnection.PreparedStatementRequest){
+                handlePreparedStatement(connection, ((OkResponse) message).interpretAsPreparedStatement());
+            } else{
+                handleOkResponse(connection, ((OkResponse)message).interpretAsRegularOk());
+            }
 		} else if (message instanceof ErrorResponse) {
 			handleErrorResponse(connection, (ErrorResponse)message);
 		} else if (message instanceof ResultSetResponse) {
@@ -78,14 +78,18 @@ public class ProtocolHandler {
 		}
 	}
 
-	private void handleServerGreeting(AbstractMySqlConnection connection, ServerGreeting serverGreeting) {
+    private void handlePreparedStatement(AbstractMySqlConnection connection, OkResponse.PreparedStatementOK preparedStatementOK) {
+        throw new UnsupportedOperationException("TODO");
+    }
+
+    private void handleServerGreeting(AbstractMySqlConnection connection, ServerGreeting serverGreeting) {
 		// TODO save the parts of the greeting that we might need (like the protocol version, etc.)
 		// Send Login request
 		LoginRequest request = new LoginRequest(connection.getCredentials(), connection.getClientCapabilities(), connection.getExtendedClientCapabilities(), connection.getCharacterSet(), serverGreeting.getSalt());
 		connection.write(request);
 	}
 
-	private void handleOkResponse(AbstractMySqlConnection connection, OkResponse response) {
+	private void handleOkResponse(AbstractMySqlConnection connection, OkResponse.RegularOK response) {
 		logger.trace("Response '{}' on connection {}", response, connection);
 
 		List<String> warnings = null;

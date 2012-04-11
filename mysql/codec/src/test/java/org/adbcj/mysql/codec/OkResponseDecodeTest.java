@@ -1,12 +1,13 @@
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.codec.MySqlClientDecoder.State;
+import org.testng.annotations.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.EnumSet;
 
-import org.adbcj.mysql.codec.MySqlClientDecoder.State;
-import org.testng.annotations.Test;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class OkResponseDecodeTest {
 
@@ -28,7 +29,7 @@ public class OkResponseDecodeTest {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_WITH_MESSAGE);
 		MySqlClientDecoder decoder = new MySqlClientDecoder();
 		decoder.setState(State.RESPONSE);
-		OkResponse response = (OkResponse) decoder.decode(in, true);
+		OkResponse.RegularOK response = ((OkResponse) decoder.decode(in, true)).interpretAsRegularOk();
 
 		assertEquals(response.getPacketLength(), 48);
 		assertEquals(response.getPacketNumber(), 1);
@@ -52,7 +53,7 @@ public class OkResponseDecodeTest {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_ONE_AFFECTED_ROW);
 		MySqlClientDecoder decoder = new MySqlClientDecoder();
 		decoder.setState(State.RESPONSE);
-		OkResponse response = (OkResponse) decoder.decode(in, true);
+        OkResponse.RegularOK response = ((OkResponse) decoder.decode(in, true)).interpretAsRegularOk();
 
 		assertEquals(response.getPacketLength(), 7);
 		assertEquals(response.getPacketNumber(), 1);

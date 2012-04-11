@@ -133,18 +133,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	public DbSessionFuture<PreparedStatement> prepareStatement(final String sql) {
 		checkClosed();
-        return enqueueTransactionalRequest(new Request<PreparedStatement>() {
-            @Override
-            public void execute() throws Exception {
-                logger.debug("Sending prepared query '{}'", sql);
-                CommandRequest request = new CommandRequest(Command.STATEMENT_PREPARE, sql);
-                write(request);
-            }
-            @Override
-            public String toString() {
-                return "SELECT PREPARE request: " + sql;
-            }
-        });
+        return enqueueTransactionalRequest(new PreparedStatementRequest(sql));
 	}
 
 	public DbFuture<Void> ping() {
@@ -290,4 +279,23 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         }
     }
 
+    public class PreparedStatementRequest extends Request<PreparedStatement> {
+        private final String sql;
+
+        public PreparedStatementRequest(String sql) {
+            this.sql = sql;
+        }
+
+        @Override
+        public void execute() throws Exception {
+            logger.debug("Sending prepared query '{}'", sql);
+            CommandRequest request = new CommandRequest(Command.STATEMENT_PREPARE, sql);
+            write(request);
+        }
+
+        @Override
+        public String toString() {
+            return "SELECT PREPARE request: " + sql;
+        }
+    }
 }
