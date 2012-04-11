@@ -50,8 +50,9 @@ public class MySqlClientEncoder {
 
 	protected void encodeCommandRequest(OutputStream out, CommandRequest request) throws IOException {
 		out.write(request.getCommand().getCommandCode());
-		if (request.getPayload() != null && request.getPayload().length() > 0) {
-			out.write(request.getPayload().getBytes(charset));
+		if (request instanceof StringCommandRequest) {
+            StringCommandRequest withStringPayload = (StringCommandRequest)request;
+			out.write(withStringPayload.getPayload().getBytes(charset));
 		}
 	}
 

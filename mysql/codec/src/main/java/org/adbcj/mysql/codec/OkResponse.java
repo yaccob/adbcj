@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.Set;
 
 public class OkResponse extends ServerPacket {
-
-
     private final byte[] restToParse;
 
     public OkResponse(int packetLength, int packetNumber,byte[] restToParse) {

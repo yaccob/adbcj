@@ -79,7 +79,8 @@ public class ProtocolHandler {
 	}
 
     private void handlePreparedStatement(AbstractMySqlConnection connection, OkResponse.PreparedStatementOK preparedStatementOK) {
-        throw new UnsupportedOperationException("TODO");
+        AbstractMySqlConnection.PreparedStatementRequest request = (AbstractMySqlConnection.PreparedStatementRequest) connection.<PreparedStatement>getActiveRequest();
+        request.setResult(new MySqlPreparedStatement(connection,preparedStatementOK));
     }
 
     private void handleServerGreeting(AbstractMySqlConnection connection, ServerGreeting serverGreeting) {

@@ -17,18 +17,17 @@
 package org.adbcj.jdbc;
 
 import org.adbcj.*;
-import org.adbcj.Connection;
-import org.adbcj.PreparedStatement;
-import org.adbcj.ResultSet;
 import org.adbcj.support.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -380,11 +379,6 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
 
         @Override
-        public List<Object> getParameterKeys() {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        @Override
         public DbFuture<ResultSet> executeQuery(final Object... params) {
             return enqueueTransactionalRequest(new Request<ResultSet>() {
                 @Override
@@ -410,21 +404,6 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                     }
                 }
             });
-        }
-
-        @Override
-        public DbFuture<ResultSet> executeQuery(Map<Object, Object> params) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        @Override
-        public DbFuture<Result> executeUpdate(Object... params) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        @Override
-        public DbFuture<Result> executeUpdate(Map<Object, Object> params) {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 

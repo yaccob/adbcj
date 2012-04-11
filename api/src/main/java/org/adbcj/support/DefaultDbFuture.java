@@ -16,15 +16,15 @@
  */
 package org.adbcj.support;
 
+import org.adbcj.DbException;
+import org.adbcj.DbFuture;
+import org.adbcj.DbListener;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
 
 public class DefaultDbFuture<T> implements DbFuture<T> {
 
@@ -150,7 +150,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     		}
             waiters++;
             try {
-           		lock.wait();
+                while(!done){
+                    lock.wait();
+                }
             } finally {
                 waiters--;
             }

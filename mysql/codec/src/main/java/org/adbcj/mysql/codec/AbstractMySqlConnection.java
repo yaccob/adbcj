@@ -105,7 +105,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 			@Override
 			public void execute() throws Exception {
 				logger.debug("Sending query '{}'", sql);
-				CommandRequest request = new CommandRequest(Command.QUERY, sql);
+				CommandRequest request = new StringCommandRequest(Command.QUERY, sql);
 				write(request);
         }
 			@Override
@@ -121,7 +121,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		return enqueueTransactionalRequest(new Request<Result>() {
 			public void execute() {
 				logger.debug("Sending update '{}'", sql);
-				CommandRequest request = new CommandRequest(Command.QUERY, sql);
+				CommandRequest request = new StringCommandRequest(Command.QUERY, sql);
 				write(request);
 			}
 			@Override
@@ -144,9 +144,9 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	// ************* Transaction method implementations ******************************************
 
-	private static final CommandRequest BEGIN = new CommandRequest(Command.QUERY, "begin");
-	private static final CommandRequest COMMIT = new CommandRequest(Command.QUERY, "commit");
-	private static final CommandRequest ROLLBACK = new CommandRequest(Command.QUERY, "rollback");
+	private static final CommandRequest BEGIN = new StringCommandRequest(Command.QUERY, "begin");
+	private static final CommandRequest COMMIT = new StringCommandRequest(Command.QUERY, "commit");
+	private static final CommandRequest ROLLBACK = new StringCommandRequest(Command.QUERY, "rollback");
 
 	@Override
 	protected void sendCommit() {
@@ -289,7 +289,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         @Override
         public void execute() throws Exception {
             logger.debug("Sending prepared query '{}'", sql);
-            CommandRequest request = new CommandRequest(Command.STATEMENT_PREPARE, sql);
+            CommandRequest request = new StringCommandRequest(Command.STATEMENT_PREPARE, sql);
             write(request);
         }
 
@@ -297,5 +297,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         public String toString() {
             return "SELECT PREPARE request: " + sql;
         }
+
+
     }
 }

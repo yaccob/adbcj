@@ -23,30 +23,40 @@ import java.io.UnsupportedEncodingException;
 
 public class CommandRequest extends ClientRequest {
 
-	private final Command command;
-	private final String payload;
+    private final Command command;
 
-	public CommandRequest(Command command) {
-		this.command = command;
-		this.payload = null;
-	}
+    public CommandRequest(Command command) {
+        this.command = command;
+    }
 
-	public CommandRequest(Command command, String payload) {
-		this.command = command;
-		this.payload = payload;
-	}
+    public Command getCommand() {
+        return command;
+    }
 
-	public Command getCommand() {
-		return command;
-	}
+    @Override
+    public int getLength(String charset) throws UnsupportedEncodingException {
+        return 1;
+    }
 
-	public String getPayload() {
-		return payload;
-	}
+}
 
-	@Override
-	public int getLength(String charset) throws UnsupportedEncodingException {
-		return 1 + ((payload == null) ? 0 : payload.getBytes(charset).length);
-	}
+class StringCommandRequest extends CommandRequest {
+    private final String payload;
+
+    public StringCommandRequest(Command command, String payload) {
+        super(command);
+        this.payload = payload;
+    }
+
+
+    @Override
+    public int getLength(String charset) throws UnsupportedEncodingException {
+        return 1 + payload.getBytes(charset).length;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
 
 }
