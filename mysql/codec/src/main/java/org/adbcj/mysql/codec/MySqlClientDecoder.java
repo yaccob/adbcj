@@ -61,9 +61,6 @@ public class MySqlClientDecoder {
      * The state of the decoder.
      */
     enum State {
-        /**
-         * The client is connecting
-         */
         CONNECTING,
         RESPONSE,
         FIELD,
@@ -73,7 +70,7 @@ public class MySqlClientDecoder {
 
     private State state = State.CONNECTING;
 
-    private String charset = "ISO8859_1";
+    private String charset = "UTF-8";
 
     /**
      * Holds the remaining number of field packets expected to build the result set
