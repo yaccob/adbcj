@@ -1,13 +1,13 @@
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.codec.packets.ServerGreeting;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.EnumSet;
-
-import org.adbcj.mysql.codec.packets.ServerGreeting;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 public class GreetingDecodeTest {
 
@@ -33,7 +33,7 @@ public class GreetingDecodeTest {
 	public void decodeGreeting1() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING1);
 		MySqlClientDecoder decoder = new MySqlClientDecoder();
-		ServerGreeting greeting = (ServerGreeting) decoder.decode(in, true);
+		ServerGreeting greeting = (ServerGreeting) decoder.decode(null,in, true);
 
 		Assert.assertEquals(greeting.getPacketLength(), 64);
 		Assert.assertEquals(greeting.getPacketNumber(), 0);
@@ -68,7 +68,7 @@ public class GreetingDecodeTest {
 	public void decodeGreeting2() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING2);
 		MySqlClientDecoder decoder = new MySqlClientDecoder();
-		ServerGreeting greeting = (ServerGreeting) decoder.decode(in, true);
+		ServerGreeting greeting = (ServerGreeting) decoder.decode(null,in, true);
 
 		Assert.assertEquals(greeting.getPacketLength(), 74);
 		Assert.assertEquals(greeting.getPacketNumber(), 0);

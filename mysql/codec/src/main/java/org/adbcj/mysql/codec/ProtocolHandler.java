@@ -59,20 +59,18 @@ public class ProtocolHandler {
 		logger.trace("Received message: {}", message);
 		if (message instanceof ServerGreeting) {
 			handleServerGreeting(connection, (ServerGreeting)message);
-		} else if (message instanceof OkResponse) {
-            if(((Request)connection.getActiveRequest()) instanceof AbstractMySqlConnection.PreparedStatementRequest){
-                handlePreparedStatement(connection, ((OkResponse) message).interpretAsPreparedStatement());
-            } else{
-                handleOkResponse(connection, ((OkResponse)message).interpretAsRegularOk());
-            }
+		} else if (message instanceof OkResponse.RegularOK) {
+            handleOkResponse(connection, ((OkResponse.RegularOK)message));
+		}  else if (message instanceof OkResponse.PreparedStatementOK) {
+            handlePreparedStatement(connection, (OkResponse.PreparedStatementOK) message);
 		} else if (message instanceof ErrorResponse) {
-			handleErrorResponse(connection, (ErrorResponse)message);
+			handleErrorResponse(connection, (ErrorResponse) message);
 		} else if (message instanceof ResultSetResponse) {
-			handleResultSetResponse(connection, (ResultSetResponse)message);
+			handleResultSetResponse(connection, (ResultSetResponse) message);
 		} else if (message instanceof ResultSetFieldResponse) {
-			handleResultSetFieldResponse(connection, (ResultSetFieldResponse)message);
+			handleResultSetFieldResponse(connection, (ResultSetFieldResponse) message);
 		} else if (message instanceof ResultSetRowResponse) {
-			handleResultSetRowResponse(connection, (ResultSetRowResponse)message);
+			handleResultSetRowResponse(connection, (ResultSetRowResponse) message);
 		} else if (message instanceof EofResponse) {
 			handleEofResponse(connection, (EofResponse)message);
 		} else {

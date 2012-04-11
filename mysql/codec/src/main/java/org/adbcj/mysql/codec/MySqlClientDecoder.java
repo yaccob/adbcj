@@ -17,6 +17,7 @@
 	Copyright 2008  Mike Heath
  */
 package org.adbcj.mysql.codec;
+import org.adbcj.PreparedStatement;
 import org.adbcj.Value;
 import org.adbcj.mysql.codec.packets.*;
 import org.adbcj.support.DefaultValue;
@@ -94,7 +95,7 @@ public class MySqlClientDecoder {
 	 * 				to decode the message without blocking
 	 * @throws IOException  thrown if an error occurs reading data from the inputstream
 	 */
-	public ServerPacket decode(InputStream input, boolean block) throws IOException {
+	public ServerPacket decode(AbstractMySqlConnection connection, InputStream input, boolean block) throws IOException {
 		// If mark is not support and we can't block, throw an exception
 		if (!input.markSupported() && !block) {
 			throw new IllegalArgumentException("Non-blocking decoding requires an InputStream that supports marking");
@@ -103,7 +104,7 @@ public class MySqlClientDecoder {
 		input.mark(Integer.MAX_VALUE);
 		ServerPacket message = null;
 		try {
-			message = doDecode(input, block);
+			message = doDecode(connection, input, block);
 		} finally {
 			if (message == null) {
 				input.reset();
@@ -112,7 +113,7 @@ public class MySqlClientDecoder {
 		return message;
 	}
 
-	protected ServerPacket doDecode(InputStream input, boolean block) throws IOException {
+	protected ServerPacket doDecode(AbstractMySqlConnection connection, InputStream input, boolean block) throws IOException {
 		// If we can't block, make sure there's enough data available to read
 		if (!block) {
 			if (input.available() < 3) {
@@ -144,7 +145,7 @@ public class MySqlClientDecoder {
 				int fieldCount = in.read();
 				if (fieldCount == RESPONSE_OK) {
 					// Create Ok response
-					return decodeOkResponse(in, length, packetNumber);
+					return decodeOkResponse(connection,in, length, packetNumber);
 				}
 				if (fieldCount == RESPONSE_ERROR) {
 					// Create error response
@@ -268,13 +269,11 @@ public class MySqlClientDecoder {
 				serverStatus);
 	}
 
-	protected OkResponse decodeOkResponse(BoundedInputStream in, int length, int packetNumber) throws IOException {
-        byte[] data = new byte[in.getRemaining()];
-        int readBytes = in.read(data);
-        if(readBytes!=data.length){
-            throw new IllegalStateException("Didn't read as much as expected. Expected to read "+data.length);
+	protected OkResponse decodeOkResponse(AbstractMySqlConnection connection,BoundedInputStream in, int length, int packetNumber) throws IOException {
+        if(connection.<PreparedStatement>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest){
+            return OkResponse.interpretAsPreparedStatement(length, packetNumber,in);
         }
-		return new OkResponse(length, packetNumber,data);
+		return OkResponse.interpretAsRegularOk(length, packetNumber, in);
 	}
 
 	protected ErrorResponse decodeErrorResponse(InputStream in, int length, int packetNumber) throws IOException {

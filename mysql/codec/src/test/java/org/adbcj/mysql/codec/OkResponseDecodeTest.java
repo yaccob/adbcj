@@ -30,7 +30,7 @@ public class OkResponseDecodeTest {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_WITH_MESSAGE);
 		MySqlClientDecoder decoder = new MySqlClientDecoder();
 		decoder.setState(State.RESPONSE);
-		OkResponse.RegularOK response = ((OkResponse) decoder.decode(in, true)).interpretAsRegularOk();
+		OkResponse.RegularOK response = ((OkResponse.RegularOK) decoder.decode(null,in, true));
 
 		assertEquals(response.getPacketLength(), 48);
 		assertEquals(response.getPacketNumber(), 1);
@@ -54,7 +54,7 @@ public class OkResponseDecodeTest {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_ONE_AFFECTED_ROW);
 		MySqlClientDecoder decoder = new MySqlClientDecoder();
 		decoder.setState(State.RESPONSE);
-        OkResponse.RegularOK response = ((OkResponse) decoder.decode(in, true)).interpretAsRegularOk();
+        OkResponse.RegularOK response = ((OkResponse.RegularOK) decoder.decode(null,in, true));
 
 		assertEquals(response.getPacketLength(), 7);
 		assertEquals(response.getPacketNumber(), 1);

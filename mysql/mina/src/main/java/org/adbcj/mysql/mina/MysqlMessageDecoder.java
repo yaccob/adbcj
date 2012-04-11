@@ -16,8 +16,6 @@
  */
 package org.adbcj.mysql.mina;
 
-import java.io.InputStream;
-
 import org.adbcj.mysql.codec.MySqlClientDecoder;
 import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.apache.mina.core.buffer.IoBuffer;
@@ -26,6 +24,8 @@ import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
 
 public class MysqlMessageDecoder extends CumulativeProtocolDecoder {
 	private static final Logger logger = LoggerFactory.getLogger(MysqlMessageDecoder.class);
@@ -37,7 +37,7 @@ public class MysqlMessageDecoder extends CumulativeProtocolDecoder {
 		logger.trace("Decoding message");
 		InputStream in = buffer.asInputStream();
 		try {
-			ServerPacket message = decoder.decode(in, false);
+			ServerPacket message = decoder.decode(null,in, false);
 			if (message == null) {
 				return false;
 			}

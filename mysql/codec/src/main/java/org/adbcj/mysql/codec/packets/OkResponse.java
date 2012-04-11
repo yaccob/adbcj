@@ -22,41 +22,32 @@ import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.IoUtils;
 import org.adbcj.mysql.codec.ServerStatus;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
 public class OkResponse extends ServerPacket {
-    private final byte[] restToParse;
 
-    public OkResponse(int packetLength, int packetNumber,byte[] restToParse) {
+    protected OkResponse(int packetLength, int packetNumber) {
         super(packetLength, packetNumber);
-        this.restToParse = restToParse;
-    }
-    public OkResponse(int packetLength, int packetNumber) {
-        super(packetLength, packetNumber);
-        restToParse = null;
     }
 
-    public RegularOK interpretAsRegularOk() throws IOException {
-        BoundedInputStream restToParse = new BoundedInputStream(new ByteArrayInputStream(this.restToParse),this.restToParse.length);
-        long affectedRows = IoUtils.readBinaryLengthEncoding(restToParse);
-        long insertId = IoUtils.readBinaryLengthEncoding(restToParse);
-        Set<ServerStatus> serverStatus = IoUtils.readEnumSetShort(restToParse, ServerStatus.class);
-        int warningCount = IoUtils.readUnsignedShort(restToParse);
-        String message = IoUtils.readFixedLengthString(restToParse, restToParse.getRemaining(), "UTF8");
-        return new RegularOK(getPacketLength(), getPacketNumber(), affectedRows, insertId, serverStatus, warningCount, message);
+    public static RegularOK interpretAsRegularOk(int packetLength, int packetNumber,BoundedInputStream toParse) throws IOException {
+        long affectedRows = IoUtils.readBinaryLengthEncoding(toParse);
+        long insertId = IoUtils.readBinaryLengthEncoding(toParse);
+        Set<ServerStatus> serverStatus = IoUtils.readEnumSetShort(toParse, ServerStatus.class);
+        int warningCount = IoUtils.readUnsignedShort(toParse);
+        String message = IoUtils.readFixedLengthString(toParse, toParse.getRemaining(), "UTF8");
+        return new RegularOK(packetLength, packetNumber, affectedRows, insertId, serverStatus, warningCount, message);
     }
 
-    public PreparedStatementOK interpretAsPreparedStatement() throws IOException {
-        BoundedInputStream restToParse = new BoundedInputStream(new ByteArrayInputStream(this.restToParse),this.restToParse.length);
-        int handlerId= IoUtils.readInt(restToParse);
-        int columns= IoUtils.readShort(restToParse);
-        int params= IoUtils.readShort(restToParse);
-        int filler = restToParse.read();
-        int warnings = IoUtils.readShort(restToParse);
-        return new PreparedStatementOK(getPacketLength(), getPacketNumber(),handlerId,columns,params,filler,warnings);
+    public static PreparedStatementOK interpretAsPreparedStatement(int packetLength, int packetNumber,BoundedInputStream toParse) throws IOException {
+        int handlerId= IoUtils.readInt(toParse);
+        int columns= IoUtils.readShort(toParse);
+        int params= IoUtils.readShort(toParse);
+        int filler = toParse.read();
+        int warnings = IoUtils.readShort(toParse);
+        return new PreparedStatementOK(packetLength, packetNumber,handlerId,columns,params,filler,warnings);
     }
     public static class PreparedStatementOK extends OkResponse{
 
@@ -73,16 +64,6 @@ public class OkResponse extends ServerPacket {
             this.params = params;
             this.filler = filler;
             this.warnings = warnings;
-        }
-
-        @Override
-        public RegularOK interpretAsRegularOk() throws IOException {
-            throw new IllegalStateException("This is a PreparedStatementOK and cannot be viewed otherwise");
-        }
-
-        @Override
-        public PreparedStatementOK interpretAsPreparedStatement() throws IOException {
-            return this;
         }
 
         public int getHandlerId() {
@@ -121,16 +102,6 @@ public class OkResponse extends ServerPacket {
             this.serverStatus = Collections.unmodifiableSet(serverStatus);
             this.warningCount = warningCount;
             this.message = message;
-        }
-
-        @Override
-        public RegularOK interpretAsRegularOk() throws IOException {
-            return this;
-        }
-
-        @Override
-        public PreparedStatementOK interpretAsPreparedStatement() throws IOException {
-            throw new IllegalStateException("This is a RegularOK and cannot be viewed otherwise");
         }
 
         public long getAffectedRows() {

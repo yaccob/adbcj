@@ -129,7 +129,7 @@ class Decoder extends FrameDecoder {
 	protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
 		 InputStream in = new ChannelBufferInputStream(buffer);
 		 try {
-			 return decoder.decode(in, false);
+			 return decoder.decode(connection.get(),in, false);
 		 } finally {
 			 in.close();
 		 }
