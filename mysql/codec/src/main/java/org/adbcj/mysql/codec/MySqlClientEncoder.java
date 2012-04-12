@@ -19,6 +19,7 @@
 package org.adbcj.mysql.codec;
 
 import org.adbcj.mysql.codec.packets.CommandRequest;
+import org.adbcj.mysql.codec.packets.PreparedStatementRequest;
 import org.adbcj.mysql.codec.packets.StringCommandRequest;
 
 import java.io.IOException;
@@ -57,10 +58,14 @@ public class MySqlClientEncoder {
             StringCommandRequest withStringPayload = (StringCommandRequest)request;
 			out.write(withStringPayload.getPayload().getBytes(charset));
 		}
+		else if (request instanceof PreparedStatementRequest) {
+            StringCommandRequest withStringPayload = (StringCommandRequest)request;
+			out.write(withStringPayload.getPayload().getBytes(charset));
+		}
 	}
 
 	protected void encodeLoginRequest(OutputStream out, LoginRequest request) throws IOException, NoSuchAlgorithmException {
-		// Encode inital part of authentication request
+		// Encode initial part of authentication request
 		IoUtils.writeEnumSetShort(out, request.getCapabilities());
 		IoUtils.writeEnumSetShort(out, request.getExtendedCapabilities());
 		IoUtils.writeInt(out, request.getMaxPacketSize());

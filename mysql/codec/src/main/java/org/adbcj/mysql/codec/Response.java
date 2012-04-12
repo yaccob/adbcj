@@ -7,7 +7,6 @@ import org.adbcj.mysql.codec.packets.OkResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Set;
 
 /**
 * @author roman.stoffel@gamlor.info
@@ -22,39 +21,7 @@ class Response extends DecoderState{
         int fieldCount = in.read();
         if (fieldCount == RESPONSE_OK) {
             if (connection!=null && connection.<PreparedStatement>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest) {
-                final OkResponse.PreparedStatementOK statementOK = OkResponse.interpretAsPreparedStatement(length, packetNumber, in);
-                if(statementOK.getParams()>0){
-                    return result(new DecoderState() {
-                        @Override
-                        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
-                            String catalogName = IoUtils.readLengthCodedString(in, CHARSET);
-                            String schemaName = IoUtils.readLengthCodedString(in, CHARSET);
-                            String tableLabel = IoUtils.readLengthCodedString(in, CHARSET);
-                            String tableName = IoUtils.readLengthCodedString(in, CHARSET);
-                            String columnLabel = IoUtils.readLengthCodedString(in, CHARSET);
-                            String columnName = IoUtils.readLengthCodedString(in, CHARSET);
-                            in.read(); // Skip filler
-                            int characterSetNumber = IoUtils.readUnsignedShort(in);
-                            MysqlCharacterSet charSet = MysqlCharacterSet.findById(characterSetNumber);
-                            long length2 = IoUtils.readUnsignedInt(in);
-                            int fieldTypeId = in.read();
-                            MysqlType fieldType = MysqlType.findById(fieldTypeId);
-                            Set<FieldFlag> flags = IoUtils.readEnumSet(in, FieldFlag.class);
-                            int decimals = in.read();
-                            in.skip(2); // Skip filler
-                            long fieldDefault = IoUtils.readBinaryLengthEncoding(in);
-//                            int fieldIndex = fields.size();
-//                            MysqlField field = new MysqlField(fieldIndex, catalogName, schemaName, tableLabel, tableName, fieldType, columnLabel,
-//                                    columnName, 0, // Figure out precision
-//                                    decimals, charSet, length, flags, fieldDefault);
-//                            List<MysqlField> accumulatedFields = new ArrayList<MysqlField>(fields);
-//                            accumulatedFields.add(field);
-                            return result(EOF_EXPECTED,statementOK);
-                        }
-                    }, statementOK);
-                } else{
-                    return result(EOF_EXPECTED,statementOK);
-                }
+                return processOKMessage(length, packetNumber, in);
             }
             return result(RESPONSE, OkResponse.interpretAsRegularOk(length, packetNumber, in));
         }
@@ -65,6 +32,15 @@ class Response extends DecoderState{
             throw new IllegalStateException("Did not expect an EOF response from the server");
         }
         return parseAsResult(length, packetNumber, in, fieldCount);
+    }
+
+    private ResultAndState processOKMessage(int length, int packetNumber, BoundedInputStream in) throws IOException {
+        final OkResponse.PreparedStatementOK statementOK = OkResponse.interpretAsPreparedStatement(length, packetNumber, in);
+        if(statementOK.getParams()>0){
+            return result(FINISH_PREPARE_STATEMENT_OK(statementOK), statementOK);
+        } else{
+            return result(RESPONSE,statementOK);
+        }
     }
 
     private ResultAndState parseAsResult(int length, int packetNumber, BoundedInputStream in, int fieldCount) throws IOException {
