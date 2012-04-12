@@ -106,7 +106,6 @@ public abstract class DecoderState {
             // Get the number of fields. The largest this can be is a 24-bit
             // integer so cast to int is ok
             int expectedFieldPackets = (int) IoUtils.readBinaryLengthEncoding(in, fieldCount);
-            MysqlField[] fields = new MysqlField[expectedFieldPackets];
             logger.trace("Field count {}", expectedFieldPackets);
 
             Long extra = null;
@@ -119,7 +118,7 @@ public abstract class DecoderState {
 
 
         protected OkResponse decodeOkResponse(AbstractMySqlConnection connection, BoundedInputStream in, int length, int packetNumber) throws IOException {
-            if (connection.<PreparedStatement>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest) {
+            if (connection!=null && connection.<PreparedStatement>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest) {
                 return OkResponse.interpretAsPreparedStatement(length, packetNumber, in);
             }
             return OkResponse.interpretAsRegularOk(length, packetNumber, in);
@@ -150,7 +149,7 @@ public abstract class DecoderState {
 
             int restOfExpectedFields = expectedFieldPackets-1;
             logger.trace("fieldPacketCount: {}", expectedFieldPackets);
-            if (expectedFieldPackets == 0) {
+            if (restOfExpectedFields == 0) {
                 return result(FIELD_EOF(resultSetFieldResponse.getSecond()),resultSetFieldResponse.getFirst());
             } else{
                 return result(FIELD(restOfExpectedFields,resultSetFieldResponse.getSecond()),resultSetFieldResponse.getFirst());
@@ -247,10 +246,10 @@ public abstract class DecoderState {
                     }
                 }
                 values[field.getIndex()] = new DefaultValue(field, value);
+                i++;
                 if (i < fields.size()) {
                     fieldCount = in.read();
                 }
-                i++;
             }
             return result(ROW(fields),new ResultSetRowResponse(length, packetNumber, values));
 
