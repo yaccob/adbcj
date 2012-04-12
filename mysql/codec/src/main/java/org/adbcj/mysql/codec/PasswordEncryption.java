@@ -18,13 +18,16 @@
 */
 package org.adbcj.mysql.codec;
 
+import org.adbcj.support.UncheckedThrow;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 
 public class PasswordEncryption {
 
-	public static byte[] encryptPassword(String password, byte[] salt) throws NoSuchAlgorithmException {
+	public static byte[] encryptPassword(String password, byte[] salt)  {
+        try{
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
 
 		byte[] hash1 = md.digest(password.getBytes());
@@ -40,7 +43,9 @@ public class PasswordEncryption {
 		for (int i = 0; i < digest.length; i++) {
 			digest[i] = (byte)(digest[i] ^ hash1[i]);
 		}
-		return digest;
+		return digest; }catch (NoSuchAlgorithmException e){
+            throw UncheckedThrow.throwUnchecked(e);
+        }
 	}
 
 }

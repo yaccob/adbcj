@@ -18,6 +18,8 @@
 */
 package org.adbcj.mysql.codec;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
@@ -57,7 +59,43 @@ public class LoginRequest extends ClientRequest {
 				+ credentials.getDatabase().getBytes(charset).length + 1;
 	}
 
-	@Override
+    @Override
+    public boolean hasPayload() {
+        return true;
+    }
+
+    @Override
+    public void writeToOutputStream(OutputStream out, String charset) throws IOException{
+        // Encode initial part of authentication request
+        IoUtils.writeEnumSetShort(out, getCapabilities());
+        IoUtils.writeEnumSetShort(out, getExtendedCapabilities());
+        IoUtils.writeInt(out, getMaxPacketSize());
+        out.write(getCharSet().getId());
+        out.write(new byte[LoginRequest.FILLER_LENGTH]);
+
+        out.write(getCredentials().getUserName().getBytes(charset));
+        out.write(0); // null-terminate username
+
+        // Encode password
+        final String password = getCredentials().getPassword();
+        if (password != null && password.length() > 0) {
+            byte[] salt = getSalt();
+            byte[] encryptedPassword = PasswordEncryption.encryptPassword(password, salt);
+            out.write(encryptedPassword.length);
+            out.write(encryptedPassword);
+        } else {
+            out.write(0); // null-terminate password
+        }
+
+        // Encode desired database/schema
+        final String database = getCredentials().getDatabase();
+        if (database != null) {
+            out.write(database.getBytes(charset));
+        }
+        out.write(0);
+    }
+
+    @Override
 	public int getPacketNumber() {
 		return 1;
 	}

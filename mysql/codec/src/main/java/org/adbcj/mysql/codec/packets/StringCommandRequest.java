@@ -1,5 +1,9 @@
 package org.adbcj.mysql.codec.packets;
 
+import org.adbcj.support.UncheckedThrow;
+
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -16,8 +20,27 @@ public class StringCommandRequest extends CommandRequest {
 
 
     @Override
-    public int getLength(String charset) throws UnsupportedEncodingException {
-        return 1 + payload.getBytes(charset).length;
+    public int getLength(String charset) {
+        return 1 + payloadAsBinary(charset).length;
+    }
+
+    @Override
+    public boolean hasPayload() {
+        return payload != null;
+    }
+
+    @Override
+    protected void writePayLoad(OutputStream out, String charset) throws IOException {
+        out.write(payloadAsBinary(charset));
+    }
+
+
+    private byte[] payloadAsBinary(String charset) {
+        try {
+            return payload.getBytes(charset);
+        } catch (UnsupportedEncodingException e) {
+            throw UncheckedThrow.throwUnchecked(e);
+        }
     }
 
     public String getPayload() {

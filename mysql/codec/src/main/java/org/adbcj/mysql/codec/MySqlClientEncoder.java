@@ -18,17 +18,13 @@
 */
 package org.adbcj.mysql.codec;
 
-import org.adbcj.mysql.codec.packets.CommandRequest;
-import org.adbcj.mysql.codec.packets.PreparedStatementRequest;
-import org.adbcj.mysql.codec.packets.StringCommandRequest;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 
 public class MySqlClientEncoder {
 
-	private String charset = "ISO8859_1";
+	private final String charset = "UTF-8";
 
 	public void encode(ClientRequest request, OutputStream out) throws IOException, NoSuchAlgorithmException {
 		int length = request.getLength(charset);
@@ -42,60 +38,9 @@ public class MySqlClientEncoder {
 		// Write the packet number
 		out.write(request.getPacketNumber());
 
-		if (request instanceof CommandRequest) {
-			encodeCommandRequest(out, (CommandRequest)request);
-		} else if (request instanceof LoginRequest) {
-			encodeLoginRequest(out, (LoginRequest)request);
-		} else {
-			throw new IllegalStateException("Unable to encode message of type " + request.getClass().getName());
-		}
+        request.writeToOutputStream(out,charset);
 
 	}
 
-	protected void encodeCommandRequest(OutputStream out, CommandRequest request) throws IOException {
-		out.write(request.getCommand().getCommandCode());
-		if (request instanceof StringCommandRequest) {
-            StringCommandRequest withStringPayload = (StringCommandRequest)request;
-			out.write(withStringPayload.getPayload().getBytes(charset));
-		}
-		else if (request instanceof PreparedStatementRequest) {
-            StringCommandRequest withStringPayload = (StringCommandRequest)request;
-			out.write(withStringPayload.getPayload().getBytes(charset));
-		}
-	}
-
-	protected void encodeLoginRequest(OutputStream out, LoginRequest request) throws IOException, NoSuchAlgorithmException {
-		// Encode initial part of authentication request
-		IoUtils.writeEnumSetShort(out, request.getCapabilities());
-		IoUtils.writeEnumSetShort(out, request.getExtendedCapabilities());
-		IoUtils.writeInt(out, request.getMaxPacketSize());
-		out.write(request.getCharSet().getId());
-		out.write(new byte[LoginRequest.FILLER_LENGTH]);
-
-		out.write(request.getCredentials().getUserName().getBytes(charset));
-		out.write(0); // null-terminate username
-
-		// Encode password
-		final String password = request.getCredentials().getPassword();
-		if (password != null && password.length() > 0) {
-			byte[] salt = request.getSalt();
-			byte[] encryptedPassword = PasswordEncryption.encryptPassword(password, salt);
-			out.write(encryptedPassword.length);
-			out.write(encryptedPassword);
-		} else {
-			out.write(0); // null-terminate password
-		}
-
-		// Encode desired database/schema
-		final String database = request.getCredentials().getDatabase();
-		if (database != null) {
-			out.write(database.getBytes(charset));
-		}
-		out.write(0);
-	}
-
-	public void setCharset(String charset) {
-		this.charset = charset;
-	}
 
 }

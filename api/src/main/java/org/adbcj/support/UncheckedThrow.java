@@ -20,7 +20,7 @@ public final class UncheckedThrow {
      * Remember, Generics are erased in Java. So this basically throws an Exception. The real
      * Type of T is lost during the compilation
      */
-    public static <T extends Exception> T throwsUnchecked(Throwable toThrow) throws T{
+    private static <T extends Exception> T throwsUnchecked(Throwable toThrow) throws T{
         // Since the type is erased, this cast actually does nothing!!!
         // we can throw any exception
         throw (T) toThrow;

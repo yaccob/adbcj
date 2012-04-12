@@ -20,6 +20,8 @@ package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.mysql.codec.ClientRequest;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 
@@ -38,6 +40,23 @@ public class CommandRequest extends ClientRequest {
     @Override
     public int getLength(String charset) throws UnsupportedEncodingException {
         return 1;
+    }
+
+    @Override
+    public boolean hasPayload() {
+        return false;
+    }
+
+    @Override
+    public final void writeToOutputStream(OutputStream out, String charset) throws IOException {
+        out.write(command.getCommandCode());
+        if(hasPayload()){
+            writePayLoad(out,charset);
+        }
+    }
+
+    protected void writePayLoad(OutputStream out, String charset) throws IOException{
+
     }
 
 }

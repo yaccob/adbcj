@@ -1,5 +1,6 @@
 package org.adbcj.mysql.codec.packets;
 
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -16,6 +17,16 @@ public class PreparedStatementRequest extends CommandRequest {
         this.data = data;
     }
 
+    @Override
+    public boolean hasPayload() {
+        return true;
+    }
+
+
+    @Override
+    protected void writePayLoad(OutputStream out, String charset) {
+        throw new Error("TIODO");
+    }
 
     @Override
     public int getLength(String charset) throws UnsupportedEncodingException {

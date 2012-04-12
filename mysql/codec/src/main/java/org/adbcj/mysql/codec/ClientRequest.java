@@ -18,6 +18,8 @@
 */
 package org.adbcj.mysql.codec;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 
@@ -33,4 +35,9 @@ public abstract class ClientRequest {
 	public int getPacketNumber() {
 		return 0;
 	}
+
+    public abstract boolean hasPayload();
+
+    public abstract void writeToOutputStream(OutputStream out, String charset) throws IOException;
+
 }
