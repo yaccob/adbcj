@@ -31,7 +31,7 @@ public abstract class DecoderState {
         return new Row(fields);
     }
     protected static DecoderState FINISH_PREPARE_STATEMENT_OK(OkResponse.PreparedStatementOK statement){
-        return new FinishPrepareStatement(statement);
+        return FinishPrepareStatement.create(statement);
     }
 
 

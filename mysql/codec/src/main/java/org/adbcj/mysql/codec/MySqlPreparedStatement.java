@@ -4,8 +4,8 @@ import org.adbcj.DbFuture;
 import org.adbcj.PreparedStatement;
 import org.adbcj.ResultEventHandler;
 import org.adbcj.ResultSet;
-import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementRequest;
+import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultResultSet;
 import org.adbcj.support.ExpectResultRequest;
@@ -16,9 +16,9 @@ import org.adbcj.support.ExpectResultRequest;
  */
 public class MySqlPreparedStatement implements PreparedStatement {
     private final AbstractMySqlConnection connection;
-    private final OkResponse.PreparedStatementOK statementInfo;
+    private final StatementPreparedEOF statementInfo;
 
-    public MySqlPreparedStatement(AbstractMySqlConnection connection,OkResponse.PreparedStatementOK statementInfo) {
+    public MySqlPreparedStatement(AbstractMySqlConnection connection,StatementPreparedEOF statementInfo) {
         this.connection = connection;
         this.statementInfo = statementInfo;
     }
