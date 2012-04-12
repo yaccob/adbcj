@@ -20,42 +20,49 @@ package org.adbcj.mysql.codec;
 
 import org.adbcj.Type;
 
+import java.math.BigDecimal;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Date;
+
 // TODO Make sure all the types are mapped up properly - Most of these are guesses
 public enum MysqlType {
-	DECIMAL(0x00, Type.DECIMAL),
-	TINY(0x01, Type.TINYINT),
-	SHORT(0x02, Type.SMALLINT),
-	LONG(0x03, Type.BIGINT),
-	FLOAT(0x04, Type.FLOAT),
-	DOUBLE(0x05, Type.DOUBLE),
-	NULL(0x06, Type.NULL),
-	TIMESTAMP(0x07, Type.TIMESTAMP),
-	LONGLONG(0x08, Type.BIGINT),
-	INT24(0x09, Type.INTEGER),
-	DATE(0x0a, Type.DATE),
-	TIME(0x0b, Type.TIME),
-	DATETIME(0x0c, Type.TIMESTAMP),
-	YEAR(0x0d, Type.INTEGER),
-	NEWDATE(0x0e, Type.DATE),
-	VARCHAR(0x0f, Type.VARCHAR),
-	BIT(0x10, Type.BIT),
-	NEWDECIMAL(0xf6, Type.DECIMAL),
-	ENUM(0xf7, Type.INTEGER),
-	SET(0xf8, Type.ARRAY),
-	TINY_BLOB(0xf9, Type.BLOB),
-	MEDIUM_BLOB(0xfa, Type.BLOB),
-	LONG_BLOB(0xfb, Type.BLOB),
-	BLOB(0xfc, Type.BLOB),
-	VAR_STRING(0xfd, Type.VARCHAR),
-	STRING(0xfe, Type.VARCHAR),
-	GEOMETRY(0xff, Type.STRUCT);
+	DECIMAL(0x00, Type.DECIMAL, BigDecimal.class),
+	TINY(0x01, Type.TINYINT,Short.class),
+	SHORT(0x02, Type.SMALLINT,Short.class),
+	LONG(0x03, Type.BIGINT,Long.class),
+	FLOAT(0x04, Type.FLOAT,Float.class),
+	DOUBLE(0x05, Type.DOUBLE,Double.class),
+	NULL(0x06, Type.NULL,Double.class),
+	TIMESTAMP(0x07, Type.TIMESTAMP,Timestamp.class),
+	LONGLONG(0x08, Type.BIGINT,Long.class),
+	INT24(0x09, Type.INTEGER,Long.class),
+	DATE(0x0a, Type.DATE,Date.class),
+	TIME(0x0b, Type.TIME,Time.class),
+	DATETIME(0x0c, Type.TIMESTAMP,Date.class),
+	YEAR(0x0d, Type.INTEGER,Date.class),
+	NEWDATE(0x0e, Type.DATE,Date.class),
+	VARCHAR(0x0f, Type.VARCHAR,String.class),
+	BIT(0x10, Type.BIT,Long.class),
+	NEWDECIMAL(0xf6, Type.DECIMAL,BigDecimal.class),
+	ENUM(0xf7, Type.INTEGER,String.class),
+	SET(0xf8, Type.ARRAY,Object.class),
+	TINY_BLOB(0xf9, Type.BLOB,byte[].class),
+	MEDIUM_BLOB(0xfa, Type.BLOB,byte[].class),
+	LONG_BLOB(0xfb, Type.BLOB,byte[].class),
+	BLOB(0xfc, Type.BLOB,byte[].class),
+	VAR_STRING(0xfd, Type.VARCHAR,String.class),
+	STRING(0xfe, Type.VARCHAR,String.class),
+	GEOMETRY(0xff, Type.STRUCT,Object.class);
 
 	private final int id;
 	private final Type type;
+	private final String className;
 
-	MysqlType(int id, Type type) {
+	MysqlType(int id, Type type, Class javaType) {
 		this.id = id;
 		this.type = type;
+        this.className = javaType.getName();
 	}
 
 	public int getId() {
@@ -86,6 +93,6 @@ public enum MysqlType {
 	}
 
 	public String getClassName() {
-		return ""; // TODO Figure out what should be returned for a MySQL type class name
+		return className;
 	}
 }

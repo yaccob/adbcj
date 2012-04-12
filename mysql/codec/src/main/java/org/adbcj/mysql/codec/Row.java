@@ -43,6 +43,8 @@ class Row extends DecoderState{
                         value = Byte.valueOf(strVal);
                         break;
                     case INTEGER:
+                        value = Integer.valueOf(strVal);
+                        break;
                     case BIGINT:
                         value = Long.valueOf(strVal);
                         break;

@@ -19,9 +19,9 @@
 package org.adbcj.mysql.codec;
 
 
-import java.util.Set;
-
 import org.adbcj.support.DefaultField;
+
+import java.util.Set;
 
 // TODO Add support for 'ZEROFILL' when doing toString on integer Value objects
 public class MysqlField extends DefaultField {

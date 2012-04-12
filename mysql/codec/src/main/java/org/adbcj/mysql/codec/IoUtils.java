@@ -254,4 +254,16 @@ public final class IoUtils {
 		// Non-instantiable
 	}
 
+    /**
+     * Creates a null value bit mask, according to http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#Execute_Packet_.28Tentative_Description.29
+     */
+    public static byte[] nullMask(Object[] arguments) {
+        byte[] nullBitsBuffer = new byte[(arguments.length+7) / 8];
+        for (int i = 0; i < arguments.length; i++) {
+            if (arguments[i] == null) {
+                nullBitsBuffer[i / 8] |= (1 << (i & 7));
+            }
+        }
+        return nullBitsBuffer;
+    }
 }

@@ -1,14 +1,14 @@
 package org.adbcj.mysql.codec;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 public class IoUtilsTest {
 
@@ -65,6 +65,57 @@ public class IoUtilsTest {
 
 		Assert.assertEquals(IoUtils.readString(in, "UTF-8"), first);
 		Assert.assertEquals(IoUtils.readString(in, "UTF-8"), second);
+	}
+	@Test
+	public void allNullOneByte() throws IOException {
+        Object[] noNullValueOneElement = new Object[]{1};
+        Assert.assertEquals(IoUtils.nullMask(noNullValueOneElement)[0],(byte)0);
+        Object[] noNullValueTwoElement = new Object[]{1,1};
+        Assert.assertEquals(IoUtils.nullMask(noNullValueTwoElement)[0],(byte)0);
+        Object[] noNullValueFullByte = new Object[]{1,1,1,1,1,1,1,1};
+        Assert.assertEquals(IoUtils.nullMask(noNullValueFullByte)[0],(byte)0);
+	}
+	@Test
+	public void someNullOneByte() throws IOException {
+        Object[] firstArgNull = new Object[]{null,1,1,1,1,1,1,1};
+        Assert.assertEquals(IoUtils.nullMask(firstArgNull)[0],(byte)1);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,null,1,1,1,1,1,1})[0],(byte)2);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,null,1,1,1,1,1,1})[0],(byte)3);
+        byte mostSignificatBitSet = (byte)0x80;
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,null})[0],mostSignificatBitSet);
+        byte mostAndLeastBitSet = (byte)(mostSignificatBitSet | 0x01);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,null})[0],mostAndLeastBitSet);
+	}
+	@Test
+	public void allNullMutlipleByte() throws IOException {
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,1,1})[0],(byte)0);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,1,1})[1],(byte)0);
+
+
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1})[0],(byte)0);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1})[1],(byte)0);
+
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1})[0],(byte)0);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1})[1],(byte)0);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1})[2],(byte)0);
+	}
+	@Test
+	public void someNullMutlipleByte() throws IOException {
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,1,1})[0],(byte)1);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,1,1})[1],(byte)0);
+
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,null,1,1,1,1,1,1,1})[0],(byte)3);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,1,null})[1],(byte)1);
+
+
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,1,null,1,1,1,1,1,1,1})[0],(byte)1);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,1,null,1,1,1,1,1,1,1})[1],(byte)1);
+
+
+        byte mostSignificatBitSet = (byte)0x80;
+        byte mostAndLeastBitSet = (byte)(mostSignificatBitSet | 0x01);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,null,null,1,1,1,1,1,1,null})[0], mostAndLeastBitSet);
+        Assert.assertEquals(IoUtils.nullMask(new Object[]{null,1,1,1,1,1,1,null,null,1,1,1,1,1,1,null})[1], mostAndLeastBitSet);
 	}
 
 }

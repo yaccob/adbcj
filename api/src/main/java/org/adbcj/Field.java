@@ -38,8 +38,6 @@ public interface Field {
 	
 	String getCatalogName();
 	
-	String getFieldClassName();
-	
 	String getColumnLabel();
 	
 	String getColumnName();

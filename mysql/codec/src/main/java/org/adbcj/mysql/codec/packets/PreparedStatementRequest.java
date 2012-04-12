@@ -1,5 +1,8 @@
 package org.adbcj.mysql.codec.packets;
 
+import org.adbcj.mysql.codec.IoUtils;
+
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
@@ -22,10 +25,17 @@ public class PreparedStatementRequest extends CommandRequest {
         return true;
     }
 
-
+    /**
+     * Protocol see http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#Execute_Packet_.28Tentative_Description.29
+     */
     @Override
-    protected void writePayLoad(OutputStream out, String charset) {
-        throw new Error("TIODO");
+    protected void writePayLoad(OutputStream out, String charset) throws IOException {
+        IoUtils.writeInt(out, statementId);
+        out.write((byte)1); // flags: 1: CURSOR_TYPE_READ_ONLY
+        IoUtils.writeInt(out,1); // reserved for future use. Currently always 1.
+        out.write(IoUtils.nullMask(data));  //null_bit_map
+        out.write(1); //  new_parameter_bound_flag
+
     }
 
     @Override
