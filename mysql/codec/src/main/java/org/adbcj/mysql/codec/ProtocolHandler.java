@@ -62,7 +62,9 @@ public class ProtocolHandler {
         } else if (message instanceof OkResponse.RegularOK) {
             handleOkResponse(connection, ((OkResponse.RegularOK) message));
         } else if (message instanceof OkResponse.PreparedStatementOK) {
-            handlePreparedStatement(connection, (OkResponse.PreparedStatementOK) message);
+            // no action right now
+        } else if (message instanceof PreparedStatementToBuild) {
+            // no action right now
         } else if (message instanceof StatementPreparedEOF) {
             handlePreparedStatement(connection, (StatementPreparedEOF) message);
         } else if (message instanceof ErrorResponse) {
@@ -84,10 +86,6 @@ public class ProtocolHandler {
         AbstractMySqlConnection.PreparedStatementRequest activeRequest
                 = (AbstractMySqlConnection.PreparedStatementRequest) connection.<PreparedStatement>getActiveRequest();
         activeRequest.complete(new MySqlPreparedStatement(connection, preparationInfo));
-    }
-
-    private void handlePreparedStatement(AbstractMySqlConnection connection, OkResponse.PreparedStatementOK preparedStatementOK) {
-
     }
 
     private void handleServerGreeting(AbstractMySqlConnection connection, ServerGreeting serverGreeting) {

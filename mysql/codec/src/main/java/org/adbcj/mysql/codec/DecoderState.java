@@ -30,7 +30,7 @@ public abstract class DecoderState {
     protected static DecoderState ROW(List<MysqlField> fields){
         return new Row(fields);
     }
-    protected static DecoderState FINISH_PREPARE_STATEMENT_OK(OkResponse.PreparedStatementOK statement){
+    protected static DecoderState FINISH_PREPARE_STATEMENT_OK(PreparedStatementToBuild statement){
         return FinishPrepareStatement.create(statement);
     }
 

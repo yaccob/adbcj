@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-public class OkResponse extends ServerPacket {
+public abstract class OkResponse extends ServerPacket {
 
     protected OkResponse(int packetLength, int packetNumber) {
         super(packetLength, packetNumber);
@@ -47,22 +47,20 @@ public class OkResponse extends ServerPacket {
         int params= IoUtils.readShort(toParse);
         int filler = toParse.read();
         int warnings = IoUtils.readShort(toParse);
-        return new PreparedStatementOK(packetLength, packetNumber,handlerId,columns,params,filler,warnings);
+        return new PreparedStatementOK(packetLength, packetNumber,handlerId,columns,params,warnings);
     }
     public static class PreparedStatementOK extends OkResponse{
 
         private final int handlerId;
         private final int columns;
         private final int params;
-        private final int filler;
         private final int warnings;
 
-        public PreparedStatementOK(int packetLength, int packetNumber, int handlerId, int columns, int params, int filler, int warnings) {
+        public PreparedStatementOK(int packetLength, int packetNumber, int handlerId, int columns, int params, int warnings) {
             super(packetLength, packetNumber);
             this.handlerId = handlerId;
             this.columns = columns;
             this.params = params;
-            this.filler = filler;
             this.warnings = warnings;
         }
 
@@ -76,10 +74,6 @@ public class OkResponse extends ServerPacket {
 
         public int getParams() {
             return params;
-        }
-
-        public int getFiller() {
-            return filler;
         }
 
         public int getWarnings() {

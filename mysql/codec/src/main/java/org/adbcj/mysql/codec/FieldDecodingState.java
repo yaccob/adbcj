@@ -39,6 +39,14 @@ class FieldDecodingState extends DecoderState{
 
     private Tuple<ResultSetFieldResponse,List<MysqlField>> decodeFieldResponse(InputStream in,
                                                        int packetLength, int packetNumber) throws IOException {
+        MysqlField field = parseField(in, fields.size());
+        List<MysqlField> accumulatedFields = new ArrayList<MysqlField>(fields.size()+1);
+        accumulatedFields.addAll(fields);
+        accumulatedFields.add(field);
+        return Tuple.create(new ResultSetFieldResponse(packetLength, packetNumber, field),accumulatedFields);
+    }
+
+    public static MysqlField parseField(InputStream in, int fieldIndex) throws IOException {
         String catalogName = IoUtils.readLengthCodedString(in, CHARSET);
         String schemaName = IoUtils.readLengthCodedString(in, CHARSET);
         String tableLabel = IoUtils.readLengthCodedString(in, CHARSET);
@@ -55,12 +63,8 @@ class FieldDecodingState extends DecoderState{
         int decimals = in.read();
         in.skip(2); // Skip filler
         long fieldDefault = IoUtils.readBinaryLengthEncoding(in);
-        int fieldIndex = fields.size();
-        MysqlField field = new MysqlField(fieldIndex, catalogName, schemaName, tableLabel, tableName, fieldType, columnLabel,
+        return new MysqlField(fieldIndex, catalogName, schemaName, tableLabel, tableName, fieldType, columnLabel,
                 columnName, 0, // Figure out precision
                 decimals, charSet, length, flags, fieldDefault);
-        List<MysqlField> accumulatedFields = new ArrayList<MysqlField>(fields);
-        accumulatedFields.add(field);
-        return Tuple.create(new ResultSetFieldResponse(packetLength, packetNumber, field),accumulatedFields);
     }
 }

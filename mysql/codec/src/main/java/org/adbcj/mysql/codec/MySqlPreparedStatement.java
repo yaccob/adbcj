@@ -25,8 +25,8 @@ public class MySqlPreparedStatement implements PreparedStatement {
 
     @Override
     public DbFuture<ResultSet> executeQuery(final Object... params) {
-        if(params.length!=statementInfo.getParams()){
-            throw new IllegalArgumentException("Expect "+statementInfo.getParams()+" paramenters " +
+        if(params.length!=statementInfo.getParametersTypes().size()){
+            throw new IllegalArgumentException("Expect "+statementInfo.getParametersTypes().size()+" paramenters " +
                     "but got "+params.length+" parameters");
         }
         ResultEventHandler<DefaultResultSet> eventHandler = new AbstractDbSession.DefaultResultEventsHandler();

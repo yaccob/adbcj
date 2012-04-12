@@ -1,10 +1,12 @@
 package org.adbcj.mysql.codec;
 
 import org.adbcj.mysql.codec.packets.EofResponse;
-import org.adbcj.mysql.codec.packets.OkResponse;
+import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
 import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -12,9 +14,9 @@ import java.io.IOException;
  */
 abstract class FinishPrepareStatement extends DecoderState {
 
-    protected final OkResponse.PreparedStatementOK statement;
+    protected final PreparedStatementToBuild statement;
 
-    FinishPrepareStatement(OkResponse.PreparedStatementOK statement) {
+    FinishPrepareStatement(PreparedStatementToBuild statement) {
         this.statement = statement;
     }
 
@@ -22,12 +24,12 @@ abstract class FinishPrepareStatement extends DecoderState {
         in.read(new byte[in.getRemaining()]);
     }
 
-    public static DecoderState create(OkResponse.PreparedStatementOK statement) {
-        if(statement.getParams()>0){
-            return new ReadParameters(statement.getParams(),statement);
-        }else if(statement.getColumns()>0){
-            return new ReadColumns(statement.getColumns(),statement);
-        } else{
+    public static DecoderState create(PreparedStatementToBuild statement) {
+        if (statement.getParams() > 0) {
+            return new ReadParameters(statement.getParams(), statement);
+        } else if (statement.getColumns() > 0) {
+            return new ReadColumns(statement.getColumns(), statement);
+        } else {
             throw new IllegalStateException("Should be finished allready!");
         }
     }
@@ -35,7 +37,7 @@ abstract class FinishPrepareStatement extends DecoderState {
     private static class ReadParameters extends FinishPrepareStatement {
         private final int parametersToParse;
 
-        public ReadParameters(int parametersToParse, OkResponse.PreparedStatementOK statement) {
+        public ReadParameters(int parametersToParse, PreparedStatementToBuild statement) {
             super(statement);
 
             this.parametersToParse = parametersToParse;
@@ -43,19 +45,25 @@ abstract class FinishPrepareStatement extends DecoderState {
 
         @Override
         public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
-            readAllAndIgnore(in);
+            int typesCount = statement.getParametersTypes().size();
+            MysqlType newType = FieldDecodingState.parseField(in, typesCount).getMysqlType();
+            List<MysqlType> types = new ArrayList<MysqlType>(typesCount + 1);
+            types.addAll(statement.getParametersTypes());
+            types.add(newType);
+            PreparedStatementToBuild newStatement = new PreparedStatementToBuild(length, packetNumber,
+                    statement.getPreparedStatement(), types);
             int restOfParams = parametersToParse - 1;
             if (restOfParams > 0) {
-                return result(new ReadParameters(restOfParams, statement), statement);
+                return result(new ReadParameters(restOfParams, newStatement), statement);
             } else {
-                return result(new EofAndColumns(statement), statement);
+                return result(new EofAndColumns(newStatement), statement);
             }
         }
     }
 
     private static class EofAndColumns extends FinishPrepareStatement {
 
-        public EofAndColumns(OkResponse.PreparedStatementOK statement) {
+        public EofAndColumns(PreparedStatementToBuild statement) {
             super(statement);
         }
 
@@ -78,7 +86,7 @@ abstract class FinishPrepareStatement extends DecoderState {
 
         private final int restOfColumns;
 
-        public ReadColumns(int restOfColumns, OkResponse.PreparedStatementOK statement) {
+        public ReadColumns(int restOfColumns, PreparedStatementToBuild statement) {
             super(statement);
             this.restOfColumns = restOfColumns;
         }
@@ -97,7 +105,7 @@ abstract class FinishPrepareStatement extends DecoderState {
 
     private static class EofStatement extends FinishPrepareStatement {
 
-        public EofStatement(OkResponse.PreparedStatementOK statement) {
+        public EofStatement(PreparedStatementToBuild statement) {
             super(statement);
         }
 
