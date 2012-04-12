@@ -18,16 +18,12 @@
  */
 package org.adbcj.mysql.codec;
 
-import org.adbcj.PreparedStatement;
-import org.adbcj.Value;
-import org.adbcj.mysql.codec.packets.*;
-import org.adbcj.support.DefaultValue;
+import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Set;
 
 /**
  * Client stateful decoder.  Being stateful, each client connection must have its own decoder instance to function
@@ -38,51 +34,8 @@ import java.util.Set;
 public class MySqlClientDecoder {
     private static final Logger logger = LoggerFactory.getLogger(MySqlClientDecoder.class);
 
-    /**
-     * The salt size in a server greeting
-     */
-    public static final int SALT_SIZE = 8;
 
-    /**
-     * The size of the second salt in a server greeting
-     */
-    public static final int SALT2_SIZE = 12;
-
-    /**
-     * Number of unused bytes in server greeting
-     */
-    public static final int GREETING_UNUSED_SIZE = 13;
-
-    public static final int RESPONSE_OK = 0x00;
-    public static final int RESPONSE_EOF = 0xfe;
-    public static final int RESPONSE_ERROR = 0xff;
-
-    /**
-     * The state of the decoder.
-     */
-    enum State {
-        CONNECTING,
-        RESPONSE,
-        FIELD,
-        FIELD_EOF,
-        ROW
-    }
-
-    private State state = State.CONNECTING;
-
-    private String charset = "UTF-8";
-
-    /**
-     * Holds the remaining number of field packets expected to build the result set
-     */
-    private int expectedFieldPackets = 0;
-
-    private int fieldIndex = 0;
-
-    /**
-     * The field definitions for the current result set
-     */
-    private MysqlField[] fields;
+    private DecoderState state = DecoderState.CONNECTING;
 
     /**
      * Decodes a message from a MySql server.
@@ -134,105 +87,9 @@ public class MySqlClientDecoder {
         try {
 
             logger.trace("Decoding in state {}", state);
-            switch (state) {
-                case CONNECTING:
-                    ServerGreeting serverGreeting = decodeServerGreeting(in, length, packetNumber);
-                    state = State.RESPONSE;
-                    return serverGreeting;
-                case RESPONSE:
-                    int fieldCount = in.read();
-                    if (fieldCount == RESPONSE_OK) {
-                        // Create Ok response
-                        return decodeOkResponse(connection, in, length, packetNumber);
-                    }
-                    if (fieldCount == RESPONSE_ERROR) {
-                        // Create error response
-                        ErrorResponse response = decodeErrorResponse(in, length, packetNumber);
-                        return response;
-                    }
-                    if (fieldCount == RESPONSE_EOF) {
-                        throw new IllegalStateException("Did not expect an EOF response from the server");
-                    }
-                    // Must be receiving result set header
-
-                    // Get the number of fields. The largest this can be is a 24-bit
-                    // integer so cast to int is ok
-                    expectedFieldPackets = (int) IoUtils.readBinaryLengthEncoding(in, fieldCount);
-                    fields = new MysqlField[expectedFieldPackets];
-                    logger.trace("Field count {}", expectedFieldPackets);
-
-                    Long extra = null;
-                    if (in.getRemaining() > 0) {
-                        extra = IoUtils.readBinaryLengthEncoding(in);
-                    }
-
-                    state = State.FIELD;
-
-                    return new ResultSetResponse(length, packetNumber, expectedFieldPackets, extra);
-                case FIELD:
-                    ResultSetFieldResponse resultSetFieldResponse = decodeFieldResponse(in, length, packetNumber);
-
-                    expectedFieldPackets--;
-                    logger.trace("fieldPacketCount: {}", expectedFieldPackets);
-                    if (expectedFieldPackets == 0) {
-                        state = State.FIELD_EOF;
-                    }
-                    return resultSetFieldResponse;
-                case FIELD_EOF:
-                    fieldCount = in.read();
-
-                    if (fieldCount != RESPONSE_EOF) {
-                        throw new IllegalStateException("Expected an EOF response from the server");
-                    }
-                    EofResponse fieldEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.FIELD);
-                    state = State.ROW;
-                    fieldIndex = 0;
-                    return fieldEof;
-                case ROW:
-                    fieldCount = in.read(); // This is only for checking for EOF
-                    if (fieldCount == RESPONSE_EOF) {
-                        EofResponse rowEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.ROW);
-
-                        state = State.RESPONSE;
-
-                        return rowEof;
-                    }
-
-                    Value[] values = new Value[fields.length];
-                    for (int i = 0; i < fields.length; ) {
-                        MysqlField field = fields[i++];
-                        Object value = null;
-                        if (fieldCount != IoUtils.NULL_VALUE) {
-                            // We will have to move this as some datatypes will not be sent across the wire as strings
-                            String strVal = IoUtils.readLengthCodedString(in, fieldCount, charset);
-
-                            // TODO add decoding for all column types
-                            switch (field.getColumnType()) {
-                                case TINYINT:
-                                    value = Byte.valueOf(strVal);
-                                    break;
-                                case INTEGER:
-                                case BIGINT:
-                                    value = Long.valueOf(strVal);
-                                    break;
-                                case VARCHAR:
-                                    value = strVal;
-                                    break;
-                                default:
-                                    throw new IllegalStateException("Don't know how to handle column type of "
-                                            + field.getColumnType());
-                            }
-                        }
-                        values[field.getIndex()] = new DefaultValue(field, value);
-                        if (i < fields.length) {
-                            fieldCount = in.read();
-                        }
-
-                    }
-                    return new ResultSetRowResponse(length, packetNumber, values);
-                default:
-                    throw new IllegalStateException("Unkown decoder state " + state);
-            }
+            ResultAndState stateAndResult = state.parse(length, packetNumber, in, connection);
+            state = stateAndResult.getNewState();
+            return stateAndResult.getResult();
         } catch (IOException e) {
             threwException = true;
             throw e;
@@ -246,80 +103,15 @@ public class MySqlClientDecoder {
         }
     }
 
-    protected ServerGreeting decodeServerGreeting(InputStream in, int length, int packetNumber) throws IOException {
-        int protocol = IoUtils.safeRead(in);
-        String version = IoUtils.readString(in, "ASCII");
-        int threadId = IoUtils.readInt(in);
 
-        byte[] salt = new byte[SALT_SIZE + SALT2_SIZE];
-        in.read(salt, 0, SALT_SIZE);
-        in.read(); // Throw away 0 byte
 
-        Set<ClientCapabilities> serverCapabilities = IoUtils.readEnumSetShort(in, ClientCapabilities.class);
-        MysqlCharacterSet charSet = MysqlCharacterSet.findById(in.read());
-        Set<ServerStatus> serverStatus = IoUtils.readEnumSetShort(in, ServerStatus.class);
-        in.skip(GREETING_UNUSED_SIZE);
-
-        in.read(salt, SALT_SIZE, SALT2_SIZE);
-        in.read(); // Throw away 0 byte
-
-        return new ServerGreeting(length, packetNumber, protocol, version, threadId, salt, serverCapabilities, charSet,
-                serverStatus);
-    }
-
-    protected OkResponse decodeOkResponse(AbstractMySqlConnection connection, BoundedInputStream in, int length, int packetNumber) throws IOException {
-        if (connection.<PreparedStatement>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest) {
-            return OkResponse.interpretAsPreparedStatement(length, packetNumber, in);
-        }
-        return OkResponse.interpretAsRegularOk(length, packetNumber, in);
-    }
-
-    protected ErrorResponse decodeErrorResponse(InputStream in, int length, int packetNumber) throws IOException {
-        int errorNumber = IoUtils.readUnsignedShort(in);
-        in.read(); // Throw away sqlstate marker
-        String sqlState = IoUtils.readString(in, "ASCII");
-        String message = IoUtils.readString(in, charset);
-        return new ErrorResponse(length, packetNumber, errorNumber, sqlState, message);
-    }
-
-    protected EofResponse decodeEofResponse(InputStream in, int length, int packetNumber, EofResponse.Type type) throws IOException {
-        int warnings = IoUtils.readUnsignedShort(in);
-        Set<ServerStatus> serverStatus = IoUtils.readEnumSetShort(in, ServerStatus.class);
-
-        return new EofResponse(length, packetNumber, warnings, serverStatus, type);
-    }
-
-    protected ResultSetFieldResponse decodeFieldResponse(InputStream in,
-                                                         int packetLength, int packetNumber) throws IOException {
-        String catalogName = IoUtils.readLengthCodedString(in, charset);
-        String schemaName = IoUtils.readLengthCodedString(in, charset);
-        String tableLabel = IoUtils.readLengthCodedString(in, charset);
-        String tableName = IoUtils.readLengthCodedString(in, charset);
-        String columnLabel = IoUtils.readLengthCodedString(in, charset);
-        String columnName = IoUtils.readLengthCodedString(in, charset);
-        in.read(); // Skip filler
-        int characterSetNumber = IoUtils.readUnsignedShort(in);
-        MysqlCharacterSet charSet = MysqlCharacterSet.findById(characterSetNumber);
-        long length = IoUtils.readUnsignedInt(in);
-        int fieldTypeId = in.read();
-        MysqlType fieldType = MysqlType.findById(fieldTypeId);
-        Set<FieldFlag> flags = IoUtils.readEnumSet(in, FieldFlag.class);
-        int decimals = in.read();
-        in.skip(2); // Skip filler
-        long fieldDefault = IoUtils.readBinaryLengthEncoding(in);
-        MysqlField field = new MysqlField(fieldIndex, catalogName, schemaName, tableLabel, tableName, fieldType, columnLabel,
-                columnName, 0, // Figure out precision
-                decimals, charSet, length, flags, fieldDefault);
-        fields[fieldIndex++] = field;
-        return new ResultSetFieldResponse(packetLength, packetNumber, field);
-    }
 
     /**
      * Sets the state, used for testing.
      *
      * @param state
      */
-    void setState(State state) {
+    void setState(DecoderState state) {
         this.state = state;
     }
 }

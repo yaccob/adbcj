@@ -17,7 +17,7 @@
 
 	<modules>
 		<module>codec</module>
-		<module>mina</module>
+		<!--<module>mina</module>-->
 		<module>netty</module>
 	</modules>
 
