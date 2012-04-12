@@ -25,13 +25,13 @@ public class PreparedStatementsTest {
         DbFuture<Void> closeFuture = connectionManager.close(true);
         closeFuture.getUninterruptably();
     }
-//    public void testSimpleSelect() throws DbException, InterruptedException {
-//        Connection connection = connectionManager.connect().get();
-//        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
-//                " WHERE str_val LIKE ?").get();
-//
-//        assertQueryFor(statement, "Zero");
-//    }
+    public void testSimpleSelect() throws DbException, InterruptedException {
+        Connection connection = connectionManager.connect().get();
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
+                " WHERE str_val LIKE ?").get();
+
+        assertQueryFor(statement, "Zero");
+    }
 
 //    public void testErrorIsReported() throws DbException, InterruptedException {
 //        Connection connection = connectionManager.connect().get();
