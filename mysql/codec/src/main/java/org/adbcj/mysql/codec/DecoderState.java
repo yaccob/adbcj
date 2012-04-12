@@ -29,8 +29,8 @@ public abstract class DecoderState {
     }
     protected static DecoderState ROW(List<MysqlField> fields){
         return new Row(fields);
-
     }
+    protected static DecoderState EOF_EXPECTED = new ExpectEOF();
 
 
     public abstract ResultAndState parse(int length,

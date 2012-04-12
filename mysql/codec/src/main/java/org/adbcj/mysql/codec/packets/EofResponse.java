@@ -26,7 +26,8 @@ public class EofResponse extends ServerPacket {
 
 	public enum Type {
 		FIELD,
-		ROW
+		ROW,
+        STATEMENT,
 	}
 
 	private final int warnings;
