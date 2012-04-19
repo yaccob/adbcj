@@ -32,6 +32,17 @@ public class PreparedStatementsTest {
 
         assertQueryFor(statement, "Zero");
     }
+    public void testSelectWithNull() throws DbException, InterruptedException {
+        Connection connection = connectionManager.connect().get();
+        PreparedStatement statement = connection.prepareStatement("SELECT int_val,str_val,NULL FROM simple_values" +
+                " WHERE str_val LIKE ?").get();
+
+        ResultSet resultSet = statement.executeQuery("Zero").get();
+
+        Assert.assertEquals(resultSet.size(), 1);
+        Assert.assertEquals(resultSet.get(0).get(1).getString(), "Zero");
+        Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
+    }
 
 //    public void testErrorIsReported() throws DbException, InterruptedException {
 //        Connection connection = connectionManager.connect().get();

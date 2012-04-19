@@ -33,7 +33,7 @@ public enum MysqlType {
 	LONG(0x03, Type.INTEGER,Long.class),
 	FLOAT(0x04, Type.FLOAT,Float.class),
 	DOUBLE(0x05, Type.DOUBLE,Double.class),
-	NULL(0x06, Type.NULL,Double.class),
+	NULL(0x06, Type.NULL,Object.class),
 	TIMESTAMP(0x07, Type.TIMESTAMP,Timestamp.class),
 	LONGLONG(0x08, Type.BIGINT,Long.class),
 	INT24(0x09, Type.INTEGER,Long.class),

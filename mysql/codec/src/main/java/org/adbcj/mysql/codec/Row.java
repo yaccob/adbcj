@@ -42,17 +42,21 @@ class Row extends DecoderState{
     private void binaryDecode(BoundedInputStream in, Value[] values) throws IOException {
         in.read(); // 0 (packet header)
         byte[] nullBits = new byte[ (values.length+7+2)/8];
-        for (Field field : fields  ) {
+        for (MysqlField field : fields  ) {
             Object value = null;
             if(hasValue(field.getIndex(), nullBits)){
-                switch (field.getColumnType()) {
-                    case INTEGER:
+                switch (field.getMysqlType()) {
+                    case LONG:
                         value =  IoUtils.readInt(in);
                         break;
-                    case VARCHAR:
+                    case VAR_STRING:
                         value =  IoUtils.readLengthCodedString(in, in.read(), CHARSET);
                         break;
-                    default: throw new IllegalStateException("Not yet implemented");
+                    case NULL:
+                        value =  null;
+                        break;
+                    default:
+                        throw new IllegalStateException("Not yet implemented");
                 }
 
             }
