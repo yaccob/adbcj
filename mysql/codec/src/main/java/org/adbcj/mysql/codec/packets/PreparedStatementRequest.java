@@ -1,10 +1,12 @@
 package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.mysql.codec.IoUtils;
+import org.adbcj.mysql.codec.MysqlType;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -12,11 +14,13 @@ import java.io.UnsupportedEncodingException;
  */
 public class PreparedStatementRequest extends CommandRequest {
     private final int statementId;
+    private final List<MysqlType> types;
     private final Object[] data;
 
-    public PreparedStatementRequest(int statementId, Object[] data) {
+    public PreparedStatementRequest(int statementId,List<MysqlType> types, Object[] data) {
         super(Command.STATEMENT_EXECUTE);
         this.statementId = statementId;
+        this.types = types;
         this.data = data;
     }
 
@@ -31,11 +35,20 @@ public class PreparedStatementRequest extends CommandRequest {
     @Override
     protected void writePayLoad(OutputStream out, String charset) throws IOException {
         IoUtils.writeInt(out, statementId);
-        out.write((byte)1); // flags: 1: CURSOR_TYPE_READ_ONLY
-        IoUtils.writeInt(out,1); // reserved for future use. Currently always 1.
+        out.write((byte) 1); // flags: 1: CURSOR_TYPE_READ_ONLY
+        IoUtils.writeInt(out, 1); // reserved for future use. Currently always 1.
         out.write(IoUtils.nullMask(data));  //null_bit_map
         out.write(1); //  new_parameter_bound_flag
-
+        for (MysqlType type : types) {
+            IoUtils.writeShort(out, type.getId());
+        }
+        for (Object param : data) {
+            if(param instanceof String){
+                IoUtils.writeLengthCodedString(out, (String) param, "UTF-8");
+            } else {
+                throw new Error("TODO");
+            }
+        }
     }
 
     @Override

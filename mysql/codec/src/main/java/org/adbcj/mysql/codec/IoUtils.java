@@ -18,11 +18,7 @@
  */
 package org.adbcj.mysql.codec;
 
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -165,7 +161,38 @@ public final class IoUtils {
 		return readFixedLengthString(in, (int)length, charset);
 	}
 
-	/**
+    public static void writeLengthCodedString(OutputStream out, String stringToWrite, String charset) throws IOException {
+        if (stringToWrite == null) {
+            out.write(251);
+        } else {
+            byte[] data = stringToWrite.getBytes(charset);
+            if (data.length > 250) {
+                if(data.length>0xFFFFFF) {
+                    out.write(254);
+                    writeLong(out,data.length, 4);
+                } else if(data.length>0xFFFF) {
+                    out.write((253));
+                    writeLong(out,data.length, 3);
+                } else  {
+                    out.write((252));
+                    writeLong(out,data.length, 2);
+                }
+                out.write(data);
+            } else {
+                out.write((byte) data.length);
+                out.write(data);
+            }
+        }
+
+    }
+    public static void writeLong(OutputStream out, long value, int length) throws IOException {
+        for (int i = 0; i < length; i++) {
+            out.write((byte) ((value >> (i * 8)) & 0xFF));
+        }
+    }
+
+
+    /**
 	 * Reads a null-terminate string
 	 *
 	 * @param in

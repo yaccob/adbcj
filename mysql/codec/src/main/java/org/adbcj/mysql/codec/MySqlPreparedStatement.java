@@ -18,7 +18,8 @@ public class MySqlPreparedStatement implements PreparedStatement {
     private final AbstractMySqlConnection connection;
     private final StatementPreparedEOF statementInfo;
 
-    public MySqlPreparedStatement(AbstractMySqlConnection connection,StatementPreparedEOF statementInfo) {
+    public MySqlPreparedStatement(AbstractMySqlConnection connection,
+                                  StatementPreparedEOF statementInfo) {
         this.connection = connection;
         this.statementInfo = statementInfo;
     }
@@ -36,7 +37,8 @@ public class MySqlPreparedStatement implements PreparedStatement {
         return connection.enqueueTransactionalRequest(new ExpectResultRequest(connection,eventHandler, resultSet) {
             @Override
             public void execute() throws Exception {
-                PreparedStatementRequest request = new PreparedStatementRequest(statementInfo.getHandlerId(), params);
+                PreparedStatementRequest request = new PreparedStatementRequest(statementInfo.getHandlerId(),
+                        statementInfo.getParametersTypes(),params);
                 connection.write(request);
             }
 
