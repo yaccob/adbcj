@@ -44,27 +44,27 @@ public class PreparedStatementsTest {
         Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
     }
 
-//    public void testErrorIsReported() throws DbException, InterruptedException {
-//        Connection connection = connectionManager.connect().get();
-//        DbSessionFuture<PreparedStatement> future = connection.prepareStatement("SELECT * FROM this:is:an:invalid:query ");
-//
-//        try{
-//            ResultSet rows = future.get().executeQuery().get();
-//            Assert.fail("Expected a failure, and not "+ rows);
-//        } catch (DbException ex){
-//            ex.printStackTrace();
-//            // expected
-//        }
-//    }
-//    public void testCanReuseStatement() throws DbException, InterruptedException {
-//        Connection connection = connectionManager.connect().get();
-//        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
-//                " WHERE str_val LIKE ?").get();
-//
-//
-//        assertQueryFor(statement, "Zero");
-//        assertQueryFor(statement, "One");
-//    }
+    public void testErrorIsReported() throws DbException, InterruptedException {
+        Connection connection = connectionManager.connect().get();
+        DbSessionFuture<PreparedStatement> future = connection.prepareStatement("SELECT * FROM this:is:an:invalid:query ");
+
+        try{
+            ResultSet rows = future.get().executeQuery().get();
+            Assert.fail("Expected a failure, and not "+ rows);
+        } catch (DbException ex){
+            ex.printStackTrace();
+            // expected
+        }
+    }
+    public void testCanReuseStatement() throws DbException, InterruptedException {
+        Connection connection = connectionManager.connect().get();
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
+                " WHERE str_val LIKE ?").get();
+
+
+        assertQueryFor(statement, "Zero");
+        assertQueryFor(statement, "One");
+    }
 
     private void assertQueryFor(PreparedStatement statement, String valueToQueryFor) throws InterruptedException {
         ResultSet resultSet = statement.executeQuery(valueToQueryFor).get();
