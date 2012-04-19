@@ -83,23 +83,19 @@ public class MySqlClientDecoder {
         }
         final int packetNumber = IoUtils.safeRead(input);
         BoundedInputStream in = new BoundedInputStream(input, length);
-        boolean threwException = false;
         try {
 
             logger.trace("Decoding in state {}", state);
             ResultAndState stateAndResult = state.parse(length, packetNumber, in, connection);
             state = stateAndResult.getNewState();
-            return stateAndResult.getResult();
-        } catch (IOException e) {
-            threwException = true;
-            throw e;
-        } catch (RuntimeException e) {
-            threwException = true;
-            throw e;
-        } finally {
-            if (!threwException && in.getRemaining() > 0) {
+            if (in.getRemaining() > 0) {
                 throw new IllegalStateException("Buffer underrun occured; remaining bytes: " + in.getRemaining());
             }
+            return stateAndResult.getResult();
+        } catch (IOException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw e;
         }
     }
 

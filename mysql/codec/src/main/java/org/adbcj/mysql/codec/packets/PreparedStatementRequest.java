@@ -52,7 +52,7 @@ public class PreparedStatementRequest extends CommandRequest {
 
             try{
             IoUtils.writeInt(out, statementId);
-            out.write((byte) 1); // flags: 1: CURSOR_TYPE_READ_ONLY
+            out.write((byte) 0); // flags: 0: CURSOR_TYPE_NO_CURSOR
             IoUtils.writeInt(out, 1); // reserved for future use. Currently always 1.
             out.write(IoUtils.nullMask(data));  //null_bit_map
             out.write(1); //  new_parameter_bound_flag

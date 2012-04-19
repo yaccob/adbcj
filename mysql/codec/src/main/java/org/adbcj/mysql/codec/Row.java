@@ -30,7 +30,58 @@ class Row extends DecoderState{
         }
 
         Value[] values = new Value[fields.size()];
+        if(connection.getActiveRequest() instanceof MySqlPreparedStatement.ExecutePrepareStatement){
+            binaryDecode(in, values);
+        } else{
+            stringDecode(in, fieldCount, values);
+        }
+        return result(ROW(fields),new ResultSetRowResponse(length, packetNumber, values));
+
+    }
+
+    private void binaryDecode(BoundedInputStream in, Value[] values) throws IOException {
+        in.read(); // 0 (packet header)
+        byte[] nullBits = new byte[ (values.length+7+2)/8];
         int i = 0;
+        for (Field field : fields  ) {
+            Object value = null;
+            if(hasValue(i, nullBits)){
+                switch (field.getColumnType()) {
+                    case VARCHAR:
+                        value =  IoUtils.readLengthCodedString(in, in.read(), CHARSET);
+                        break;
+                    default: throw new IllegalStateException("Not yet implemented");
+                }
+
+            }
+
+            values[field.getIndex()] = new DefaultValue(field, value);
+            i++;
+        }
+
+    }
+
+
+    private boolean hasValue(int valuePos, byte[] nullBitMap) {
+        int bit = 4; // first two bits are reserved for future use
+        int nullMaskPos = 0;
+        boolean hasValue = false;
+        for (int i = 0; i <= valuePos; i++) {
+            if((nullBitMap[nullMaskPos] & bit) > 0) {
+                hasValue = false;
+            } else{
+                hasValue = true;
+            }
+            if (((bit <<= 1) & 255) == 0) {
+                bit = 1;
+                nullMaskPos++;
+            }
+        }
+        return hasValue;
+    }
+
+    private void stringDecode(BoundedInputStream in, int fieldCount, Value[] values) throws IOException {
+        int i=0;
         for (Field field : fields  ) {
             Object value = null;
             if (fieldCount != IoUtils.NULL_VALUE) {
@@ -62,7 +113,5 @@ class Row extends DecoderState{
                 fieldCount = in.read();
             }
         }
-        return result(ROW(fields),new ResultSetRowResponse(length, packetNumber, values));
-
     }
 }

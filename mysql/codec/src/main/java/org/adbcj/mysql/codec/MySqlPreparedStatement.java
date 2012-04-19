@@ -34,18 +34,27 @@ public class MySqlPreparedStatement implements PreparedStatement {
         DefaultResultSet resultSet = new DefaultResultSet(connection);
 
 
-        return connection.enqueueTransactionalRequest(new ExpectResultRequest(connection,eventHandler, resultSet) {
-            @Override
-            public void execute() throws Exception {
-                PreparedStatementRequest request = new PreparedStatementRequest(statementInfo.getHandlerId(),
-                        statementInfo.getParametersTypes(),params);
-                connection.write(request);
-            }
+        return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, resultSet, params));
+    }
 
-            @Override
-            public String toString() {
-                return "Prepared statement execute";
-            }
-        });
+    public class ExecutePrepareStatement extends ExpectResultRequest {
+        private final Object[] params;
+
+        public ExecutePrepareStatement(ResultEventHandler<DefaultResultSet> eventHandler, DefaultResultSet resultSet, Object... params) {
+            super(MySqlPreparedStatement.this.connection, eventHandler, resultSet);
+            this.params = params;
+        }
+
+        @Override
+        public void execute() throws Exception {
+            PreparedStatementRequest request = new PreparedStatementRequest(statementInfo.getHandlerId(),
+                    statementInfo.getParametersTypes(), params);
+            connection.write(request);
+        }
+
+        @Override
+        public String toString() {
+            return "Prepared statement execute";
+        }
     }
 }

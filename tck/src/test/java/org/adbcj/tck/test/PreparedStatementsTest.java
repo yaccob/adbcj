@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
  * @author roman.stoffel@gamlor.info
  * @since 05.04.12
  */
-@Test(invocationCount=1, threadPoolSize=1, timeOut = 50000)
+@Test(invocationCount=1, threadPoolSize=1, timeOut = 500000)
 public class PreparedStatementsTest {
     private ConnectionManager connectionManager;
 
@@ -27,7 +27,7 @@ public class PreparedStatementsTest {
     }
     public void testSimpleSelect() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
-        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
+        PreparedStatement statement = connection.prepareStatement("SELECT str_val FROM simple_values" +
                 " WHERE str_val LIKE ?").get();
 
         assertQueryFor(statement, "Zero");
@@ -55,10 +55,10 @@ public class PreparedStatementsTest {
 //        assertQueryFor(statement, "One");
 //    }
 
-    private void assertQueryFor(PreparedStatement statement, String expectNumber) throws InterruptedException {
-        ResultSet resultSet = statement.executeQuery(expectNumber).get();
+    private void assertQueryFor(PreparedStatement statement, String valueToQueryFor) throws InterruptedException {
+        ResultSet resultSet = statement.executeQuery(valueToQueryFor).get();
 
         Assert.assertEquals(resultSet.size(), 1);
-        Assert.assertEquals(resultSet.get(0).get(1).getString(), expectNumber);
+        Assert.assertEquals(resultSet.get(0).get(0).getString(), valueToQueryFor);
     }
 }
