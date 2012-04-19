@@ -1,4 +1,4 @@
-package org.adbcj.support;
+package org.adbcj.postgresql.codec;
 
 import java.io.OutputStream;
 import java.io.IOException;

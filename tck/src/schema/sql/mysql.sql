@@ -26,3 +26,18 @@ CREATE TABLE updates (id int) type=InnoDB;
 DROP TABLE IF EXISTS locks;
 CREATE TABLE locks (name varchar(255) primary key not null) type=InnoDB;
 INSERT INTO locks(name) VALUES ('lock');
+
+CREATE TABLE IF NOT EXISTS table_with_some_values (
+  auto_int int(11) NOT NULL AUTO_INCREMENT,
+  can_be_null_int int(11) DEFAULT NULL,
+  can_be_null_varchar varchar(255) DEFAULT NULL,
+  PRIMARY KEY (auto_int)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
+
+--
+-- Dumping data for table 'table_with_some_values'
+--
+
+INSERT INTO table_with_some_values (auto_int, can_be_null_int, can_be_null_varchar) VALUES
+(1, NULL, NULL),
+(2, 42, '42');

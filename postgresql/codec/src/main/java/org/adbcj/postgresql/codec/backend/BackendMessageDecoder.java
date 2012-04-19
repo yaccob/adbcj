@@ -32,7 +32,7 @@ import org.adbcj.postgresql.codec.PgFieldType;
 import org.adbcj.postgresql.codec.ConfigurationVariable;
 import org.adbcj.postgresql.codec.ConnectionState;
 import org.adbcj.support.DefaultValue;
-import org.adbcj.support.DecoderInputStream;
+import org.adbcj.postgresql.codec.DecoderInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

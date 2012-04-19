@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.adbcj.support.EncoderOutputStream;
+import org.adbcj.postgresql.codec.EncoderOutputStream;
 import org.adbcj.postgresql.codec.ConnectionState;
 import org.adbcj.postgresql.codec.FormatCode;
 import org.adbcj.postgresql.codec.ConfigurationVariable;

@@ -1,4 +1,4 @@
-package org.adbcj.support;
+package org.adbcj.postgresql.codec;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -84,13 +84,6 @@ public class DecoderInputStream extends InputStream {
 		this.limit = limit;
 	}
 
-	public ByteOrder getByteOrder() {
-		return byteOrder;
-	}
-
-	public void setByteOrder(ByteOrder byteOrder) {
-		this.byteOrder = byteOrder;
-	}
 
 	public byte readByte() throws IOException {
 		int ch = read();

@@ -2,7 +2,7 @@ package org.adbcj.postgresql.netty;
 
 import org.adbcj.DbFuture;
 import org.adbcj.DbException;
-import org.adbcj.support.DecoderInputStream;
+import org.adbcj.postgresql.codec.DecoderInputStream;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.postgresql.codec.AbstractConnectionManager;
 import org.adbcj.postgresql.codec.ConnectionState;

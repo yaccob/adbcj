@@ -57,7 +57,6 @@ public class SelectTest {
             public void onCompletion(DbFuture<ResultSet> future) throws Exception {
                 future.get().size();
                 latch.countDown();
-                System.out.println("Finished callback");
             }
         }).get();
         Iterator<Row> i = resultSet.iterator();
@@ -76,7 +75,6 @@ public class SelectTest {
                     System.out.println("In callback");
                     future.get().size();
                     latch.countDown();
-                    System.out.println("Finished callback");
                 }
             }).get();
 
@@ -119,6 +117,10 @@ public class SelectTest {
         } finally {
             connection.close(true);
         }
+    }
+
+    public void testSelectWithNullFields(){
+
     }
 
     public void testMultipleSelectStatements() throws Exception {

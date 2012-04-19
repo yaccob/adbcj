@@ -1,12 +1,13 @@
-package org.adbcj.support;
+package org.adbcj.postgresql;
+
+import org.adbcj.postgresql.codec.DecoderInputStream;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 /**
  * @author Mike Heath

@@ -1,4 +1,4 @@
-package org.adbcj.support;
+package org.adbcj.postgresql.codec;
 
 /**
  * @author Mike Heath

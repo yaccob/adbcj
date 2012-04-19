@@ -5,7 +5,7 @@ import org.testng.Assert;
 import org.adbcj.postgresql.codec.ConnectionState;
 import org.adbcj.postgresql.codec.ConfigurationVariable;
 import org.adbcj.postgresql.codec.PgField;
-import org.adbcj.support.DecoderInputStream;
+import org.adbcj.postgresql.codec.DecoderInputStream;
 import org.adbcj.Type;
 
 import java.io.ByteArrayInputStream;
