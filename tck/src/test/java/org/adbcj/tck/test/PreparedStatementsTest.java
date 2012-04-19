@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
  * @author roman.stoffel@gamlor.info
  * @since 05.04.12
  */
-@Test(invocationCount=1, threadPoolSize=1, timeOut = 500000)
+@Test(invocationCount=50, threadPoolSize=10, timeOut = 500000)
 public class PreparedStatementsTest {
     private ConnectionManager connectionManager;
 
@@ -31,6 +31,7 @@ public class PreparedStatementsTest {
                 " WHERE str_val LIKE ?").get();
 
         assertQueryFor(statement, "Zero");
+        connection.close(false);
     }
     public void testSelectWithNull() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
@@ -42,6 +43,7 @@ public class PreparedStatementsTest {
         Assert.assertEquals(resultSet.size(), 1);
         Assert.assertEquals(resultSet.get(0).get(1).getString(), "Zero");
         Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
+        connection.close(false);
     }
 
     public void testErrorIsReported() throws DbException, InterruptedException {
@@ -55,6 +57,7 @@ public class PreparedStatementsTest {
             ex.printStackTrace();
             // expected
         }
+        connection.close(false);
     }
     public void testCanReuseStatement() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
@@ -64,6 +67,8 @@ public class PreparedStatementsTest {
 
         assertQueryFor(statement, "Zero");
         assertQueryFor(statement, "One");
+
+        connection.close(false);
     }
 
     private void assertQueryFor(PreparedStatement statement, String valueToQueryFor) throws InterruptedException {
