@@ -27,7 +27,7 @@ public class PreparedStatementsTest {
     }
     public void testSimpleSelect() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
-        PreparedStatement statement = connection.prepareStatement("SELECT str_val FROM simple_values" +
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
                 " WHERE str_val LIKE ?").get();
 
         assertQueryFor(statement, "Zero");
@@ -59,6 +59,6 @@ public class PreparedStatementsTest {
         ResultSet resultSet = statement.executeQuery(valueToQueryFor).get();
 
         Assert.assertEquals(resultSet.size(), 1);
-        Assert.assertEquals(resultSet.get(0).get(0).getString(), valueToQueryFor);
+        Assert.assertEquals(resultSet.get(0).get(1).getString(), valueToQueryFor);
     }
 }

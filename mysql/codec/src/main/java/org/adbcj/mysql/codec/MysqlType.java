@@ -30,7 +30,7 @@ public enum MysqlType {
 	DECIMAL(0x00, Type.DECIMAL, BigDecimal.class),
 	TINY(0x01, Type.TINYINT,Short.class),
 	SHORT(0x02, Type.SMALLINT,Short.class),
-	LONG(0x03, Type.BIGINT,Long.class),
+	LONG(0x03, Type.INTEGER,Long.class),
 	FLOAT(0x04, Type.FLOAT,Float.class),
 	DOUBLE(0x05, Type.DOUBLE,Double.class),
 	NULL(0x06, Type.NULL,Double.class),
