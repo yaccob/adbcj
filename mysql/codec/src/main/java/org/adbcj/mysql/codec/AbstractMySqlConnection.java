@@ -23,7 +23,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	private final LoginCredentials credentials;
 
-	private Request<Void> closeRequest; // Access must by synchronized on 'this'
+	private volatile Request<Void> closeRequest;
 
 	private final MysqlCharacterSet charset = MysqlCharacterSet.LATIN1_SWEDISH_CI;
 
@@ -45,50 +45,16 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		return connectionManager;
 	}
 
-	public synchronized DbSessionFuture<Void> close(final boolean immediate) throws DbException {
+	public synchronized DbFuture<Void> close() throws DbException {
 		// If the connection is already closed, return existing close future
 		logger.debug("Closing");
 		if (isClosed()) {
-			if (closeRequest == null) {
-				closeRequest = new Request<Void>(this) {
-					@Override
-					public void execute() throws Exception {
-						// Do nothing, close already occurred
-					}
-					@Override
-					public String toString() {
-						return "Close MySQL session";
-					}
-				};
-				closeRequest.setResult(null);
-			}
-			return closeRequest;
-		} else {
-			if (immediate) {
-				logger.debug("Executing immediate close");
-				// If the close is immediate, cancel pending requests and send request to server
-				cancelPendingRequests(true);
-				write(new CommandRequest(Command.QUIT));
-				closeRequest = new Request<Void>(this) {
-					@Override
-					protected boolean cancelRequest(boolean mayInterruptIfRunning) {
-						// Canceling is not possible when an immediate close
-						return false;
-					}
-					@Override
-					public void execute() throws Exception {
-						// Do nothing, close was already sent
-					}
-					@Override
-					public String toString() {
-						return "MySQl immediate close";
-					}
-				};
-			} else {
-				// If the close is NOT immediate, schedule the close
-				closeRequest = new CloseRequest();
-				enqueueRequest(closeRequest);
-			}
+			return DefaultDbFuture.completed();
+		} if(closeRequest!=null){
+            return closeRequest;
+        }else {
+            closeRequest = new CloseRequest();
+            enqueueRequest(closeRequest);
 		}
 		logger.trace("Exiting close()");
 		return closeRequest;
@@ -214,8 +180,8 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	 * Make this method public.
 	 */
 	@Override
-	public <E> void enqueueRequest(Request<E> request) {
-		super.enqueueRequest(request);
+	public <E> Request<E> enqueueRequest(Request<E> request) {
+		return super.enqueueRequest(request);
 	}
 
 	/*

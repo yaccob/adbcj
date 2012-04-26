@@ -32,7 +32,7 @@ public class PreparedStatementsTest {
 
         assertQueryFor(statement, "Zero");
         statement.close();
-        connection.close(false);
+        connection.close();
     }
     public void testSelectWithNull() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
@@ -45,7 +45,7 @@ public class PreparedStatementsTest {
         Assert.assertEquals(resultSet.get(0).get(1).getString(), "Zero");
         Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
         statement.close();
-        connection.close(false);
+        connection.close();
     }
 
     public void testErrorIsReported() throws DbException, InterruptedException {
@@ -59,7 +59,7 @@ public class PreparedStatementsTest {
             ex.printStackTrace();
             // expected
         }
-        connection.close(false);
+        connection.close();
     }
     public void testCanReuseStatement() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
@@ -71,7 +71,7 @@ public class PreparedStatementsTest {
         assertQueryFor(statement, "One");
 
         statement.close();
-        connection.close(false);
+        connection.close();
     }
     public void testCanSelectNull() throws DbException, InterruptedException{
         Connection connection = connectionManager.connect().get();
@@ -84,7 +84,7 @@ public class PreparedStatementsTest {
 
 
         statement.close();
-        connection.close(false);
+        connection.close();
     }
     public void testCanCloseStatement() throws DbException, InterruptedException{
         Connection connection = connectionManager.connect().get();
@@ -94,7 +94,7 @@ public class PreparedStatementsTest {
 
         statement.close().get();
         Assert.assertTrue(statement.isClosed());
-        connection.close(false);
+        connection.close();
     }
 
     private void assertQueryFor(PreparedStatement statement, String valueToQueryFor) throws InterruptedException {

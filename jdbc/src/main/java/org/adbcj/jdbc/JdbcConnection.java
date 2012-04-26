@@ -38,8 +38,6 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     private final JdbcConnectionManager connectionManager;
     private final java.sql.Connection jdbcConnection;
 
-    private DbSessionFuture<Void> closeFuture;
-
     public JdbcConnection(JdbcConnectionManager connectionManager, java.sql.Connection jdbcConnection) {
         super(false);
         this.connectionManager = connectionManager;
@@ -50,61 +48,34 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         return connectionManager;
     }
 
-    public synchronized DbSessionFuture<Void> close(boolean immediate) throws DbException {
+    public synchronized DbFuture<Void> close() throws DbException {
         if (!isClosed()) {
-            if (immediate) {
-                cancelPendingRequests(true);
-                DefaultDbSessionFuture<Void> future = new DefaultDbSessionFuture<Void>(this);
-                try {
+            Request<Void> closeRequest = new Request<Void>(this) {
+                @Override
+                protected void execute() throws Exception {
                     jdbcConnection.close();
-                    future.setResult(null);
-                } catch (SQLException e) {
-                    future.setException(e);
+                    complete(null);
                 }
-                closeFuture = future;
-            } else {
-                CallableRequest<Void> closeRequest = new CallableRequest<Void>() {
-                    private boolean started = false;
-                    private boolean cancelled = false;
 
-                    public synchronized Void doCall() throws Exception {
-                        if (cancelled) {
-                            return null;
-                        }
-                        started = true;
-                        jdbcConnection.close();
-                        return null;
-                    }
+                @Override
+                public synchronized boolean cancelRequest(boolean mayInterruptIfRunning) {
+                    return false;
+                }
 
-                    @Override
-                    public synchronized boolean cancelRequest(boolean mayInterruptIfRunning) {
-                        if (started) {
-                            return false;
-                        }
-                        cancelled = true;
-                        unclose();
-                        return true;
-                    }
-
-                    @Override
-                    public boolean isPipelinable() {
-                        return false;
-                    }
-                };
-                enqueueRequest(closeRequest);
-                closeFuture = closeRequest;
-            }
+                @Override
+                public boolean isPipelinable() {
+                    return false;
+                }
+            };
+            return enqueueRequest(closeRequest);
+        } else{
+            return DefaultDbSessionFuture.completed();
         }
-        return closeFuture;
-    }
-
-    private synchronized void unclose() {
-        this.closeFuture = null;
     }
 
     public boolean isClosed() {
         try {
-            return closeFuture != null || jdbcConnection.isClosed();
+            return jdbcConnection.isClosed();
         } catch (SQLException e) {
             throw new DbException(this, e);
         }

@@ -1,26 +1,19 @@
 package org.adbcj.tck.test;
 
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import org.adbcj.*;
+import org.adbcj.tck.TestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
-import org.adbcj.DbSessionFuture;
-import org.adbcj.ResultSet;
-import org.adbcj.tck.TestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Parameters;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 /**
  *
@@ -116,12 +109,12 @@ public class ConnectSpecialCaseTest {
 			}
 
 			logger.debug("Closing connection");
-			connection.close(true).get();
+			connection.close().get();
 			logger.debug("Closed");
 
 			logger.debug("Closing locking connection");
 			lockingConnection.rollback().get();
-			lockingConnection.close(true).get();
+			lockingConnection.close().get();
 			logger.debug("Locking connection finalizeClose");
 
 			assertTrue(connection.isClosed(), "Connection should be closed");

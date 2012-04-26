@@ -52,10 +52,12 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
      */
     private volatile boolean done;
 
-    /**
-     * The number of threads waiting on the future.  Access must by synchronized on {@link #lock}.
-     */
-    private int waiters;
+
+    public static DbFuture<Void> completed() {
+        DefaultDbFuture f = new DefaultDbFuture();
+        f.setResult(null);
+        return f;
+    }
 
     public DefaultDbFuture() {
         this.lock = this;
@@ -112,9 +114,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             cancelled = doCancel(mayInterruptIfRunning);
             if (cancelled) {
                 done = true;
-                if (waiters > 0) {
-                    lock.notifyAll();
-                }
+                lock.notifyAll();
             }
         }
         if (cancelled) {
@@ -135,13 +135,8 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             if (done) {
                 return getResult();
             }
-            waiters++;
-            try {
-                while (!done) {
-                    lock.wait();
-                }
-            } finally {
-                waiters--;
+            while (!done) {
+                lock.wait();
             }
         }
         return getResult();
@@ -157,14 +152,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             if (done) {
                 return getResult();
             }
-            waiters++;
-            try {
-                lock.wait(timeoutMillis);
-                if (!done) {
-                    throw new TimeoutException();
-                }
-            } finally {
-                waiters--;
+            lock.wait(timeoutMillis);
+            if (!done) {
+                throw new TimeoutException();
             }
         }
         return getResult();
@@ -179,7 +169,6 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
                 return getResult();
             }
             boolean interrupted = false;
-            waiters++;
             try {
                 while (!done) {
                     try {
@@ -189,7 +178,6 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
                     }
                 }
             } finally {
-                waiters--;
                 if (interrupted) {
                     Thread.currentThread().interrupt();
                 }
@@ -220,9 +208,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
             this.result = result;
             done = true;
-            if (waiters > 0) {
-                lock.notifyAll();
-            }
+            lock.notifyAll();
         }
 
         notifyListeners();
@@ -265,9 +251,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             }
             this.exception = exception;
             done = true;
-            if (waiters > 0) {
-                lock.notifyAll();
-            }
+            lock.notifyAll();
         }
         notifyListeners();
     }

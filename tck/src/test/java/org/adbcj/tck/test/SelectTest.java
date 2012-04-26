@@ -124,7 +124,7 @@ public class SelectTest {
         Assert.assertEquals(resultSet.get(0).get(1).getString(),null);
         Assert.assertEquals(resultSet.get(0).get(2).getString(),null);
 
-        connection.close(false);
+        connection.close();
 
     }
 
@@ -157,7 +157,7 @@ public class SelectTest {
         } catch (DbException e) {
             // Pass
         } finally {
-            connection.close(true).get();
+            connection.close().get();
         }
     }
 	

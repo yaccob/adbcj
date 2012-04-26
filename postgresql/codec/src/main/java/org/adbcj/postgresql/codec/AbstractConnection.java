@@ -35,7 +35,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 
 	private final AbstractConnectionManager connectionManager;
 	private final ConnectionState connectionState;
-	private Request<Void> closeRequest; // Access synchronized on lock
+	private volatile Request<Void> closeRequest;
 
 	private volatile int pid;
 	private volatile int key;
@@ -67,54 +67,20 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		}
 	}
 
-	public DbSessionFuture<Void> close(boolean immediate) throws DbException {
-		// TODO AbstractConnection.finalizeClose(boolean) is almost identical to MySQL finalizeClose method, generify this
+	public DbFuture<Void> close() throws DbException {
 
 		// If the connection is already closed, return existing finalizeClose future
 		synchronized (lock) {
 			if (isClosed()) {
-				if (closeRequest == null) {
-					closeRequest = new Request<Void>(this) {
-						@Override
-						public void execute() throws Exception {
-							// Do nothing since finalizeClose has already occurred
-						}
-						@Override
-						public String toString() {
-							return "Connection closed";
-						}
-					};
-					closeRequest.setResult(null);
-				}
-			} else {
-				if (immediate) {
-					logger.debug("Executing immediate finalizeClose");
-					// If the finalizeClose is immediate, cancel pending requests and send request to server
-					cancelPendingRequests(true);
-					write(SimpleFrontendMessage.TERMINATE);
-					closeRequest = new Request<Void>(this) {
-						@Override
-						protected boolean cancelRequest(boolean mayInterruptIfRunning) {
-							// Immediate finalizeClose can not be cancelled
-							return false;
-						}
-						@Override
-						public void execute() throws Exception {
-							// Do nothing, finalizeClose message has already been sent
-						}
-						@Override
-						public String toString() {
-							return "Immediate finalizeClose";
-						}
-					};
-				} else {
+				return DefaultDbFuture.completed();
+			} if(null!=closeRequest){
+                return closeRequest;
+            } else {
 					// If the finalizeClose is NOT immediate, schedule the finalizeClose
-					closeRequest = new Request<Void>(this) {
+                this.closeRequest =  new Request<Void>(this) {
 						@Override
 						public boolean cancelRequest(boolean mayInterruptIfRunning) {
-							logger.debug("Cancelling finalizeClose");
-							unclose();
-							return true;
+							return false;
 						}
 						@Override
 						public void execute() {
@@ -127,26 +93,17 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 						}
 						@Override
 						public String toString() {
-							return "Deferred finalizeClose";
+							return "close request";
 						}
 					};
-					enqueueRequest(closeRequest);
-				}
+					return enqueueRequest(closeRequest);
 			}
-			return closeRequest;
-		}
-	}
-
-	private void unclose() {
-		synchronized (lock) {
-			logger.debug("Unclosing");
-			this.closeRequest = null;
 		}
 	}
 
 	public boolean isClosed() throws DbException {
 		synchronized (lock) {
-			return closeRequest != null || isConnectionClosing();
+			return isConnectionClosing();
 		}
 	}
 
@@ -155,7 +112,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		errorPendingRequests(new DbException("Connection closed"));
 		synchronized (lock) {
 			if (closeRequest != null) {
-				closeRequest.setResult(null);
+				closeRequest.complete(null);
 			}
 		}
 	}
@@ -258,8 +215,8 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 	// ================================================================================================================
 
 	@Override
-	protected <E> void enqueueRequest(Request<E> request) {
-		super.enqueueRequest(request);
+	protected <E> Request<E> enqueueRequest(Request<E> request) {
+		return super.enqueueRequest(request);
 	}
 
 	@Override

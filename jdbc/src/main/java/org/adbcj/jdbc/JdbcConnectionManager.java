@@ -21,33 +21,25 @@ import org.adbcj.support.DbFutureConcurrentProxy;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.UncheckedThrow;
 
-import java.sql.DriverManager;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class JdbcConnectionManager implements ConnectionManager {
-
-	private static final Object USER = "user";
-	private static final Object PASSWORD = "password";
-	
-	private final String jdbcUrl;
-	private final Properties properties;
 	private final ExecutorService executorService;
 
 	private final Object lock = this;
-	private final Set<JdbcConnection> connections = new HashSet<JdbcConnection>(); // Access must be synchronized on lock 
+    private final JDBCConnectionProvider connectionProvider;
+	private final Set<JdbcConnection> connections = new HashSet<JdbcConnection>(); // Access must be synchronized on lock
 	
 	private volatile DefaultDbFuture<Void> closeFuture;
 
 	private volatile boolean pipeliningEnabled = false;
 
-	public JdbcConnectionManager(String jdbcUrl, String username,
-			String password, Properties properties) {
-		this(jdbcUrl, username, password, Executors.newCachedThreadPool(new ThreadFactory() {
+	public JdbcConnectionManager(JDBCConnectionProvider connectionProvider) {
+		this(Executors.newCachedThreadPool(new ThreadFactory() {
             private final AtomicInteger threadNumber = new AtomicInteger(1);
             @Override
             public Thread newThread(Runnable r) {
@@ -56,20 +48,15 @@ public class JdbcConnectionManager implements ConnectionManager {
                 thread.setDaemon(true);
                 return thread;
             }
-        }), properties);
+        }), connectionProvider);
 	}
 
-	public JdbcConnectionManager(String jdbcUrl, String username,
-			String password, ExecutorService executorService, Properties properties) {
-		this.jdbcUrl = jdbcUrl;
-		this.properties = new Properties(properties);
-		this.executorService = executorService;
+    public JdbcConnectionManager(ExecutorService executorService, JDBCConnectionProvider connectionProvider) {
+        this.executorService = executorService;
+        this.connectionProvider = connectionProvider;
+    }
 
-		this.properties.put(USER, username);
-		this.properties.put(PASSWORD, password);
-	}
-
-	public DbFuture<Connection> connect() throws DbException {
+    public DbFuture<Connection> connect() throws DbException {
 		if (isClosed()) {
 			throw new DbException("This connection manager is closed");
 		}
@@ -77,11 +64,11 @@ public class JdbcConnectionManager implements ConnectionManager {
 		Future<Connection> executorFuture = executorService.submit(new Callable<Connection>() {
 			public Connection call() throws Exception {
 				try {
-					java.sql.Connection jdbcConnection = DriverManager.getConnection(jdbcUrl, properties);
+					java.sql.Connection jdbcConnection = connectionProvider.getConnection();
 					JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this, jdbcConnection);
 					synchronized (lock) {
 						if (isClosed()) {
-							connection.close(true);
+							connection.close();
 							future.setException(new DbException("Connection manager closed"));
 						} else {
 							connections.add(connection);
@@ -141,7 +128,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 		synchronized (lock) {
 			for (JdbcConnection connection : connections) {
 				countDown.incrementAndGet();
-				connection.close(immediate).addListener(listener);
+				connection.close().addListener(listener);
 			}
 		}
 		allClosed.set(true);
@@ -154,12 +141,6 @@ public class JdbcConnectionManager implements ConnectionManager {
 	public boolean isClosed() {
 		return closeFuture != null;
 	}
-
-	/*
-	 * 
-	 * Non API Method
-	 * 
-	 */
 	
 	public ExecutorService getExecutorService() {
 		return executorService;
@@ -181,7 +162,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 
 	@Override
 	public String toString() {
-		return String.format("%s: %s (user: %s)", getClass().getName(), jdbcUrl, properties.get(USER));
+		return "JdbcConnectionManager with" + connectionProvider.toString();
 	}
 	
 }

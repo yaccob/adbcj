@@ -17,7 +17,6 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.*;
-import org.adbcj.tck.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterTest;
@@ -30,7 +29,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -67,7 +65,7 @@ public class ConnectTest {
 		});
 		Connection connection = connectFuture.get(10, TimeUnit.SECONDS);
 		assertTrue(!connection.isClosed());
-		DbFuture<Void> closeFuture = connection.close(true).addListener(new DbListener<Void>() {
+		DbFuture<Void> closeFuture = connection.close().addListener(new DbListener<Void>() {
 			public void onCompletion(DbFuture<Void> future) throws Exception {
 				// Indicate that callback has been invoked
 				callbacks[1] = true;
@@ -86,7 +84,7 @@ public class ConnectTest {
 
 		Connection connection = connectionManager.connect().get();
 		assertTrue(!connection.isClosed());
-		connection.close(true).addListener(new DbListener<Void>() {
+		connection.close().addListener(new DbListener<Void>() {
 			public void onCompletion(DbFuture<Void> future) throws Exception {
 				// Indicate that finalizeClose callback has been invoked
 				latch.countDown();
@@ -96,61 +94,7 @@ public class ConnectTest {
 		latch.await(1, TimeUnit.SECONDS);
 	}
 
-	public void testCancelClose() throws DbException, InterruptedException {
-		final AtomicBoolean[] closeCallback = {new AtomicBoolean(),new AtomicBoolean()};
 
-		// This connection is used for doing a select for update lock
-		Connection lockConnection = connectionManager.connect().get();
-		Connection connectionToClose = connectionManager.connect().get();
-
-		try {
-			// Get lock with select for update
-			lockConnection.beginTransaction();
-			TestUtils.selectForUpdate(lockConnection).get();
-
-			// Do select for update on second connection so we can finalizeClose it and then cancel the finalizeClose
-			connectionToClose.beginTransaction();
-			DbFuture<ResultSet> future = TestUtils.selectForUpdate(connectionToClose);
-
-			DbSessionFuture<Void> closeFuture = connectionToClose.close(false).addListener(new DbListener<Void>() {
-				public void onCompletion(DbFuture<Void> future) throws Exception {
-					logger.debug("testCancelClose: In finalizeClose callback for connectionManager {}", connectionManager);
-					closeCallback[0].set(true);
-					closeCallback[1].set(future.isCancelled());
-				}
-			});
-			assertTrue(connectionToClose.isClosed(), "This connection should be flagged as closed now");
-//            if(!(closeFuture.isDone() || closeFuture.cancel(false))){
-//                while(!closeFuture.cancel(false)){
-//                    System.out.println("wtf");
-//                }
-//                System.out.println("wtf2");
-//            }
-			assertTrue(closeFuture.isDone() || closeFuture.cancel(false), "The connection finalizeClose should have cancelled properly");
-			assertFalse(connectionToClose.isClosed(), "This connection should not be closed because we canceled the finalizeClose");
-
-			// Release lock
-			lockConnection.rollback().get();
-
-			// Make sure closingConnection's select for update completed successfully
-			future.get();
-			connectionToClose.rollback().get();
-		} finally {
-			if (lockConnection.isInTransaction()) {
-				lockConnection.rollback().get();
-			}
-			if (!connectionToClose.isClosed() && connectionToClose.isInTransaction()) {
-				connectionToClose.rollback().get();
-			}
-
-			lockConnection.close(true);
-			connectionToClose.close(true);
-		}
-		// Make sure the finalizeClose's callback was invoked properly
-		assertTrue(closeCallback[0].get(), "The finalizeClose callback was not invoked when cancelled");
-		assertTrue(closeCallback[1].get(), "The finalizeClose future did not indicate the finalizeClose was cancelled");
-	}
-	
 	public void testNonImmediateClose() throws Exception {
 		Connection connection = connectionManager.connect().get();
 
@@ -160,7 +104,7 @@ public class ConnectTest {
 			futures.add(connection.executeQuery(String.format("SELECT *, %d FROM simple_values", i)));
 		}
 		try {
-			connection.close(false).get(10, TimeUnit.SECONDS);
+			connection.close().get(10, TimeUnit.SECONDS);
 		} catch (TimeoutException e) {
 			for (DbSessionFuture<ResultSet> future : futures) {
 				if (future.isDone()) {

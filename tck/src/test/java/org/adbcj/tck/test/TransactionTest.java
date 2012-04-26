@@ -16,22 +16,15 @@
  */
 package org.adbcj.tck.test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.Result;
-import org.adbcj.ResultSet;
-import org.adbcj.Value;
+import org.adbcj.*;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 @Test(timeOut = 5000)
 public class TransactionTest {
@@ -63,7 +56,7 @@ public class TransactionTest {
 				// Pass
 			}
 		} finally {
-			connection.close(true);
+			connection.close();
 		}
 	}
 
@@ -94,7 +87,7 @@ public class TransactionTest {
 
 			connection.beginTransaction();
 		} finally {
-			connection.close(true);
+			connection.close();
 		}
 	}
 
@@ -133,7 +126,7 @@ public class TransactionTest {
 			assertEquals(rs.size(), 0);
 
 		} finally {
-			connection.close(true);
+			connection.close();
 		}
 	}
 
@@ -171,8 +164,8 @@ public class TransactionTest {
 			assertEquals(rs.get(0).get(0).getInt(), 1);
 
 		} finally {
-			connection.close(true);
-			connection2.close(true);
+			connection.close();
+			connection2.close();
 		}
 	}
 }

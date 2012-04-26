@@ -61,7 +61,7 @@ public interface DbSession {
 	
 	DbSessionFuture<PreparedStatement> prepareStatement(String sql);
 
-	DbSessionFuture<Void> close(boolean immediate) throws DbException;
+	DbFuture<Void> close() throws DbException;
 	
 	boolean isClosed() throws DbException;
 

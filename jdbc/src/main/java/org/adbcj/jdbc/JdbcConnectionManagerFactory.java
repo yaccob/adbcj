@@ -16,13 +16,13 @@
  */
 package org.adbcj.jdbc;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Properties;
-
 import org.adbcj.ConnectionManager;
 import org.adbcj.ConnectionManagerFactory;
 import org.adbcj.DbException;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Properties;
 
 
 public class JdbcConnectionManagerFactory implements ConnectionManagerFactory {
@@ -38,7 +38,7 @@ public class JdbcConnectionManagerFactory implements ConnectionManagerFactory {
 
 			String jdbcUrl = uri.toString();
 
-			return new JdbcConnectionManager(jdbcUrl, username, password, properties);
+			return new JdbcConnectionManager(new PlainJDBCConnection(jdbcUrl, username, password, properties));
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}

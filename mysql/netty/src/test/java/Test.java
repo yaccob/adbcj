@@ -9,7 +9,7 @@ public class Test {
 	public static void main(String[] args) throws DbException, Exception {
 		ConnectionManager cm = ConnectionManagerProvider.createConnectionManager("adbcj:mysqlnetty://localhost/test", "foo", "dawg");
 		Connection connection = cm.connect().get();
-		connection.close(true);
+		connection.close();
 	}
 
 }

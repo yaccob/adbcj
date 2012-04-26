@@ -16,19 +16,7 @@
  */
 package org.adbcj.tck.test;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
-import org.adbcj.ResultSet;
+import org.adbcj.*;
 import org.adbcj.tck.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +24,13 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 @Test(timeOut = 5000)
 public class SelectForUpdateTest {
@@ -114,9 +109,9 @@ public class SelectForUpdateTest {
 		
 		// Close connections
 		logger.debug("Closing connections");
-		conn1.close(true).get();
+		conn1.close().get();
 		logger.debug("Closed connection 1");
-		conn2.close(true).get();
+		conn2.close().get();
 		logger.debug("Closed connection 2");
 	}
 	

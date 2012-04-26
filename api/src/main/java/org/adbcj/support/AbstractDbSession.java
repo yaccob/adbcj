@@ -46,7 +46,7 @@ public abstract class AbstractDbSession implements DbSession {
         this.pipelined = pipelined;
     }
 
-    protected <E> void enqueueRequest(final Request<E> request) {
+    protected <E> Request<E> enqueueRequest(final Request<E> request) {
         // Check to see if the request can be pipelined
         synchronized (lock) {
             if (request.isPipelinable()) {
@@ -55,7 +55,7 @@ public abstract class AbstractDbSession implements DbSession {
                     invokeExecuteWithCatch(request);
                     // If the request errors out on execution, return
                     if (request.isDone()) {
-                        return;
+                        return request;
                     }
 
                 }
@@ -67,6 +67,7 @@ public abstract class AbstractDbSession implements DbSession {
                 makeNextRequestActive();
             }
         }
+        return request;
     }
 
     @SuppressWarnings("unchecked")
