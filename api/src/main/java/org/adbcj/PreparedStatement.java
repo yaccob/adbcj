@@ -20,5 +20,7 @@ public interface PreparedStatement {
 	
 	DbFuture<ResultSet> executeQuery(Object... params);
 
-	
+    boolean isClosed();
+
+    DbFuture<Void> close();
 }

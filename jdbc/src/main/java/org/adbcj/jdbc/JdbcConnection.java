@@ -282,6 +282,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                     case VARCHAR:
                         value = jdbcResultSet.getString(i);
                         break;
+                    case NULL:
+                        value = null;
+                        break;
                     default:
                         throw new IllegalStateException("Don't know how to handle field to type " + field.getColumnType());
                 }
@@ -406,6 +409,27 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                             nativeResult.close();
                         }
                     }
+                }
+            });
+        }
+
+
+        @Override
+        public boolean isClosed() {
+            try {
+                return sqlStatement.isClosed();
+            } catch (SQLException e) {
+                throw new DbException(e);
+            }
+        }
+
+        @Override
+        public DbFuture<Void> close() {
+            return enqueueTransactionalRequest(new Request<Void>(JdbcConnection.this) {
+                @Override
+                protected void execute() throws Exception {
+                    sqlStatement.close();
+                    complete(null);
                 }
             });
         }

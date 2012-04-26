@@ -31,6 +31,7 @@ public class PreparedStatementsTest {
                 " WHERE str_val LIKE ?").get();
 
         assertQueryFor(statement, "Zero");
+        statement.close();
         connection.close(false);
     }
     public void testSelectWithNull() throws DbException, InterruptedException {
@@ -43,6 +44,7 @@ public class PreparedStatementsTest {
         Assert.assertEquals(resultSet.size(), 1);
         Assert.assertEquals(resultSet.get(0).get(1).getString(), "Zero");
         Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
+        statement.close();
         connection.close(false);
     }
 
@@ -68,6 +70,7 @@ public class PreparedStatementsTest {
         assertQueryFor(statement, "Zero");
         assertQueryFor(statement, "One");
 
+        statement.close();
         connection.close(false);
     }
     public void testCanSelectNull() throws DbException, InterruptedException{
@@ -80,7 +83,17 @@ public class PreparedStatementsTest {
         Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
 
 
+        statement.close();
+        connection.close(false);
+    }
+    public void testCanCloseStatement() throws DbException, InterruptedException{
+        Connection connection = connectionManager.connect().get();
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM `table_with_some_values` " +
+                "WHERE `can_be_null_int` IS NULL").get();
 
+
+        statement.close().get();
+        Assert.assertTrue(statement.isClosed());
         connection.close(false);
     }
 

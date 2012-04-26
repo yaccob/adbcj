@@ -1,9 +1,7 @@
 package org.adbcj.mysql.codec;
 
-import org.adbcj.DbFuture;
-import org.adbcj.PreparedStatement;
-import org.adbcj.ResultEventHandler;
-import org.adbcj.ResultSet;
+import org.adbcj.*;
+import org.adbcj.mysql.codec.packets.ClosePreparedStatementRequest;
 import org.adbcj.mysql.codec.packets.PreparedStatementRequest;
 import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
 import org.adbcj.support.AbstractDbSession;
@@ -17,6 +15,7 @@ import org.adbcj.support.ExpectResultRequest;
 public class MySqlPreparedStatement implements PreparedStatement {
     private final AbstractMySqlConnection connection;
     private final StatementPreparedEOF statementInfo;
+    private volatile boolean isOpen = true;
 
     public MySqlPreparedStatement(AbstractMySqlConnection connection,
                                   StatementPreparedEOF statementInfo) {
@@ -26,15 +25,38 @@ public class MySqlPreparedStatement implements PreparedStatement {
 
     @Override
     public DbFuture<ResultSet> executeQuery(final Object... params) {
-        if(params.length!=statementInfo.getParametersTypes().size()){
-            throw new IllegalArgumentException("Expect "+statementInfo.getParametersTypes().size()+" paramenters " +
-                    "but got "+params.length+" parameters");
+        if(isClosed()){
+            throw new IllegalStateException("Cannot execute closed statement");
+        }
+        if (params.length != statementInfo.getParametersTypes().size()) {
+            throw new IllegalArgumentException("Expect " + statementInfo.getParametersTypes().size() + " paramenters " +
+                    "but got " + params.length + " parameters");
         }
         ResultEventHandler<DefaultResultSet> eventHandler = new AbstractDbSession.DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet(connection);
 
 
         return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, resultSet, params));
+    }
+
+    @Override
+    public boolean isClosed() {
+        return connection.isClosed() || !isOpen;
+    }
+
+    @Override
+    public DbFuture<Void> close() {
+        isOpen  = false;
+        DbSessionFuture<Void> future = connection.enqueueTransactionalRequest(new AbstractDbSession.Request<Void>(connection) {
+            @Override
+            protected void execute() throws Exception {
+                ClosePreparedStatementRequest request = new ClosePreparedStatementRequest(statementInfo.getHandlerId());
+                connection.write(request);
+                complete(null);
+            }
+
+        });
+        return future;
     }
 
     public class ExecutePrepareStatement extends ExpectResultRequest {

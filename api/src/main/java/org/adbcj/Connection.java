@@ -32,13 +32,6 @@ public interface Connection extends DbSession {
 	 * @return  The connection manager instance that created this connection.
 	 */
 	ConnectionManager getConnectionManager();
-	
-	/**
-	 * Sends a noop operation to the database server.  This is useful to test an idle connection to see if it is still
-	 * working properly.
-	 * 
-	 * @return  A DbFuture representing the pending completion of the ping
-	 */
-	DbFuture<Void> ping();
+
 	
 }
