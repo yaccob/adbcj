@@ -23,10 +23,8 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -50,76 +48,83 @@ public class SelectTest {
 	}
 
 
-    public void testSelectWhichReturnsNothing() throws Exception{
+//    public void testSelectWhichReturnsNothing() throws Exception{
+//        Connection connection = connectionManager.connect().get();
+//        final CountDownLatch latch = new CountDownLatch(1);
+//        ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val FROM simple_values where str_val LIKE 'Not-In-Database-Value'").addListener(new DbListener<ResultSet>() {
+//            public void onCompletion(DbFuture<ResultSet> future) throws Exception {
+//                future.get().size();
+//                latch.countDown();
+//            }
+//        }).get();
+//        Iterator<Row> i = resultSet.iterator();
+//        Assert.assertFalse(i.hasNext());
+//
+//
+//    }
+//
+//	public void testSimpleSelect() throws DbException, InterruptedException {
+//        final CountDownLatch latch = new CountDownLatch(1);
+//
+//        Connection connection = connectionManager.connect().get();
+//        try {
+//            ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val FROM simple_values ORDER BY int_val").addListener(new DbListener<ResultSet>() {
+//                public void onCompletion(DbFuture<ResultSet> future) throws Exception {
+//                    future.get().size();
+//                    latch.countDown();
+//                }
+//            }).get();
+//
+//            Assert.assertEquals(6, resultSet.size());
+//
+//            Iterator<Row> i = resultSet.iterator();
+//
+//            Row nullRow = null;
+//            Row row = i.next();
+//            if (row.get(0).isNull()) {
+//                nullRow = row;
+//                row = i.next();
+//            }
+//            Assert.assertEquals(row.get(0).getInt(), 0);
+//            Assert.assertEquals(row.get(1).getValue(), "Zero");
+//            row = i.next();
+//            Assert.assertEquals(row.get(0).getInt(), 1);
+//            Assert.assertEquals(row.get(1).getValue(), "One");
+//            row = i.next();
+//            Assert.assertEquals(row.get(0).getInt(), 2);
+//            Assert.assertEquals(row.get(1).getValue(), "Two");
+//            row = i.next();
+//            Assert.assertEquals(row.get(0).getInt(), 3);
+//            Assert.assertEquals(row.get(1).getValue(), "Three");
+//            row = i.next();
+//            Assert.assertEquals(row.get(0).getInt(), 4);
+//            Assert.assertEquals(row.get(1).getValue(), "Four");
+//
+//            if (i.hasNext() && nullRow == null) {
+//                nullRow = i.next();
+//            }
+//
+//            Assert.assertEquals(nullRow.get(0).getValue(), null);
+//            Assert.assertEquals(nullRow.get(1).getValue(), null);
+//
+//
+//            Assert.assertTrue(!i.hasNext(), "There were too many rows in result set");
+//
+//            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS),"Expect callback call");
+//        } finally {
+//            connection.close(true);
+//        }
+//    }
+
+    public void testSelectWithNullFields() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
-        final CountDownLatch latch = new CountDownLatch(1);
-        ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val FROM simple_values where str_val LIKE 'Not-In-Database-Value'").addListener(new DbListener<ResultSet>() {
-            public void onCompletion(DbFuture<ResultSet> future) throws Exception {
-                future.get().size();
-                latch.countDown();
-            }
-        }).get();
-        Iterator<Row> i = resultSet.iterator();
-        Assert.assertFalse(i.hasNext());
 
+        ResultSet resultSet = connection.executeQuery("SELECT * FROM `table_with_some_values` WHERE `can_be_null_int` IS NULL").get();
 
-    }
+        Assert.assertEquals(resultSet.get(0).get(1).getString(),null);
+        Assert.assertEquals(resultSet.get(0).get(2).getString(),null);
 
-	public void testSimpleSelect() throws DbException, InterruptedException {
-        final CountDownLatch latch = new CountDownLatch(1);
-
-        Connection connection = connectionManager.connect().get();
-        try {
-            ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val FROM simple_values ORDER BY int_val").addListener(new DbListener<ResultSet>() {
-                public void onCompletion(DbFuture<ResultSet> future) throws Exception {
-                    System.out.println("In callback");
-                    future.get().size();
-                    latch.countDown();
-                }
-            }).get();
-
-            Assert.assertEquals(6, resultSet.size());
-
-            Iterator<Row> i = resultSet.iterator();
-
-            Row nullRow = null;
-            Row row = i.next();
-            if (row.get(0).isNull()) {
-                nullRow = row;
-                row = i.next();
-            }
-            Assert.assertEquals(row.get(0).getInt(), 0);
-            Assert.assertEquals(row.get(1).getValue(), "Zero");
-            row = i.next();
-            Assert.assertEquals(row.get(0).getInt(), 1);
-            Assert.assertEquals(row.get(1).getValue(), "One");
-            row = i.next();
-            Assert.assertEquals(row.get(0).getInt(), 2);
-            Assert.assertEquals(row.get(1).getValue(), "Two");
-            row = i.next();
-            Assert.assertEquals(row.get(0).getInt(), 3);
-            Assert.assertEquals(row.get(1).getValue(), "Three");
-            row = i.next();
-            Assert.assertEquals(row.get(0).getInt(), 4);
-            Assert.assertEquals(row.get(1).getValue(), "Four");
-
-            if (i.hasNext() && nullRow == null) {
-                nullRow = i.next();
-            }
-
-            Assert.assertEquals(nullRow.get(0).getValue(), null);
-            Assert.assertEquals(nullRow.get(1).getValue(), null);
-
-
-            Assert.assertTrue(!i.hasNext(), "There were too many rows in result set");
-
-            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS),"Expect callback call");
-        } finally {
-            connection.close(true);
-        }
-    }
-
-    public void testSelectWithNullFields(){
+        connection.close(false);
 
     }
 

@@ -30,7 +30,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         } else if (statement.getColumns() > 0) {
             return new ReadColumns(statement.getColumns(), statement);
         } else {
-            throw new IllegalStateException("Should be finished allready!");
+            return RESPONSE;
         }
     }
 

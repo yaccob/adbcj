@@ -70,6 +70,19 @@ public class PreparedStatementsTest {
 
         connection.close(false);
     }
+    public void testCanSelectNull() throws DbException, InterruptedException{
+        Connection connection = connectionManager.connect().get();
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM `table_with_some_values` " +
+                "WHERE `can_be_null_int` IS NULL").get();
+
+        ResultSet resultSet = statement.executeQuery().get();
+        Assert.assertEquals(resultSet.get(0).get(1).getString(), null);
+        Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
+
+
+
+        connection.close(false);
+    }
 
     private void assertQueryFor(PreparedStatement statement, String valueToQueryFor) throws InterruptedException {
         ResultSet resultSet = statement.executeQuery(valueToQueryFor).get();

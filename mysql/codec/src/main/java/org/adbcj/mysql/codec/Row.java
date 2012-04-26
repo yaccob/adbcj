@@ -40,8 +40,9 @@ class Row extends DecoderState{
     }
 
     private void binaryDecode(BoundedInputStream in, Value[] values) throws IOException {
-        in.read(); // 0 (packet header)
+        // 0 (packet header)   should have been read by the calling method
         byte[] nullBits = new byte[ (values.length+7+2)/8];
+        in.read(nullBits);
         for (MysqlField field : fields  ) {
             Object value = null;
             if(hasValue(field.getIndex(), nullBits)){
