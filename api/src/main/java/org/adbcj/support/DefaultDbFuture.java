@@ -209,9 +209,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             this.result = result;
             done = true;
             lock.notifyAll();
+            notifyListeners();
         }
 
-        notifyListeners();
     }
 
     private void notifyListener(DbListener<T> listener) {

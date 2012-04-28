@@ -17,7 +17,6 @@
 package org.adbcj.jdbc;
 
 import org.adbcj.*;
-import org.adbcj.support.DbFutureConcurrentProxy;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.UncheckedThrow;
 
@@ -51,8 +50,8 @@ public class JdbcConnectionManager implements ConnectionManager {
 		if (isClosed()) {
 			throw new DbException("This connection manager is closed");
 		}
-		final DbFutureConcurrentProxy<Connection> future = new DbFutureConcurrentProxy<Connection>();
-		Future<Connection> executorFuture = executorService.submit(new Callable<Connection>() {
+		final DefaultDbFuture<Connection> future = new DefaultDbFuture<Connection>();
+		executorService.submit(new Callable<Connection>() {
 			public Connection call() throws Exception {
 				try {
 					java.sql.Connection jdbcConnection = connectionProvider.getConnection();
@@ -63,7 +62,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 							future.setException(new DbException("Connection manager closed"));
 						} else {
 							connections.add(connection);
-							future.setValue(connection);
+							future.setResult(connection);
 						}
 					}
 					return connection;
@@ -75,12 +74,9 @@ public class JdbcConnectionManager implements ConnectionManager {
                     // We throw the original exception here.
                     // No nesting is used.
                     throw UncheckedThrow.throwUnchecked(e);
-				} finally {
-					future.setDone();
 				}
 			}
 		});
-		future.setFuture(executorFuture);
 		return future;
 	}
 
