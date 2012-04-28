@@ -132,7 +132,7 @@ public class SelectTest {
         Connection connection = connectionManager.connect().get();
 
         List<DbFuture<ResultSet>> futures = new LinkedList<DbFuture<ResultSet>>();
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 50; i++) {
             futures.add(
                     connection.executeQuery(String.format("SELECT *, %d FROM simple_values", i))
             );

@@ -121,7 +121,7 @@ public abstract class AbstractDbSession implements DbSession {
         return request;
     }
 
-    private <E> void invokeExecuteWithCatch(Request<E> request) {
+    protected <E> void invokeExecuteWithCatch(Request<E> request) {
         try {
             request.invokeExecute();
         } catch (Throwable e) {
@@ -133,13 +133,6 @@ public abstract class AbstractDbSession implements DbSession {
     protected <E> Request<E> getActiveRequest() {
         synchronized (lock) {
             return (Request<E>) activeRequest;
-        }
-    }
-
-    protected void cancelPendingRequests(boolean mayInterruptIfRunning) {
-        for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext(); ) {
-            Request<?> request = i.next();
-            request.cancel(mayInterruptIfRunning);
         }
     }
 

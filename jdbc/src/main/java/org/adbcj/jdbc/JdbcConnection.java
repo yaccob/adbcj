@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 public class JdbcConnection extends AbstractDbSession implements Connection {
@@ -37,11 +38,15 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
 
     private final JdbcConnectionManager connectionManager;
     private final java.sql.Connection jdbcConnection;
+    private final ExecutorService threadPool;
 
-    public JdbcConnection(JdbcConnectionManager connectionManager, java.sql.Connection jdbcConnection) {
+    public JdbcConnection(JdbcConnectionManager connectionManager,
+                          java.sql.Connection jdbcConnection,
+                          ExecutorService threadPool) {
         super(false);
         this.connectionManager = connectionManager;
         this.jdbcConnection = jdbcConnection;
+        this.threadPool = threadPool;
     }
 
     public ConnectionManager getConnectionManager() {
@@ -141,17 +146,21 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
 
     }
 
-    public DbFuture<Void> ping() {
-        checkClosed();
-        // TODO Implement JDBC ping()
-        throw new IllegalStateException("Not yet implemented");
+    @Override
+    protected <E> void invokeExecuteWithCatch(final Request<E> request) {
+        threadPool.submit(new Runnable() {
+            @Override
+            public void run() {
+                JdbcConnection.super.invokeExecuteWithCatch(request);
+            }
+        });
     }
 
     /*
-      *
-      * End of API methods
-      *
-      */
+    *
+    * End of API methods
+    *
+    */
 
     // *********** Transaction method implementations **************************
 

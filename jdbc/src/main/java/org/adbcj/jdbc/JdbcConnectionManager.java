@@ -65,7 +65,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 			public Connection call() throws Exception {
 				try {
 					java.sql.Connection jdbcConnection = connectionProvider.getConnection();
-					JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this, jdbcConnection);
+					JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this, jdbcConnection,getExecutorService());
 					synchronized (lock) {
 						if (isClosed()) {
 							connection.close();
