@@ -39,16 +39,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 	private volatile boolean pipeliningEnabled = false;
 
 	public JdbcConnectionManager(JDBCConnectionProvider connectionProvider) {
-		this(Executors.newCachedThreadPool(new ThreadFactory() {
-            private final AtomicInteger threadNumber = new AtomicInteger(1);
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread thread = Executors.defaultThreadFactory().newThread(r);
-                thread.setName("ADBC to JDBC bridge "+threadNumber.incrementAndGet());
-                thread.setDaemon(true);
-                return thread;
-            }
-        }), connectionProvider);
+		this(createPool(), connectionProvider);
 	}
 
     public JdbcConnectionManager(ExecutorService executorService, JDBCConnectionProvider connectionProvider) {
@@ -164,5 +155,23 @@ public class JdbcConnectionManager implements ConnectionManager {
 	public String toString() {
 		return "JdbcConnectionManager with" + connectionProvider.toString();
 	}
+
+    private static ExecutorService createPool() {
+        ExecutorService executorService = new ThreadPoolExecutor(0, 64,
+                60L, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>(),
+                new ThreadFactory() {
+                    private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        Thread thread = Executors.defaultThreadFactory().newThread(r);
+                        thread.setName("ADBC to JDBC bridge " + threadNumber.incrementAndGet());
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                });
+        return executorService;
+    }
 	
 }
