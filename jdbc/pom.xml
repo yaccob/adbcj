@@ -25,6 +25,12 @@
 			<artifactId>slf4j-api</artifactId>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp</artifactId>
+            <version>0.7.1.RELEASE</version>
+            <scope>provided</scope>
+        </dependency>
 	</dependencies>
 
 </project>
