@@ -30,7 +30,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     private final Object lock;
 
-    private List<DbListener<T>> otherListeners;
+    private List<DbListener<T>> otherListeners = new ArrayList<DbListener<T>>(1);
 
     /**
      * The result of this future.
@@ -67,22 +67,12 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         if (listener == null) {
             throw new IllegalArgumentException("listener can NOT be null");
         }
-
-        boolean notifyNow = true;
-        if (!done) {
-            synchronized (lock) {
-                if (!done) {
-                    notifyNow = false;
-                    if (otherListeners == null) {
-                        otherListeners = new ArrayList<DbListener<T>>(1);
-                    }
-                    otherListeners.add(listener);
-                }
+        synchronized (lock) {
+            if (done) {
+                notifyListener(listener);
             }
-        }
+            otherListeners.add(listener);
 
-        if (notifyNow) {
-            notifyListener(listener);
         }
         return this;
     }
@@ -92,15 +82,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             throw new IllegalArgumentException("listener can NOT be null");
         }
 
-        boolean removed = false;
         synchronized (lock) {
-            if (!done) {
-                removed = otherListeners.remove(listener);
-            }
+            return otherListeners.remove(listener);
         }
-
-
-        return removed;
     }
 
     public final boolean cancel(boolean mayInterruptIfRunning) {
@@ -203,15 +187,15 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         synchronized (lock) {
             // Allow only once.
             if (done) {
-                return;
+                throw new IllegalStateException("Should not set result if future is completed");
             }
 
             this.result = result;
             done = true;
             lock.notifyAll();
+            notifyListeners();
         }
 
-        notifyListeners();
     }
 
     private void notifyListener(DbListener<T> listener) {
