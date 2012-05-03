@@ -1,4 +1,4 @@
-package org.adbcj.mysql.netty;
+package netty;
 
 import java.net.URI;
 import java.net.URISyntaxException;

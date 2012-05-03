@@ -1,4 +1,4 @@
-package org.adbcj.mysql.netty;
+package netty;
 
 import org.adbcj.Connection;
 import org.adbcj.mysql.codec.AbstractMySqlConnection;

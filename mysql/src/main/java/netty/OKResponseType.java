@@ -1,4 +1,4 @@
-package org.adbcj.mysql.netty;
+package netty;
 
 /**
 * @author roman.stoffel@gamlor.info

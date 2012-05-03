@@ -11,37 +11,17 @@
 		<version>0.2-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>mysql-build</artifactId>
-	<packaging>pom</packaging>
-	<name>ADBCJ - MySQL Drivers Build</name>
-
-	<modules>
-		<module>codec</module>
-		<!--<module>mina</module>-->
-		<module>netty</module>
-	</modules>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>mysql-codec</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+	<artifactId>mysql-async-driver</artifactId>
+	<packaging>jar</packaging>
+	<name>ADBCJ - MySQL Async Driver based on Netty</name>
 
 	<dependencies>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>adbcj-api</artifactId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<groupId>org.slf4j</groupId>
+			<version>${slf4j.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 </project>
-
-

@@ -1,4 +1,4 @@
-package org.adbcj.mysql.netty;
+package netty;
 
 import java.util.LinkedList;
 import java.util.List;
