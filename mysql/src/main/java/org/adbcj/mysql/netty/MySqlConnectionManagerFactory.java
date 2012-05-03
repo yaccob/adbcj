@@ -1,16 +1,16 @@
-package netty;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Properties;
+package org.adbcj.mysql.netty;
 
 import org.adbcj.ConnectionManager;
 import org.adbcj.ConnectionManagerFactory;
 import org.adbcj.DbException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Properties;
+
 public class MySqlConnectionManagerFactory implements ConnectionManagerFactory {
 
-	public static final String PROTOCOL = "mysqlnetty";
+	public static final String PROTOCOL = "mysql";
 	public static final int DEFAULT_PORT = 3306;
 
 	@Override

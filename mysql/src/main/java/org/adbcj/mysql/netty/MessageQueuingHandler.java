@@ -1,15 +1,10 @@
-package netty;
+package org.adbcj.mysql.netty;
+
+import org.jboss.netty.channel.*;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipelineCoverage;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.MessageEvent;
-
-@ChannelPipelineCoverage("one")
 class MessageQueuingHandler implements ChannelUpstreamHandler {
 
 	private ChannelHandlerContext context;

@@ -28,23 +28,23 @@
 			<class name="org.adbcj.tck.InitMysqlJdbc" />
 		</classes>
 	</test>
-	<test name="Postgresql">
-		<parameter name="url" value="adbcj:postgresql://localhost/adbcjtck" />
-		<parameter name="user" value="adbcjtck" />
-		<parameter name="password" value="adbcjtck" />
-		<packages>
-			<package name="org.adbcj.tck.test" />
-		</packages>
-	</test>
-	<test name="Postgresql-JDBC">
-		<parameter name="url" value="adbcj:jdbc:postgresql://localhost/adbcjtck" />
-		<parameter name="user" value="adbcjtck" />
-		<parameter name="password" value="adbcjtck" />
-		<packages>
-			<package name="org.adbcj.tck.test" />
-		</packages>
-		<classes>
-			<class name="org.adbcj.tck.InitPostgresqlJdbc" />
-		</classes>
-	</test>
+	<!--<test name="Postgresql">-->
+		<!--<parameter name="url" value="adbcj:postgresql://localhost/adbcjtck" />-->
+		<!--<parameter name="user" value="adbcjtck" />-->
+		<!--<parameter name="password" value="adbcjtck" />-->
+		<!--<packages>-->
+			<!--<package name="org.adbcj.tck.test" />-->
+		<!--</packages>-->
+	<!--</test>-->
+	<!--<test name="Postgresql-JDBC">-->
+		<!--<parameter name="url" value="adbcj:jdbc:postgresql://localhost/adbcjtck" />-->
+		<!--<parameter name="user" value="adbcjtck" />-->
+		<!--<parameter name="password" value="adbcjtck" />-->
+		<!--<packages>-->
+			<!--<package name="org.adbcj.tck.test" />-->
+		<!--</packages>-->
+		<!--<classes>-->
+			<!--<class name="org.adbcj.tck.InitPostgresqlJdbc" />-->
+		<!--</classes>-->
+	<!--</test>-->
 </suite>

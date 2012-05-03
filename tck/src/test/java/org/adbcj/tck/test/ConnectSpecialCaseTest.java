@@ -51,42 +51,6 @@ public class ConnectSpecialCaseTest {
 		}
 	}
 
-//	@Parameters({"url", "user", "password"})
-//	@Test(timeOut=60000)
-//	public void testConnectCancel(String url, String user, String password) throws Exception {
-//		StringBuilder urlBuilder = new StringBuilder();
-//
-//		URI connectUrl = new URI(url);
-//		String scheme = connectUrl.getScheme();
-//		while (scheme != null) {
-//			urlBuilder.append(scheme).append(":");
-//			connectUrl = new URI(connectUrl.getSchemeSpecificPart());
-//			scheme = connectUrl.getScheme();
-//		}
-//
-//		urlBuilder.append("//").append(UNREACHABLE_HOST);
-//		urlBuilder.append(connectUrl.getPath());
-//
-//		final boolean[] callbacks = {false};
-//		final CountDownLatch latch = new CountDownLatch(1);
-//
-//		ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(urlBuilder.toString(), "dummyuser", "dummypassword");
-//		try {
-//			DbFuture<Connection> connectFuture = connectionManager.connect().addListener(new DbListener<Connection>() {
-//				public void onCompletion(DbFuture<Connection> future) throws Exception {
-//					callbacks[0] = true;
-//					latch.countDown();
-//				}
-//			});
-//			assertTrue(connectFuture.cancel(true), "Connection to unreachable host was not canceled");
-//			assertTrue(connectFuture.isCancelled());
-//			assertTrue(latch.await(1, TimeUnit.SECONDS), "Callback was not invoked in time");
-//			assertTrue(callbacks[0], "Connect future callback was not invoked with connect cancellation");
-//		} finally {
-//			connectionManager.finalizeClose(true);
-//		}
-//	}
-
 	@Parameters({"url", "user", "password"})
 	@Test(timeOut=60000)
 	public void testImmediateClose(String url, String user, String password) throws InterruptedException {
