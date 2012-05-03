@@ -6,7 +6,7 @@
 
 	<groupId>org.adbcj</groupId>
 	<artifactId>adbcj</artifactId>
-	<version>0.2-SNAPSHOT</version>
+	<version>0.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>ADBCJ</name>
@@ -28,24 +28,30 @@
 		<module>api</module>
 		<module>jdbc</module>
 		<module>mysql</module>
-		<module>postgresql</module>
+		<!--<module>postgresql</module>-->
 		<module>tck</module>
 	</modules>
 
 	<scm>
-		<url>https://github.com/mheath/adbcj</url>
+		<url>https://github.com/gamlerhart/adbcj</url>
 		<connection>
 			scm:git://github.com/mheath/adbcj.git
 		</connection>
 		<developerConnection>
-			git@github.com:mheath/adbcj.git
+			git:git@github.com:gamlerhart/adbcj.git
 		</developerConnection>
 	</scm>
 
 	<issueManagement>
 		<system>github</system>
-		<url>https://github.com/mheath/adbcj/issues</url>
+		<url>https://github.com/gamlerhart/adbcj/issues</url>
 	</issueManagement>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <url>https://github.com/gamlerhart/gamlor-mvn/tree/master/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 	<licenses>
 		<license>
@@ -60,6 +66,11 @@
 			<id>mheath</id>
 			<name>Mike Heath</name>
 			<url>http://blog.toadhead.net</url>
+		</developer>
+		<developer>
+			<id>rstoffel</id>
+			<name>Roman Stoffel</name>
+			<url>http://www.gamlor.info</url>
 		</developer>
 	</developers>
 
