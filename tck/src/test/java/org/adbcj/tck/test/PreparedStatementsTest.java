@@ -34,6 +34,22 @@ public class PreparedStatementsTest {
         statement.close();
         connection.close();
     }
+    public void testOrderIsCorrect() throws DbException, InterruptedException {
+        Connection connection = connectionManager.connect().get();
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
+                " WHERE int_val > 0 ORDER BY int_val DESC").get();
+
+        ResultSet resultSet = statement.executeQuery().get();
+        Assert.assertEquals(resultSet.size(),4);
+        Assert.assertEquals(resultSet.get(0).get(0).getInt(),4);
+        Assert.assertEquals(resultSet.get(1).get(0).getInt(),3);
+        Assert.assertEquals(resultSet.get(2).get(0).getInt(),2);
+        Assert.assertEquals(resultSet.get(3).get(0).getInt(),1);
+
+
+        statement.close();
+        connection.close();
+    }
     public void testSelectWithNull() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
         PreparedStatement statement = connection.prepareStatement("SELECT int_val,str_val,NULL FROM simple_values" +
