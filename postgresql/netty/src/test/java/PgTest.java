@@ -31,7 +31,7 @@ public class PgTest {
 		for (Row row : rs2) {
 			System.out.println(row.get(0) + " " + row.get(1));
 		}
-		connection.close(true).get();
+		connection.close().get();
 		cm.close(true).get();
 		System.out.println("Closed");
 	}

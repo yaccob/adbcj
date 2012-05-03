@@ -1,13 +1,9 @@
-import static org.testng.Assert.assertTrue;
+import org.adbcj.*;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
+import static org.testng.Assert.assertTrue;
 
 public class Test {
 
@@ -29,7 +25,7 @@ public class Test {
 		});
 		Connection connection = connectFuture.get(5, TimeUnit.SECONDS);
 		assertTrue(!connection.isClosed());
-		DbFuture<Void> closeFuture = connection.close(true).addListener(new DbListener<Void>() {
+		DbFuture<Void> closeFuture = connection.close().addListener(new DbListener<Void>() {
 			public void onCompletion(DbFuture<Void> future) throws Exception {
 				// Indicate that callback has been invoked
 				callbacks[1] = true;

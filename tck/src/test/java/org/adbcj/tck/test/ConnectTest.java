@@ -91,7 +91,7 @@ public class ConnectTest {
 			}
 		}).get();
 		assertTrue(connection.isClosed());
-		latch.await(1, TimeUnit.SECONDS);
+        assertTrue(latch.await(1, TimeUnit.SECONDS));
 	}
 
 

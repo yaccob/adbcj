@@ -30,7 +30,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     private final Object lock;
 
-    private List<DbListener<T>> otherListeners = new ArrayList<DbListener<T>>(1);
+    private final List<DbListener<T>> otherListeners = new ArrayList<DbListener<T>>(1);
 
     /**
      * The result of this future.
@@ -128,6 +128,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     public T get(long timeout, TimeUnit unit) throws InterruptedException, DbException, TimeoutException {
         long timeoutMillis = unit.toMillis(timeout);
+        long timeoutNanos = unit.toNanos(timeout);
 
         if (done) {
             return getResult();
@@ -136,7 +137,10 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             if (done) {
                 return getResult();
             }
-            lock.wait(timeoutMillis);
+            final long startTime = System.nanoTime();
+            while (!done &&(startTime+timeoutNanos) > System.nanoTime() ){
+                lock.wait(timeoutMillis);
+            }
             if (!done) {
                 throw new TimeoutException();
             }
@@ -215,7 +219,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
                 for (DbListener<T> l : otherListeners) {
                     notifyListener(l);
                 }
-                otherListeners = null;
+                otherListeners.clear();
             }
         }
     }
