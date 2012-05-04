@@ -9,14 +9,6 @@
 			<package name="org.adbcj.tck.test" />
 		</packages>
 	</test>
-	<test name="MySQL-Netty">
-		<parameter name="url" value="adbcj:mysqlnetty://localhost/adbcjtck" />
-		<parameter name="user" value="adbcjtck" />
-		<parameter name="password" value="adbcjtck" />
-		<packages>
-			<package name="org.adbcj.tck.test" />
-		</packages>
-	</test>
 	<test name="MySQL-JDBC">
 		<parameter name="url" value="adbcj:jdbc:mysql://localhost/adbcjtck" />
 		<parameter name="user" value="adbcjtck" />
