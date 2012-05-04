@@ -41,3 +41,25 @@ CREATE TABLE IF NOT EXISTS table_with_some_values (
 INSERT INTO table_with_some_values (auto_int, can_be_null_int, can_be_null_varchar) VALUES
 (1, NULL, NULL),
 (2, 42, '42');
+
+CREATE TABLE IF NOT EXISTS `supporteddatatypes` (
+  `intValue` int(11) NOT NULL,
+  `varChar` varchar(255) NOT NULL,
+  `bigInt` bigint(20) NOT NULL,
+  `decimal` decimal(10,0) NOT NULL,
+  `date` date NOT NULL,
+  `double` double NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+
+INSERT INTO `adbcjtck`.`supportedDataTypes` (
+  `intValue` ,
+  `varChar` ,
+  `bigInt` ,
+  `decimal` ,
+  `date` ,
+  `double`
+)
+VALUES (
+'42', '4242', '42', '42', '2012-05-03', '42.42'
+);

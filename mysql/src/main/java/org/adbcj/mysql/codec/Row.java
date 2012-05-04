@@ -7,6 +7,9 @@ import org.adbcj.mysql.codec.packets.ResultSetRowResponse;
 import org.adbcj.support.DefaultValue;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -21,7 +24,9 @@ class Row extends DecoderState{
     }
 
     @Override
-    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+    public ResultAndState parse(int length, int packetNumber,
+                                BoundedInputStream in,
+                                AbstractMySqlConnection connection) throws IOException {
         int fieldCount = in.read(); // This is only for checking for EOF
         if (fieldCount == RESPONSE_EOF) {
             EofResponse rowEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.ROW);
@@ -33,7 +38,11 @@ class Row extends DecoderState{
         if(connection.getActiveRequest() instanceof MySqlPreparedStatement.ExecutePrepareStatement){
             binaryDecode(in, values);
         } else{
-            stringDecode(in, fieldCount, values);
+            try {
+                stringDecode(in, fieldCount, values);
+            } catch (ParseException e) {
+                throw new RuntimeException(e.getMessage(),e);
+            }
         }
         return result(ROW(fields),new ResultSetRowResponse(length, packetNumber, values));
 
@@ -50,14 +59,26 @@ class Row extends DecoderState{
                     case LONG:
                         value =  IoUtils.readInt(in);
                         break;
+                    case LONGLONG:
+                        value =  IoUtils.readLong(in);
+                        break;
                     case VAR_STRING:
                         value =  IoUtils.readLengthCodedString(in, in.read(), CHARSET);
+                        break;
+                    case NEWDECIMAL:
+                        value =  IoUtils.readLengthCodedString(in, in.read(), CHARSET);
+                        break;
+                    case DATE:
+                        value =  IoUtils.readDate(in);
+                        break;
+                    case DOUBLE:
+                        value =  Double.longBitsToDouble(IoUtils.readLong(in));
                         break;
                     case NULL:
                         value =  null;
                         break;
                     default:
-                        throw new IllegalStateException("Not yet implemented");
+                        throw new IllegalStateException("Not yet implemented for type "+field.getMysqlType());
                 }
 
             }
@@ -86,15 +107,15 @@ class Row extends DecoderState{
         return hasValue;
     }
 
-    private void stringDecode(BoundedInputStream in, int fieldCount, Value[] values) throws IOException {
+    private void stringDecode(BoundedInputStream in, int fieldCount, Value[] values) throws IOException,ParseException {
         int i=0;
+        SimpleDateFormat dateDecoder = new SimpleDateFormat("yyyy-MM-dd");
         for (Field field : fields  ) {
             Object value = null;
             if (fieldCount != IoUtils.NULL_VALUE) {
                 // We will have to move this as some datatypes will not be sent across the wire as strings
                 String strVal = IoUtils.readLengthCodedString(in, fieldCount, CHARSET);
 
-                // TODO add decoding for all column types
                 switch (field.getColumnType()) {
                     case TINYINT:
                         value = Byte.valueOf(strVal);
@@ -107,6 +128,15 @@ class Row extends DecoderState{
                         break;
                     case VARCHAR:
                         value = strVal;
+                        break;
+                    case DECIMAL:
+                        value = new BigDecimal(strVal);
+                        break;
+                    case DATE:
+                        value = dateDecoder.parse(strVal);
+                        break;
+                    case DOUBLE:
+                        value = Double.parseDouble(strVal);
                         break;
                     default:
                         throw new IllegalStateException("Don't know how to handle column type of "

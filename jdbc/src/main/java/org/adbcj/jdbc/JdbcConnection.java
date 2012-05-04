@@ -262,6 +262,15 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                     case VARCHAR:
                         value = jdbcResultSet.getString(i);
                         break;
+                    case DECIMAL:
+                        value = jdbcResultSet.getString(i);
+                        break;
+                    case DATE:
+                        value = jdbcResultSet.getDate(i);
+                        break;
+                    case DOUBLE:
+                        value = jdbcResultSet.getDouble(i);
+                        break;
                     case NULL:
                         value = null;
                         break;
