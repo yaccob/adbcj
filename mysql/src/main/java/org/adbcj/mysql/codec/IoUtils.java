@@ -19,6 +19,8 @@
 package org.adbcj.mysql.codec;
 
 import java.io.*;
+import java.sql.Date;
+import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -292,5 +294,21 @@ public final class IoUtils {
             }
         }
         return nullBitsBuffer;
+    }
+
+    public static Date readDate(BoundedInputStream in) throws IOException {
+        int length = in.read();
+        byte[] data = new byte[length];
+        in.read(data);
+        if(length!=4){
+            throw new UnsupportedOperationException("This date format is not yet implemented");
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, ((data[1] & 0xFF) << 8)
+     					+ (data[0] & 0xFF));
+     			calendar.set(Calendar.MONTH, data[2] & 0xFF);
+     			calendar.set(Calendar.DAY_OF_MONTH, data[3] & 0xFF);
+     	return new java.sql.Date(calendar.getTime().getTime());
     }
 }
