@@ -32,7 +32,8 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 	private final ExecutorService executorService;
 	private final ClientBootstrap bootstrap;
 
-	public MysqlConnectionManager(String host, int port, String username, String password, String schema, Properties properties) {
+	public MysqlConnectionManager(String host, int port, String username,
+                                  String password, String schema, Properties properties) {
 		super(username, password, schema, properties);
 		executorService = Executors.newCachedThreadPool();
 
@@ -41,13 +42,6 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 		init(host, port);
 	}
 
-	public MysqlConnectionManager(String host, int port, String username, String password,
-                                  String schema, Properties properties, ChannelFactory factory) {
-		super(username, password, schema, properties);
-		executorService = null;
-		bootstrap = new ClientBootstrap(factory);
-		init(host, port);
-	}
 
 	private void init(String host, int port) {
 		bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
@@ -69,9 +63,8 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 
 	@Override
 	protected void dispose() {
-		if (executorService != null) {
-			executorService.shutdownNow();
-		}
+        executorService.shutdownNow();
+        bootstrap.releaseExternalResources();
 	}
 
 	@Override

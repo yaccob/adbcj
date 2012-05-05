@@ -16,20 +16,14 @@
  */
 package org.adbcj.tck.test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbFuture;
-import org.adbcj.Result;
-import org.adbcj.ResultSet;
-import org.adbcj.Value;
+import org.adbcj.*;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 
 @Test(timeOut = 5000)
@@ -45,7 +39,7 @@ public class UpdateTest {
 
 	@AfterTest
 	public void closeConnectionManager() {
-		DbFuture<Void> closeFuture = connectionManager.close(true);
+		DbFuture<Void> closeFuture = connectionManager.close();
 		closeFuture.getUninterruptably();
 	}
 

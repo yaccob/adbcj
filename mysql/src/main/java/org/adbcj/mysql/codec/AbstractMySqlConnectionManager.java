@@ -1,10 +1,5 @@
 package org.adbcj.mysql.codec;
 
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.adbcj.Connection;
 import org.adbcj.ConnectionManager;
 import org.adbcj.DbException;
@@ -12,6 +7,11 @@ import org.adbcj.DbFuture;
 import org.adbcj.support.DefaultDbFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractMySqlConnectionManager implements
 		ConnectionManager {
@@ -30,21 +30,15 @@ public abstract class AbstractMySqlConnectionManager implements
 		this.credentials = new LoginCredentials(username, password, schema);
 	}
 
-	public synchronized DbFuture<Void> close(boolean immediate) throws DbException {
+	public synchronized DbFuture<Void> close() throws DbException {
 		if (isClosed()) {
 			return closeFuture;
 		}
-		// TODO: Close all open connections
-		if (immediate) {
-			dispose();
-			DefaultDbFuture<Void> future = new DefaultDbFuture<Void>();
-			future.setResult(null);
-			closeFuture = future;
-			return closeFuture;
-		} else {
-			// TODO In MysqlConnectionManager.close() implement deferred close
-			throw new IllegalStateException("Deferred close not yet implemented");
-		}
+        dispose();
+        DefaultDbFuture<Void> future = new DefaultDbFuture<Void>();
+        future.setResult(null);
+        closeFuture = future;
+        return closeFuture;
 	}
 
 	public synchronized boolean isClosed() {

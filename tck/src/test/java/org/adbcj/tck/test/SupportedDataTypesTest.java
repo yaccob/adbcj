@@ -24,7 +24,7 @@ public class SupportedDataTypesTest {
 
     @AfterTest
     public void closeConnectionManager() {
-        DbFuture<Void> closeFuture = connectionManager.close(true);
+        DbFuture<Void> closeFuture = connectionManager.close();
         closeFuture.getUninterruptably();
     }
 

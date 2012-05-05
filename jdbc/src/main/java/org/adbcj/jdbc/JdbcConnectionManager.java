@@ -80,7 +80,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 		return future;
 	}
 
-	public DbFuture<Void> close(boolean immediate) throws DbException {
+	public DbFuture<Void> close() throws DbException {
 		synchronized (lock) {
 			if (closeFuture == null) {
 				closeFuture = new DefaultDbFuture<Void>();

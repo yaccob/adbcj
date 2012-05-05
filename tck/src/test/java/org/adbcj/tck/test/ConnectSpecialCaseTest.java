@@ -46,7 +46,7 @@ public class ConnectSpecialCaseTest {
 			assertTrue(latch.await(1, TimeUnit.SECONDS), "Callback was not invoked in time");
 			assertTrue(callbacks[0], "Connect future callback was not invoked with connect failure");
 		} finally {
-			connectionManager.close(true);
+			connectionManager.close();
 		}
 	}
 
@@ -86,7 +86,7 @@ public class ConnectSpecialCaseTest {
 				assertTrue(future.isDone(), "Request did not finish before connection was closed: " + future);
 			}
 		} finally {
-			connectionManager.close(true).get();
+			connectionManager.close().get();
 		}
 	}
 

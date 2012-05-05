@@ -32,7 +32,7 @@ public class PgTest {
 			System.out.println(row.get(0) + " " + row.get(1));
 		}
 		connection.close().get();
-		cm.close(true).get();
+		cm.close().get();
 		System.out.println("Closed");
 	}
 

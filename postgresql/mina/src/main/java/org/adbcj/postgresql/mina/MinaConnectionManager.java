@@ -159,19 +159,14 @@ public class MinaConnectionManager extends AbstractConnectionManager {
 
 	}
 
-	public synchronized DbFuture<Void> close(boolean immediate) throws DbException {
+	public synchronized DbFuture<Void> close() throws DbException {
 		// TODO Put test in TCK to make sure all ConnectionManager connections get closed
 		if (isClosed()) {
 			return closeFuture;
 		}
 		closeFuture = new DefaultDbFuture<Void>();
-		if (immediate) {
-			socketConnector.dispose();
-			closeFuture.setResult(null);
-		} else {
-			// TODO Implement MinaConnectionManager.close(boolean)
-			throw new IllegalStateException("Non immediate finalizeClose not yet implemented");
-		}
+        socketConnector.dispose();
+        closeFuture.setResult(null);
 		return closeFuture;
 	}
 
