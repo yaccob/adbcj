@@ -160,7 +160,8 @@ class Encoder implements ChannelDownstreamHandler {
             return;
         }
 
-        ChannelBuffer buffer = ChannelBuffers.buffer(1024);
+        ClientRequest  request = (ClientRequest) e.getMessage();
+        ChannelBuffer buffer = ChannelBuffers.buffer(4+request.getLength(MySqlClientEncoder.CHARSET));
         ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
     	encoder.encode((ClientRequest) e.getMessage(), out);
     	Channels.write(context, e.getFuture(), buffer);

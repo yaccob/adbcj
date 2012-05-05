@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
  * @author roman.stoffel@gamlor.info
  * @since 05.04.12
  */
-@Test(invocationCount=50, threadPoolSize=10, timeOut = 500000)
+@Test(invocationCount=10, threadPoolSize=5, timeOut = 500000)
 public class PreparedStatementsTest {
     private ConnectionManager connectionManager;
 

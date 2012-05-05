@@ -17,8 +17,6 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
@@ -33,10 +31,8 @@ import java.util.concurrent.TimeoutException;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-@Test(invocationCount = 50, threadPoolSize = 10, timeOut = 30000)
+@Test(invocationCount = 10, threadPoolSize = 5, timeOut = 30000)
 public class ConnectTest {
-	
-	private final Logger logger = LoggerFactory.getLogger(ConnectTest.class);
 
 	private ConnectionManager connectionManager;
 

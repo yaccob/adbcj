@@ -19,7 +19,6 @@ import static org.testng.Assert.fail;
  *
  */
 public class ConnectSpecialCaseTest {
-	//private static final String UNREACHABLE_HOST = "1.0.0.1";
 
 	private final Logger logger = LoggerFactory.getLogger(ConnectSpecialCaseTest.class);
 

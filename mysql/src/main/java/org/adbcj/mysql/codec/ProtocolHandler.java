@@ -91,7 +91,10 @@ public class ProtocolHandler {
     private void handleServerGreeting(AbstractMySqlConnection connection, ServerGreeting serverGreeting) {
         // TODO save the parts of the greeting that we might need (like the protocol version, etc.)
         // Send Login request
-        LoginRequest request = new LoginRequest(connection.getCredentials(), connection.getClientCapabilities(), connection.getExtendedClientCapabilities(), connection.getCharacterSet(), serverGreeting.getSalt());
+        LoginRequest request = new LoginRequest(connection.getCredentials(),
+                connection.getClientCapabilities(),
+                connection.getExtendedClientCapabilities(),
+                connection.getCharacterSet(), serverGreeting.getSalt());
         connection.write(request);
     }
 

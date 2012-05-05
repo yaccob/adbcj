@@ -36,6 +36,8 @@ public class SupportedDataTypesTest {
 
         assertValuesOfResult(row);
 
+        connection.close().get();
+
     }
 
     @Test
@@ -46,6 +48,9 @@ public class SupportedDataTypesTest {
         final Row row = resultSet.get(0);
 
         assertValuesOfResult(row);
+
+
+        connection.close().get();
 
     }
 

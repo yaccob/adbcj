@@ -11,8 +11,8 @@ import java.util.Properties;
  */
 public final class PlainJDBCConnection implements JDBCConnectionProvider {
 
-    private static final Object USER = "user";
-    private static final Object PASSWORD = "password";
+    private static final String USER = "user";
+    private static final String PASSWORD = "password";
 
     private final String jdbcUrl;
     private final Properties properties;

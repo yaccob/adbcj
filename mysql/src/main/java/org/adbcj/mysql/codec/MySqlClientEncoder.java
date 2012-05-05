@@ -24,10 +24,10 @@ import java.security.NoSuchAlgorithmException;
 
 public class MySqlClientEncoder {
 
-	private final String charset = "UTF-8";
+	public static final String CHARSET = "UTF-8";
 
 	public void encode(ClientRequest request, OutputStream out) throws IOException, NoSuchAlgorithmException {
-		int length = request.getLength(charset);
+		int length = request.getLength(CHARSET);
 
 		// Write the length of the packet
 		out.write(length & 0xFF);
@@ -38,7 +38,7 @@ public class MySqlClientEncoder {
 		// Write the packet number
 		out.write(request.getPacketNumber());
 
-        request.writeToOutputStream(out,charset);
+        request.writeToOutputStream(out,CHARSET);
 
 	}
 
