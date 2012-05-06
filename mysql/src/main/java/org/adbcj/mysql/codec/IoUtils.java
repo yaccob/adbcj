@@ -307,7 +307,8 @@ public final class IoUtils {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, ((data[1] & 0xFF) << 8)
      					+ (data[0] & 0xFF));
-     			calendar.set(Calendar.MONTH, data[2] & 0xFF);
+        final int CALENDAR_START_WITH_MONTH_ZERO_CORRECTION = 1;
+        calendar.set(Calendar.MONTH, (data[2] & 0xFF)- CALENDAR_START_WITH_MONTH_ZERO_CORRECTION);
      			calendar.set(Calendar.DAY_OF_MONTH, data[3] & 0xFF);
      	return new java.sql.Date(calendar.getTime().getTime());
     }

@@ -43,9 +43,6 @@ public class StringCommandRequest extends CommandRequest {
         }
     }
 
-    public String getPayload() {
-        return payload;
-    }
 
 
 }
