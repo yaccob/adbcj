@@ -56,7 +56,6 @@ public class PreparedStatementsTest {
             ResultSet rows = future.get().executeQuery().get();
             Assert.fail("Expected a failure, and not "+ rows);
         } catch (DbException ex){
-            ex.printStackTrace();
             // expected
         }
         connection.close();

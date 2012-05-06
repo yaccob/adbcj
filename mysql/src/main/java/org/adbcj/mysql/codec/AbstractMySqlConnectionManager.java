@@ -8,6 +8,7 @@ import org.adbcj.support.DefaultDbFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -34,6 +35,13 @@ public abstract class AbstractMySqlConnectionManager implements
 		if (isClosed()) {
 			return closeFuture;
 		}
+        ArrayList<AbstractMySqlConnection> connectionsCopy;
+        synchronized (connections) {
+            connectionsCopy = new ArrayList<AbstractMySqlConnection>(connections);
+        }
+        for (AbstractMySqlConnection connection : connectionsCopy) {
+            connection.close();
+        }
         dispose();
         DefaultDbFuture<Void> future = new DefaultDbFuture<Void>();
         future.setResult(null);
