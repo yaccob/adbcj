@@ -8,12 +8,12 @@
 		<parameter name="user" value="adbcjtck" />
 		<parameter name="password" value="adbcjtck" />
 		<packages>
-			<package name="org.adbcj.tck.test" />
+			<!--<package name="org.adbcj.tck.test" />-->
 		</packages>
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.InsertTest"/>-->
+            <class name="org.adbcj.tck.test.InsertTest"/>
         </classes>
 	</test>
 	<test name="MySQL-JDBC">
@@ -22,11 +22,11 @@
 		<parameter name="user" value="adbcjtck" />
 		<parameter name="password" value="adbcjtck" />
 		<packages>
-			<package name="org.adbcj.tck.test" />
+			<!--<package name="org.adbcj.tck.test" />-->
 		</packages>
 		<classes>
-            <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.InsertTest"/>-->
+            <!--<class name="org.adbcj.tck.InitMysql" />-->
+            <class name="org.adbcj.tck.test.InsertTest"/>
 		</classes>
 	</test>
 	<!--<test name="Postgresql">-->

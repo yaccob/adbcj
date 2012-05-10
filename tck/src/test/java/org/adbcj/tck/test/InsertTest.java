@@ -49,14 +49,14 @@ public class InsertTest {
     }
     @Test
     public void returnsAutoIncrementPreparedQuery() throws Exception{
-//        Connection connection = connectionManager.connect().get();
-//        PreparedUpdate statement = connection.prepareQuery("INSERT INTO tableWithAutoId (textData) " +
-//                "VALUES (?)").get();
-//        ResultSet result = statement.executeQuery("value prepared").get();
-//
-//        Assert.assertEquals(result.getAffectedRows(), 1L);
-//        Assert.assertTrue(result.getGeneratedKeys().get(0).get(0).getLong()>0);
-//
-//        connection.close();
+        Connection connection = connectionManager.connect().get();
+        PreparedUpdate statement = connection.prepareUpdate("INSERT INTO tableWithAutoId (textData) " +
+                "VALUES (?)").get();
+        Result result = statement.execute("value prepared").get();
+
+        Assert.assertEquals(result.getAffectedRows(), 1L);
+        Assert.assertTrue(result.getGeneratedKeys().get(0).get(0).getLong()>0);
+
+        connection.close();
     }
 }

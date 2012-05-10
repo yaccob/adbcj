@@ -16,7 +16,7 @@ import java.util.List;
 class JDBCResult extends DefaultResult {
     private final ResultSet generatedKeys;
 
-    public JDBCResult(Long affectedRows,
+    public JDBCResult(long affectedRows,
                       List<String> warnings,
                       java.sql.ResultSet generatedKeys) {
         super(affectedRows, warnings);

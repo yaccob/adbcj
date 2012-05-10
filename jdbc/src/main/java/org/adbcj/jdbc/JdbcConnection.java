@@ -141,16 +141,24 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         return enqueueTransactionalRequest(new CallableRequest<PreparedQuery>() {
             @Override
             protected PreparedQuery doCall() throws Exception {
-                return new JDBCPreparedStatement(jdbcConnection.prepareStatement(sql));
+                return new JDBCPreparedQuery(JdbcConnection.this, jdbcConnection.prepareStatement(sql));
             }
         });
-
     }
+
 
     @Override
-    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
-        throw new UnsupportedOperationException("prepareUpdate is not supported yet");
+    public DbSessionFuture<PreparedUpdate> prepareUpdate(final String sql) {
+        checkClosed();
+        return enqueueTransactionalRequest(new CallableRequest<PreparedUpdate>() {
+            @Override
+            protected PreparedUpdate doCall() throws Exception {
+                return new JDBCPreparedUpdate(JdbcConnection.this,
+                        jdbcConnection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS));
+            }
+        });
     }
+
 
     @Override
     protected <E> void invokeExecuteWithCatch(final Request<E> request) {
@@ -294,63 +302,6 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         @Override
         public boolean isPipelinable() {
             return request.isPipelinable();
-        }
-    }
-
-    private class JDBCPreparedStatement implements PreparedQuery{
-        private final java.sql.PreparedStatement sqlStatement;
-
-        public JDBCPreparedStatement(java.sql.PreparedStatement sqlStatement) {
-            this.sqlStatement = sqlStatement;
-        }
-
-        @Override
-        public DbFuture<ResultSet> execute(final Object... params) {
-            return enqueueTransactionalRequest(new Request<ResultSet>(JdbcConnection.this) {
-                @Override
-                protected void execute() throws Exception {
-                    int index = 1;
-                    for (Object param : params) {
-                        sqlStatement.setObject(index, param);
-                        index++;
-                    }
-                    java.sql.ResultSet nativeResult = null;
-                    try {
-                        ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
-                        DefaultResultSet resultSet = new DefaultResultSet();
-                        nativeResult = sqlStatement.executeQuery();
-
-                        fillResultSet(nativeResult, eventHandler, resultSet);
-
-                        complete(resultSet);
-                    } finally {
-                        if (nativeResult != null) {
-                            nativeResult.close();
-                        }
-                    }
-                }
-            });
-        }
-
-
-        @Override
-        public boolean isClosed() {
-            try {
-                return sqlStatement.isClosed();
-            } catch (SQLException e) {
-                throw new DbException(e);
-            }
-        }
-
-        @Override
-        public DbFuture<Void> close() {
-            return enqueueTransactionalRequest(new Request<Void>(JdbcConnection.this) {
-                @Override
-                protected void execute() throws Exception {
-                    sqlStatement.close();
-                    complete(null);
-                }
-            });
         }
     }
 
