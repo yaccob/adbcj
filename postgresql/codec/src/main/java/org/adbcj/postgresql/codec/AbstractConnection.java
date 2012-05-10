@@ -165,12 +165,17 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		});
 	}
 
-	public DbSessionFuture<PreparedStatement> prepareStatement(String sql) {
-		// TODO Implement prepareStatement
-		throw new IllegalStateException();
-	}
+    @Override
+    public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
 
-	// ******** Transaction methods ***********************************************************************************
+    @Override
+    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    // ******** Transaction methods ***********************************************************************************
 
 	private final AtomicLong statementCounter = new AtomicLong();
 	private final Map<String, String> statementCache = Collections.synchronizedMap(new HashMap<String, String>());

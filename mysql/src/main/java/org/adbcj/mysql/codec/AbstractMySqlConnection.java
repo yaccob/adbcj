@@ -60,11 +60,6 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		return closeRequest;
 	}
 
-	private synchronized void unclose() {
-		logger.debug("Unclosing");
-		this.closeRequest = null;
-	}
-
 	public synchronized boolean isClosed() {
 		return closeRequest != null || isTransportClosing();
 	}
@@ -101,16 +96,15 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		});
 	}
 
-	public DbSessionFuture<PreparedStatement> prepareStatement(final String sql) {
+	public DbSessionFuture<PreparedQuery> prepareQuery(final String sql) {
+		checkClosed();
+        return enqueueTransactionalRequest(new PreparedStatementRequest(sql));
+	}
+	public DbSessionFuture<PreparedUpdate> prepareUpdate(final String sql) {
 		checkClosed();
         return enqueueTransactionalRequest(new PreparedStatementRequest(sql));
 	}
 
-	public DbFuture<Void> ping() {
-		checkClosed();
-		// TODO Implement MySQL ping()
-		throw new IllegalStateException("Not yet implemented");
-	}
 
 	// ************* Transaction method implementations ******************************************
 
@@ -253,7 +247,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         }
     }
 
-    public class PreparedStatementRequest extends Request<PreparedStatement> {
+    public class PreparedStatementRequest<T extends PreparedStatement> extends Request<T> {
         private final String sql;
 
         public PreparedStatementRequest(String sql) {

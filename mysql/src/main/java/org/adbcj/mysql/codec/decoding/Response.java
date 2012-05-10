@@ -1,6 +1,6 @@
 package org.adbcj.mysql.codec.decoding;
 
-import org.adbcj.PreparedStatement;
+import org.adbcj.PreparedUpdate;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
@@ -22,7 +22,7 @@ class Response extends DecoderState {
 
         int fieldCount = in.read();
         if (fieldCount == RESPONSE_OK) {
-            if (connection!=null && connection.<PreparedStatement>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest) {
+            if (connection!=null && connection.<PreparedUpdate>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest) {
                 return processOKMessage(length, packetNumber, in);
             }
             return result(RESPONSE, OkResponse.interpretAsRegularOk(length, packetNumber, in));

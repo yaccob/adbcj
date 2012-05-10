@@ -42,9 +42,21 @@ public class InsertTest {
                 "VALUES ('data1'),('data2'),('data3');").get();
         Assert.assertEquals(result.getAffectedRows(), 3L);
         Assert.assertTrue(result.getGeneratedKeys().get(0).get(0).getLong()>0);
-        Assert.assertTrue(result.getGeneratedKeys().get(1).get(0).getLong()>0);
+        Assert.assertTrue(result.getGeneratedKeys().get(1).get(0).getLong() > 0);
         Assert.assertTrue(result.getGeneratedKeys().get(2).get(0).getLong()>0);
 
         connection.close();
+    }
+    @Test
+    public void returnsAutoIncrementPreparedQuery() throws Exception{
+//        Connection connection = connectionManager.connect().get();
+//        PreparedUpdate statement = connection.prepareQuery("INSERT INTO tableWithAutoId (textData) " +
+//                "VALUES (?)").get();
+//        ResultSet result = statement.executeQuery("value prepared").get();
+//
+//        Assert.assertEquals(result.getAffectedRows(), 1L);
+//        Assert.assertTrue(result.getGeneratedKeys().get(0).get(0).getLong()>0);
+//
+//        connection.close();
     }
 }

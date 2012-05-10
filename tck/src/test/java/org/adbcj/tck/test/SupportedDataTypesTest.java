@@ -44,8 +44,8 @@ public class SupportedDataTypesTest {
     @Test
     public void supportedInPreparedStatement() throws Exception {
         final Connection connection = connectionManager.connect().get();
-        final PreparedStatement statement = connection.prepareStatement("SELECT *, NULL FROM supporteddatatypes").get();
-        final ResultSet resultSet = statement.executeQuery().get();
+        final PreparedQuery statement = connection.prepareQuery("SELECT *, NULL FROM supporteddatatypes").get();
+        final ResultSet resultSet = statement.execute().get();
         final Row row = resultSet.get(0);
 
         assertValuesOfResult(row);
@@ -57,14 +57,14 @@ public class SupportedDataTypesTest {
     @Test
     public void canBindDatatypesToParameters() throws Exception {
         final Connection connection = connectionManager.connect().get();
-        final PreparedStatement statement = connection.prepareStatement("SELECT *, NULL FROM supporteddatatypes " +
+        final PreparedQuery statement = connection.prepareQuery("SELECT *, NULL FROM supporteddatatypes " +
                 "WHERE intColumn=? " +
                 "AND varCharColumn LIKE ? " +
                 "AND bigIntColumn = ? " +
                 "AND decimalColumn = ? " +
                 "AND dateColumn < ? " +
                 "AND doubleColumn < ? ").get();
-        final ResultSet resultSet = statement.executeQuery(42,
+        final ResultSet resultSet = statement.execute(42,
                 "4242",
                 42L,
                 new BigDecimal("42.42"),
@@ -80,9 +80,9 @@ public class SupportedDataTypesTest {
     @Test
     public void canBindNullToParameter() throws Exception {
         final Connection connection = connectionManager.connect().get();
-        final PreparedStatement statement = connection.prepareStatement("SELECT * FROM table_with_some_values " +
+        final PreparedQuery statement = connection.prepareQuery("SELECT * FROM table_with_some_values " +
                 "WHERE can_be_null_int=? OR can_be_null_varchar LIKE ?").get();
-        final ResultSet resultSet = statement.executeQuery(42, null).get();
+        final ResultSet resultSet = statement.execute(42, null).get();
         final Row row = resultSet.get(0);
         Assert.assertNotNull(row);
 

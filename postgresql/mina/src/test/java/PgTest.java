@@ -20,7 +20,7 @@ public class PgTest {
 		for (Row row : rs) {
 			System.out.println(row.get(0) + " " + row.get(1));
 		}
-		cm.close(true).get();
+		cm.close().get();
 	}
 
 }

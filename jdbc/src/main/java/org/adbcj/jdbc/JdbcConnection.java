@@ -120,7 +120,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
             public Result doCall() throws Exception {
                 Statement statement = jdbcConnection.createStatement();
                 try {
-                    statement.executeUpdate(sql,Statement.RETURN_GENERATED_KEYS);
+                    statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
                     List<String> warnings = new LinkedList<String>();
                     SQLWarning sqlWarnings = statement.getWarnings();
                     while (sqlWarnings != null) {
@@ -136,15 +136,20 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         });
     }
 
-    public DbSessionFuture<PreparedStatement> prepareStatement(final String sql) {
+    public DbSessionFuture<PreparedQuery> prepareQuery(final String sql) {
         checkClosed();
-        return enqueueTransactionalRequest(new CallableRequest<PreparedStatement>() {
+        return enqueueTransactionalRequest(new CallableRequest<PreparedQuery>() {
             @Override
-            protected PreparedStatement doCall() throws Exception {
+            protected PreparedQuery doCall() throws Exception {
                 return new JDBCPreparedStatement(jdbcConnection.prepareStatement(sql));
             }
         });
 
+    }
+
+    @Override
+    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+        throw new UnsupportedOperationException("prepareUpdate is not supported yet");
     }
 
     @Override
@@ -292,7 +297,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
     }
 
-    private class JDBCPreparedStatement implements PreparedStatement {
+    private class JDBCPreparedStatement implements PreparedQuery{
         private final java.sql.PreparedStatement sqlStatement;
 
         public JDBCPreparedStatement(java.sql.PreparedStatement sqlStatement) {
@@ -300,7 +305,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
 
         @Override
-        public DbFuture<ResultSet> executeQuery(final Object... params) {
+        public DbFuture<ResultSet> execute(final Object... params) {
             return enqueueTransactionalRequest(new Request<ResultSet>(JdbcConnection.this) {
                 @Override
                 protected void execute() throws Exception {

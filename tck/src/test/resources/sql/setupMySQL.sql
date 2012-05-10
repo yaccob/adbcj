@@ -38,13 +38,13 @@ CREATE TABLE IF NOT EXISTS `supporteddatatypes` (
   intColumn int(11) NOT NULL,
   varCharColumn varchar(255) NOT NULL,
   bigIntColumn bigint(20) NOT NULL,
-  decimalColumn decimal(10,0) NOT NULL,
+  decimalColumn decimal(10,2) NOT NULL,
   dateColumn date NOT NULL,
   doubleColumn double NOT NULL
 )  ENGINE=InnoDB  DEFAULT CHARSET=UTF8;
 
 
-INSERT INTO `adbcjtck`.`supportedDataTypes` (
+INSERT INTO adbcjtck.supportedDataTypes (
   intColumn,
   varCharColumn,
   bigIntColumn,
@@ -53,7 +53,7 @@ INSERT INTO `adbcjtck`.`supportedDataTypes` (
   doubleColumn
 )
 VALUES (
-'42', '4242', '42', '42', '2012-05-03', '42.42'
+'42', '4242', '42', '42.42', '2012-05-03', '42.42'
 );
 
 

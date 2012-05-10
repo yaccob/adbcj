@@ -58,8 +58,8 @@ public class UnicodeTest {
     @Test
     public void worksWithPreparedStatements() throws Exception{
         Connection connection = connectionManager.connect().get();
-        PreparedStatement statement = connection.prepareStatement("SELECT textData FROM textContent WHERE textData LIKE ?").get();
-        ResultSet resultSet = statement.executeQuery("%한국어%").get();
+        PreparedQuery statement = connection.prepareQuery("SELECT textData FROM textContent WHERE textData LIKE ?").get();
+        ResultSet resultSet = statement.execute("%한국어%").get();
 
 
         Assert.assertEquals(resultSet.get(0).get("textData").getString(),"난 한국어 너무 좋아해요");

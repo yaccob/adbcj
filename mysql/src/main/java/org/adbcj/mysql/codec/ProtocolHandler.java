@@ -4,7 +4,6 @@ import org.adbcj.*;
 import org.adbcj.mysql.codec.packets.*;
 import org.adbcj.support.AbstractDbSession.Request;
 import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultResult;
 import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +83,7 @@ public class ProtocolHandler {
 
     private void handlePreparedStatement(AbstractMySqlConnection connection, StatementPreparedEOF preparationInfo) {
         AbstractMySqlConnection.PreparedStatementRequest activeRequest
-                = (AbstractMySqlConnection.PreparedStatementRequest) connection.<PreparedStatement>getActiveRequest();
+                = (AbstractMySqlConnection.PreparedStatementRequest) connection.<PreparedUpdate>getActiveRequest();
         activeRequest.complete(new MySqlPreparedStatement(connection, preparationInfo));
     }
 

@@ -59,7 +59,8 @@ public interface DbSession {
 	
 	DbSessionFuture<Result> executeUpdate(String sql);
 	
-	DbSessionFuture<PreparedStatement> prepareStatement(String sql);
+	DbSessionFuture<PreparedQuery> prepareQuery(String sql);
+	DbSessionFuture<PreparedUpdate> prepareUpdate(String sql);
 
 	DbFuture<Void> close() throws DbException;
 	
