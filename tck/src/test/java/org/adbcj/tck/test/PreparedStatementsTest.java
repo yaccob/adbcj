@@ -74,7 +74,7 @@ public class PreparedStatementsTest {
     }
     public void testCanSelectNull() throws DbException, InterruptedException{
         Connection connection = connectionManager.connect().get();
-        PreparedStatement statement = connection.prepareStatement("SELECT * FROM `table_with_some_values` " +
+        PreparedStatement statement = connection.prepareStatement("SELECT * FROM table_with_some_values " +
                 "WHERE `can_be_null_int` IS NULL").get();
 
         ResultSet resultSet = statement.executeQuery().get();

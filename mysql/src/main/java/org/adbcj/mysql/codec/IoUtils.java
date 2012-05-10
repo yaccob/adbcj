@@ -28,8 +28,11 @@ public final class IoUtils {
 
     public static final int NULL_VALUE = 0xfb;
 
+    private IoUtils() {
+        // Non-instantiable
+    }
+
     /**
-     * @param in
      * @return an unsigned byte
      * @throws IOException  if there is an error reading from the stream
      * @throws EOFException if the end of the stream is reached
@@ -72,10 +75,6 @@ public final class IoUtils {
 
     /**
      * Reads a little-endian 3-byte unsigned integer
-     *
-     * @param in
-     * @return
-     * @throws IOException
      */
     public static int readUnsignedMediumInt(InputStream in) throws IOException {
         int b0 = safeRead(in);
@@ -193,15 +192,7 @@ public final class IoUtils {
     }
 
 
-    /**
-     * Reads a null-terminate string
-     *
-     * @param in
-     * @param charset
-     * @return
-     * @throws IOException
-     */
-    public static String readString(InputStream in, String charset) throws IOException {
+    public static String readNullTerminatedString(InputStream in, String charset) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int c;
         while ((c = in.read()) > 0) {
@@ -231,10 +222,6 @@ public final class IoUtils {
         return toEnumSet(enumClass, readUnsignedShort(in) & 0xFFFFL);
     }
 
-    public static <E extends Enum<E>> E readEnum(InputStream in, Class<E> enumClass) throws IOException {
-        return toEnum(enumClass, safeRead(in));
-    }
-
     private static <E extends Enum<E>> EnumSet<E> toEnumSet(Class<E> enumClass, long vector) {
         EnumSet<E> set = EnumSet.noneOf(enumClass);
         long mask = 1;
@@ -245,16 +232,6 @@ public final class IoUtils {
             mask <<= 1;
         }
         return set;
-    }
-
-    private static <E> E toEnum(Class<E> enumClass, int i) {
-        E[] enumConstants = enumClass.getEnumConstants();
-        if (i > enumConstants.length) {
-            throw new IndexOutOfBoundsException(String.format(
-                    "%d is too large of an ordinal to convert to the enum %s",
-                    i, enumClass.getName()));
-        }
-        return enumConstants[i];
     }
 
     public static <E extends Enum<E>> void writeEnumSetShort(OutputStream out, Set<E> set) throws IOException {
@@ -277,10 +254,6 @@ public final class IoUtils {
             vector |= 1L << e.ordinal();
         }
         return vector;
-    }
-
-    private IoUtils() {
-        // Non-instantiable
     }
 
     /**
@@ -311,5 +284,15 @@ public final class IoUtils {
         calendar.set(Calendar.MONTH, (data[2] & 0xFF)- CALENDAR_START_WITH_MONTH_ZERO_CORRECTION);
      			calendar.set(Calendar.DAY_OF_MONTH, data[3] & 0xFF);
      	return new java.sql.Date(calendar.getTime().getTime());
+    }
+
+    public static void writeDate(OutputStream out,java.util.Date dateToWrite) throws IOException {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dateToWrite);
+
+
+        writeLong(out, calendar.get(Calendar.YEAR), 2);
+        out.write((byte) (calendar.get(Calendar.MONTH) + 1));
+        out.write((byte) calendar.get(Calendar.DAY_OF_MONTH));
     }
 }

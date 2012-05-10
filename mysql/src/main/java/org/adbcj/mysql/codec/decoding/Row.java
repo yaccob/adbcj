@@ -1,7 +1,8 @@
-package org.adbcj.mysql.codec;
+package org.adbcj.mysql.codec.decoding;
 
 import org.adbcj.Field;
 import org.adbcj.Value;
+import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.ResultSetRowResponse;
 import org.adbcj.support.DefaultValue;
@@ -16,7 +17,7 @@ import java.util.List;
 * @author roman.stoffel@gamlor.info
 * @since 12.04.12
 */
-class Row extends DecoderState{
+class Row extends DecoderState {
     private final List<MysqlField> fields;
 
     public Row(List<MysqlField> fields) {

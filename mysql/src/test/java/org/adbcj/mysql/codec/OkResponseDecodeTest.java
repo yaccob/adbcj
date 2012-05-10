@@ -1,5 +1,6 @@
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.packets.OkResponse;
 import org.testng.annotations.Test;
 

@@ -128,7 +128,7 @@ public class ProtocolHandler {
     }
 
     private void handleErrorResponse(AbstractMySqlConnection connection, ErrorResponse message) {
-        throw new MysqlException(connection, message.getSqlState() + ":" + message.getMessage());
+        throw new MysqlException(connection, message.getSqlState() + " " + message.getMessage());
     }
 
     private void handleResultSetResponse(AbstractMySqlConnection connection, ResultSetResponse message) {
