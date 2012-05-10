@@ -108,7 +108,7 @@ public class TransactionTest {
 			// Insert a row
 			result = connection.executeUpdate("INSERT INTO updates (id) VALUES (1)").get();
 			assertNotNull(result);
-			assertEquals(result.getAffectedRows(), Long.valueOf(1));
+			assertEquals(result.getAffectedRows(), 1L);
 
 			// Make sure we can select the row
 			rs = connection.executeQuery("SELECT id FROM updates").get();
@@ -143,7 +143,7 @@ public class TransactionTest {
 			// Insert a row
 			result = connection.executeUpdate("INSERT INTO updates (id) VALUES (1)").get();
 			assertNotNull(result);
-			assertEquals(result.getAffectedRows(), Long.valueOf(1));
+			assertEquals(result.getAffectedRows(), 1L);
 
 			// Make sure second connection can't see data
 			ResultSet rs = connection2.executeQuery("SELECT id FROM updates").get();

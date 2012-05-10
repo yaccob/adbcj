@@ -54,7 +54,7 @@ public class UpdateTest {
 		// Insert a row
 		result = connection.executeUpdate("INSERT INTO updates (id) VALUES (1)").get();
 		assertNotNull(result);
-		assertEquals(result.getAffectedRows(), Long.valueOf(1));
+		assertEquals(result.getAffectedRows(), 1L);
 
 		// Select the row
 		ResultSet rs = connection.executeQuery("SELECT id FROM updates").get();
@@ -67,17 +67,17 @@ public class UpdateTest {
 		// Update nothing
 		result = connection.executeUpdate("UPDATE updates SET id=1 WHERE id=2").get();
 		assertNotNull(result);
-		assertEquals(result.getAffectedRows(), Long.valueOf(0));
+		assertEquals(result.getAffectedRows(), 0L);
 		
 		// Update inserted row
 		result = connection.executeUpdate("UPDATE updates SET id=2").get();
 		assertNotNull(result);
-		assertEquals(result.getAffectedRows(), Long.valueOf(1));
+		assertEquals(result.getAffectedRows(), 1L);
 		
 		// Delete inserted row
 		result = connection.executeUpdate("DELETE FROM updates WHERE id=2").get();
 		assertNotNull(result);
-		assertEquals(result.getAffectedRows(), Long.valueOf(1));
+		assertEquals(result.getAffectedRows(), 1L);
 	}
 	
 }

@@ -5,6 +5,7 @@ import org.adbcj.mysql.codec.packets.ClosePreparedStatementRequest;
 import org.adbcj.mysql.codec.packets.PreparedStatementRequest;
 import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
 import org.adbcj.support.AbstractDbSession;
+import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
 import org.adbcj.support.ExpectResultRequest;
 
@@ -32,8 +33,8 @@ public class MySqlPreparedStatement implements PreparedStatement {
             throw new IllegalArgumentException("Expect " + statementInfo.getParametersTypes().size() + " paramenters " +
                     "but got " + params.length + " parameters");
         }
-        ResultEventHandler<DefaultResultSet> eventHandler = new AbstractDbSession.DefaultResultEventsHandler();
-        DefaultResultSet resultSet = new DefaultResultSet(connection);
+        ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
+        DefaultResultSet resultSet = new DefaultResultSet();
 
 
         return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, resultSet, params));

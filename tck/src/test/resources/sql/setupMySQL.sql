@@ -73,3 +73,11 @@ INSERT INTO textContent (id, lang, textData) VALUES
 (3, 'de', 'Die äüö sind toll'),
 (4, 'zh', '维基百科（英语：Wikipedia）'),
 (5, 'ja', 'ウィキペディア（英: Wikipedia）');
+
+DROP TABLE IF EXISTS tableWithAutoId;
+
+CREATE TABLE IF NOT EXISTS tableWithAutoId(
+  id int(11) NOT NULL AUTO_INCREMENT,
+  textData varchar(255) COLLATE utf8_roman_ci NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;

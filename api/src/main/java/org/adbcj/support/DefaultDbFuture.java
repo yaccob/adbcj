@@ -53,9 +53,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     private volatile boolean done;
 
 
-    public static DbFuture<Void> completed() {
+    public static <T> DbFuture<T> completed(T result) {
         DefaultDbFuture f = new DefaultDbFuture();
-        f.setResult(null);
+        f.setResult(result);
         return f;
     }
 

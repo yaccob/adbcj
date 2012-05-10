@@ -21,16 +21,16 @@ import org.adbcj.support.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+
+import static org.adbcj.jdbc.ResultSetCopier.fillResultSet;
 
 public class JdbcConnection extends AbstractDbSession implements Connection {
 
@@ -74,7 +74,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
             };
             return enqueueRequest(closeRequest);
         } else{
-            return DefaultDbSessionFuture.completed();
+            return DefaultDbSessionFuture.completed(null);
         }
     }
 
@@ -120,14 +120,15 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
             public Result doCall() throws Exception {
                 Statement statement = jdbcConnection.createStatement();
                 try {
-                    statement.execute(sql);
+                    statement.executeUpdate(sql,Statement.RETURN_GENERATED_KEYS);
                     List<String> warnings = new LinkedList<String>();
                     SQLWarning sqlWarnings = statement.getWarnings();
                     while (sqlWarnings != null) {
                         warnings.add(sqlWarnings.getLocalizedMessage());
                         sqlWarnings = sqlWarnings.getNextWarning();
                     }
-                    return new DefaultResult((long) statement.getUpdateCount(), warnings);
+                    return new JDBCResult((long) statement.getUpdateCount(),
+                            warnings,statement.getGeneratedKeys());
                 } finally {
                     statement.close();
                 }
@@ -210,82 +211,6 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     }
 
 
-    private <T> void fillResultSet(java.sql.ResultSet jdbcResultSet, ResultEventHandler<T> eventHandler, T accumulator) throws SQLException {
-        // Fetch meta data
-        ResultSetMetaData metaData = jdbcResultSet.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        List<Field> fields = new ArrayList<Field>(columnCount);
-        eventHandler.startFields(accumulator);
-
-        for (int i = 1; i <= columnCount; i++) {
-            Field field = new DefaultField(
-                    i - 1,
-                    metaData.getCatalogName(i),
-                    metaData.getSchemaName(i),
-                    metaData.getTableName(i),
-                    metaData.getTableName(i),
-                    Type.fromJdbcType(metaData.getColumnType(i)),
-                    metaData.getColumnLabel(i),
-                    metaData.getCatalogName(i),
-                    metaData.getPrecision(i),
-                    metaData.getScale(i),
-                    metaData.isAutoIncrement(i),
-                    metaData.isCaseSensitive(i),
-                    metaData.isCurrency(i),
-                    metaData.isDefinitelyWritable(i),
-                    metaData.isNullable(i) == 1,
-                    metaData.isReadOnly(i),
-                    metaData.isSearchable(i),
-                    metaData.isSigned(i),
-                    metaData.isWritable(i),
-                    metaData.getColumnClassName(i)
-            );
-            fields.add(field);
-            eventHandler.field(field, accumulator);
-        }
-
-        eventHandler.endFields(accumulator);
-
-        eventHandler.startResults(accumulator);
-        while (jdbcResultSet.next()) {
-            eventHandler.startRow(accumulator);
-            for (int i = 1; i <= columnCount; i++) {
-                Field field = fields.get(i - 1);
-                Object value = null;
-                switch (field.getColumnType()) {
-                    case BIGINT:
-                        value = jdbcResultSet.getLong(i);
-                        break;
-                    case INTEGER:
-                        value = jdbcResultSet.getInt(i);
-                        break;
-                    case VARCHAR:
-                        value = jdbcResultSet.getString(i);
-                        break;
-                    case DECIMAL:
-                        value = jdbcResultSet.getString(i);
-                        break;
-                    case DATE:
-                        value = jdbcResultSet.getDate(i);
-                        break;
-                    case DOUBLE:
-                        value = jdbcResultSet.getDouble(i);
-                        break;
-                    case NULL:
-                        value = null;
-                        break;
-                    default:
-                        throw new IllegalStateException("Don't know how to handle field to type " + field.getColumnType());
-                }
-                if (jdbcResultSet.wasNull()) {
-                    value = null;
-                }
-                eventHandler.value(new DefaultValue(field, value), accumulator);
-            }
-            eventHandler.endRow(accumulator);
-        }
-        eventHandler.endResults(accumulator);
-    }
 
     private abstract class CallableRequest<E> extends Request<E> implements Callable<E> {
         private Future<E> future = null;
@@ -387,7 +312,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                     java.sql.ResultSet nativeResult = null;
                     try {
                         ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
-                        DefaultResultSet resultSet = new DefaultResultSet(JdbcConnection.this);
+                        DefaultResultSet resultSet = new DefaultResultSet();
                         nativeResult = sqlStatement.executeQuery();
 
                         fillResultSet(nativeResult, eventHandler, resultSet);

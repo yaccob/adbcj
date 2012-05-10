@@ -21,13 +21,15 @@ import org.adbcj.postgresql.codec.AbstractConnection;
 
 public class PgResultSet extends DefaultResultSet {
 
-	public PgResultSet(AbstractConnection connection) {
-		super(connection);
-	}
-	
-	@Override
+    private final AbstractConnection connection;
+
+    public PgResultSet(AbstractConnection connection) {
+		super();
+        this.connection = connection;
+    }
+
 	public AbstractConnection getSession() {
-		return (AbstractConnection)super.getSession();
+		return (AbstractConnection)connection;
 	}
 
 }

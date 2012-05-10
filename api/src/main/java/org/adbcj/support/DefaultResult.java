@@ -16,16 +16,15 @@
  */
 package org.adbcj.support;
 
-import java.util.List;
-
-import org.adbcj.DbFuture;
 import org.adbcj.Result;
 import org.adbcj.ResultSet;
+
+import java.util.List;
 
 
 public class DefaultResult implements Result {
 
-	final Long affectedRows;
+	final long affectedRows;
 	final List<String> warnings;
 	
 	public DefaultResult(Long affectedRows, List<String> warnings) {
@@ -33,13 +32,12 @@ public class DefaultResult implements Result {
 		this.warnings = warnings;
 	}
 	
-	public Long getAffectedRows() {
+	public long getAffectedRows() {
 		return affectedRows;
 	}
 
-	public DbFuture<ResultSet> getGeneratedKeys() {
-		// TODO Implement DefaultResult.getGeneratedKeys()
-		throw new IllegalStateException("Not yet implemented");
+	public ResultSet getGeneratedKeys() {
+		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
 	public List<String> getWarnings() {

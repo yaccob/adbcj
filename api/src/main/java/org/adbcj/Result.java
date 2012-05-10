@@ -20,10 +20,10 @@ import java.util.List;
 
 public interface Result {
 
-	Long getAffectedRows();
+	long getAffectedRows();
 
 	List<String> getWarnings();
 	
-	DbFuture<ResultSet> getGeneratedKeys();
+	ResultSet getGeneratedKeys();
 	
 }

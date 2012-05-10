@@ -72,7 +72,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		// If the connection is already closed, return existing finalizeClose future
 		synchronized (lock) {
 			if (isClosed()) {
-				return DefaultDbFuture.completed();
+				return DefaultDbFuture.completed(null);
 			} if(null!=closeRequest){
                 return closeRequest;
             } else {

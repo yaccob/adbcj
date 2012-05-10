@@ -166,7 +166,7 @@ public abstract class AbstractDbSession implements DbSession {
 
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
         ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
-        DefaultResultSet resultSet = new DefaultResultSet(this);
+        DefaultResultSet resultSet = new DefaultResultSet();
         return executeQuery0(sql, eventHandler, resultSet);
     }
 
@@ -235,7 +235,7 @@ public abstract class AbstractDbSession implements DbSession {
         return future;
     }
 
-    protected <E> DbSessionFuture<E> enqueueTransactionalRequest(Request<E> request) {
+    public <E> DbSessionFuture<E> enqueueTransactionalRequest(Request<E> request) {
         // Check to see if we're in a transaction
         synchronized (lock) {
             if (transaction != null) {
@@ -537,52 +537,4 @@ public abstract class AbstractDbSession implements DbSession {
 
     }
 
-    public static class DefaultResultEventsHandler implements ResultEventHandler<DefaultResultSet> {
-
-        private Value[] currentRow;
-
-        public void startFields(DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: startFields");
-        }
-
-        public void field(Field field, DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: field");
-            accumulator.addField(field);
-        }
-
-        public void endFields(DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: endFields");
-        }
-
-        public void startResults(DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: startResults");
-        }
-
-        public void startRow(DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: startRow");
-
-            int columnCount = accumulator.getFields().size();
-            currentRow = new Value[columnCount];
-        }
-
-        public void value(Value value, DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: value");
-
-            currentRow[value.getField().getIndex()] = value;
-        }
-
-        public void endRow(DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: endRow");
-            DefaultRow row = new DefaultRow(accumulator, currentRow);
-            accumulator.addResult(row);
-            currentRow = null;
-        }
-
-        public void endResults(DefaultResultSet accumulator) {
-            logger.trace("ResultSetEventHandler: endResults");
-        }
-
-        public void exception(Throwable t, DefaultResultSet accumulator) {
-        }
-    }
 }

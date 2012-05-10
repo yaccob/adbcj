@@ -30,8 +30,6 @@ import org.adbcj.Row;
 
 
 public class DefaultResultSet extends AbstractList<Row> implements ResultSet {
-
-	private final DbSession session;
 	
 	private final List<Field> fields;
 	
@@ -39,8 +37,7 @@ public class DefaultResultSet extends AbstractList<Row> implements ResultSet {
 	
 	private final Map<Object, Field> fieldMapping = new HashMap<Object, Field>();
 	
-	public DefaultResultSet(DbSession session) {
-		this.session = session;
+	public DefaultResultSet() {
 		fields = new ArrayList<Field>();
 	}
 	
@@ -116,9 +113,5 @@ public class DefaultResultSet extends AbstractList<Row> implements ResultSet {
 			}
 		}
 		return null;
-	}
-	
-	public DbSession getSession() {
-		return session;
 	}
 }
