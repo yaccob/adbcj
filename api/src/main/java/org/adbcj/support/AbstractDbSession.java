@@ -456,11 +456,12 @@ public abstract class AbstractDbSession implements DbSession {
 
         public void complete(T result) {
             setResult(result);
-            synchronized (getSession().lock) {
-                if (getSession().activeRequest == this) {
-                    getSession().makeNextRequestActive();
-                }
-            }
+            makeNextRequestActive();
+        }
+
+        public void tryComplete(T result) {
+            trySetResult(result);
+            makeNextRequestActive();
         }
 
         public void error(DbException exception) {
@@ -468,6 +469,10 @@ public abstract class AbstractDbSession implements DbSession {
             if (transaction != null) {
                 transaction.cancelPendingRequests();
             }
+            makeNextRequestActive();
+        }
+
+        private void makeNextRequestActive() {
             synchronized (getSession().lock) {
                 if (getSession().activeRequest == this) {
                     getSession().makeNextRequestActive();

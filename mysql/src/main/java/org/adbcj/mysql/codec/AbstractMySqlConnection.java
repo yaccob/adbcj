@@ -225,7 +225,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         }
 		synchronized (this) {
 			if (closeRequest != null) {
-				closeRequest.complete(null);
+				closeRequest.tryComplete(null);
 			}
 		}
 	}
@@ -241,9 +241,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
         @Override
         public boolean cancelRequest(boolean mayInterruptIfRunning) {
-            logger.debug("Cancelling close");
-            unclose();
-            return true;
+            return false;
         }
         public synchronized void execute() {
             logger.debug("Sending QUIT to server");

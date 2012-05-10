@@ -189,15 +189,22 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     public void setResult(T result) {
         synchronized (lock) {
-            // Allow only once.
             if (done) {
                 throw new IllegalStateException("Should not set result if future is completed");
             }
 
-            this.result = result;
-            done = true;
-            lock.notifyAll();
-            notifyListeners();
+            setResultAndNotify(result);
+        }
+
+    }
+
+    public void trySetResult(T result) {
+        synchronized (lock) {
+            if (done) {
+                return;
+            }
+
+            setResultAndNotify(result);
         }
 
     }
@@ -208,6 +215,13 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         } catch (Throwable t) {
             throw UncheckedThrow.throwUnchecked(t);
         }
+    }
+
+    private void setResultAndNotify(T result) {
+        this.result = result;
+        done = true;
+        lock.notifyAll();
+        notifyListeners();
     }
 
     private void notifyListeners() {
