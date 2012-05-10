@@ -3,28 +3,30 @@
 
 <suite name="ADBCJ-TCK" verbose="1" >
 	<test name="MySQL">
-        <parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck" />
+        <parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
 		<parameter name="url" value="adbcj:mysql://localhost/adbcjtck" />
 		<parameter name="user" value="adbcjtck" />
 		<parameter name="password" value="adbcjtck" />
 		<packages>
-			<package name="org.adbcj.tck.test" />
+			<!--<package name="org.adbcj.tck.test" />-->
 		</packages>
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
+            <class name="org.adbcj.tck.test.UnicodeTest"/>
         </classes>
 	</test>
 	<test name="MySQL-JDBC">
-		<parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck" />
-		<parameter name="url" value="adbcj:jdbc:mysql://localhost/adbcjtck" />
+		<parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
+		<parameter name="url" value="adbcj:jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
 		<parameter name="user" value="adbcjtck" />
 		<parameter name="password" value="adbcjtck" />
 		<packages>
-			<package name="org.adbcj.tck.test" />
+			<!--<package name="org.adbcj.tck.test" />-->
 		</packages>
 		<classes>
             <class name="org.adbcj.tck.InitMysql" />
+            <class name="org.adbcj.tck.test.UnicodeTest"/>
 		</classes>
 	</test>
 	<!--<test name="Postgresql">-->
