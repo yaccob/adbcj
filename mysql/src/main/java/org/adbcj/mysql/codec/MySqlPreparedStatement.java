@@ -13,7 +13,7 @@ import org.adbcj.support.ExpectResultRequest;
  * @author roman.stoffel@gamlor.info
  * @since 11.04.12
  */
-public class MySqlPreparedStatement implements PreparedQuery {
+public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
     private final AbstractMySqlConnection connection;
     private final StatementPreparedEOF statementInfo;
     private volatile boolean isOpen = true;
@@ -25,7 +25,7 @@ public class MySqlPreparedStatement implements PreparedQuery {
     }
 
     @Override
-    public DbFuture<ResultSet> execute(final Object... params) {
+    public DbFuture execute(final Object... params) {
         if(isClosed()){
             throw new IllegalStateException("Cannot execute closed statement");
         }
