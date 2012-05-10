@@ -9,7 +9,7 @@ import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -101,9 +101,8 @@ public class ProtocolHandler {
     private void handleOkResponse(AbstractMySqlConnection connection, OkResponse.RegularOK response) {
         logger.trace("Response '{}' on connection {}", response, connection);
 
-        List<String> warnings = null;
+        List<String> warnings = new ArrayList<String>(response.getWarningCount());
         if (response.getWarningCount() > 0) {
-            warnings = new LinkedList<String>();
             for (int i = 0; i < response.getWarningCount(); i++) {
                 warnings.add(response.getMessage());
             }
@@ -123,7 +122,7 @@ public class ProtocolHandler {
                 throw new IllegalStateException("Received an OkResponse with no activeRequest " + response);
             }
         }
-        Result result = new DefaultResult(response.getAffectedRows(), warnings);
+        Result result = new MysqlResult(response.getAffectedRows(), warnings,response.getInsertId());
         activeRequest.complete(result);
     }
 

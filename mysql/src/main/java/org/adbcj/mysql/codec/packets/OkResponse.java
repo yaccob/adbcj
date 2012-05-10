@@ -89,7 +89,9 @@ public abstract class OkResponse extends ServerPacket {
         private final int warningCount;
         private final String message;
 
-        public RegularOK(int length, int packetNumber, long affectedRows, long insertId, Set<ServerStatus> serverStatus, int warningCount, String message) {
+        public RegularOK(int length, int packetNumber,
+                         long affectedRows, long insertId,
+                         Set<ServerStatus> serverStatus, int warningCount, String message) {
             super(length, packetNumber);
             this.affectedRows = affectedRows;
             this.insertId = insertId;
