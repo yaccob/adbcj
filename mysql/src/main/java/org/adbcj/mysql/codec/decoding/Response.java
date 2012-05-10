@@ -2,7 +2,6 @@ package org.adbcj.mysql.codec.decoding;
 
 import org.adbcj.PreparedStatement;
 import org.adbcj.mysql.codec.*;
-import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
@@ -60,8 +59,8 @@ class Response extends DecoderState {
     protected ErrorResponse decodeErrorResponse(InputStream in, int length, int packetNumber) throws IOException {
         int errorNumber = IoUtils.readUnsignedShort(in);
         in.read(); // Throw away sqlstate marker
-        String sqlState = IoUtils.readString(in, CHARSET);
-        String message = IoUtils.readString(in, CHARSET);
+        String sqlState = IoUtils.readNullTerminatedString(in, CHARSET);
+        String message = IoUtils.readNullTerminatedString(in, CHARSET);
         return new ErrorResponse(length, packetNumber, errorNumber, sqlState, message);
     }
 }

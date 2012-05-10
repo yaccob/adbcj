@@ -67,7 +67,7 @@ public class SupportedDataTypesTest {
         final ResultSet resultSet = statement.executeQuery(42,
                 "4242",
                 42L,
-                new BigDecimal("42"),
+                new BigDecimal("42.42"),
                 new Date(),
                 42.4200001).get();
         final Row row = resultSet.get(0);
@@ -78,15 +78,23 @@ public class SupportedDataTypesTest {
 
     }
     @Test
-    public void canBindNullToParameter() {
-        Assert.fail();
+    public void canBindNullToParameter() throws Exception {
+        final Connection connection = connectionManager.connect().get();
+        final PreparedStatement statement = connection.prepareStatement("SELECT * FROM table_with_some_values " +
+                "WHERE can_be_null_int=? OR can_be_null_varchar LIKE ?").get();
+        final ResultSet resultSet = statement.executeQuery(42, null).get();
+        final Row row = resultSet.get(0);
+        Assert.assertNotNull(row);
+
+
+        connection.close().get();
     }
 
     private void assertValuesOfResult(Row row) {
         Assert.assertEquals(row.get("intColumn").getInt(), 42);
         Assert.assertEquals(row.get("varCharColumn").getString(),"4242");
         Assert.assertEquals(row.get("bigIntColumn").getLong(),42L);
-        Assert.assertEquals(row.get("decimalColumn").getBigDecimal(),new BigDecimal("42"));
+        Assert.assertEquals(row.get("decimalColumn").getBigDecimal(),new BigDecimal("42.42"));
         Assert.assertTrue(row.get("dateColumn").getDate().getTime() < System.currentTimeMillis());
         Assert.assertEquals(row.get("doubleColumn").getDouble(),42.42,0.0001);
         Assert.assertEquals(row.get(6).getString(),null);

@@ -69,15 +69,21 @@ public class PreparedStatementRequest extends CommandRequest {
     }
 
     private void writeParameters(ByteArrayOutputStream out) throws IOException {
-        for (Object param : data) {
-            if (param instanceof String) {
-                IoUtils.writeLengthCodedString(out, (String) param, "UTF-8");
-            } else if(param instanceof Integer){
-                IoUtils.writeLong(out, ((Integer) param).longValue(),4);
-            } else if(param instanceof Long){
-                IoUtils.writeLong(out, ((Long) param),8);
-            } else {
-                throw new UnsupportedOperationException("Not yet implemented:"+param.getClass());
+        if (types.size() != data.length) {
+            throw new IllegalStateException("Expect type and data length to match. Type length: " +
+                    types.size() + " data length " + data.length);
+        }
+        for (int i = 0; i < data.length;i++) {
+            Object param = data[i];
+            MysqlType type = types.get(i);
+            if(null!=param){
+                if (MysqlType.VARCHAR == type) {
+                    IoUtils.writeLengthCodedString(out, param.toString(), "UTF-8");
+                } if (MysqlType.VAR_STRING == type) {
+                    IoUtils.writeLengthCodedString(out, param.toString(), "UTF-8");
+                }  else {
+                    throw new UnsupportedOperationException("Not yet implemented:" + type);
+                }
             }
         }
     }

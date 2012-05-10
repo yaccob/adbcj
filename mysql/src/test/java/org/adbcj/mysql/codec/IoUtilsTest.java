@@ -63,8 +63,8 @@ public class IoUtilsTest {
 		System.arraycopy(secondBytes, 0, newBytes, firstBytes.length + 1, secondBytes.length);
 		InputStream in = new ByteArrayInputStream(newBytes);
 
-		Assert.assertEquals(IoUtils.readString(in, "UTF-8"), first);
-		Assert.assertEquals(IoUtils.readString(in, "UTF-8"), second);
+		Assert.assertEquals(IoUtils.readNullTerminatedString(in, "UTF-8"), first);
+		Assert.assertEquals(IoUtils.readNullTerminatedString(in, "UTF-8"), second);
 	}
 	@Test
 	public void allNullOneByte() throws IOException {

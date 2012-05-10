@@ -1,7 +1,6 @@
 package org.adbcj.mysql.codec.decoding;
 
 import org.adbcj.mysql.codec.*;
-import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
 
 import java.io.IOException;
@@ -39,7 +38,7 @@ class Connecting extends DecoderState {
 
     protected ServerGreeting decodeServerGreeting(InputStream in, int length, int packetNumber) throws IOException {
         int protocol = IoUtils.safeRead(in);
-        String version = IoUtils.readString(in, "ASCII");
+        String version = IoUtils.readNullTerminatedString(in, "ASCII");
         int threadId = IoUtils.readInt(in);
 
         byte[] salt = new byte[SALT_SIZE + SALT2_SIZE];
