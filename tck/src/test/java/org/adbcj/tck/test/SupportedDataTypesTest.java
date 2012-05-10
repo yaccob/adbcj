@@ -8,6 +8,7 @@ import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -53,14 +54,41 @@ public class SupportedDataTypesTest {
         connection.close().get();
 
     }
+    @Test
+    public void canBindDatatypesToParameters() throws Exception {
+        final Connection connection = connectionManager.connect().get();
+        final PreparedStatement statement = connection.prepareStatement("SELECT *, NULL FROM supporteddatatypes " +
+                "WHERE intColumn=? " +
+                "AND varCharColumn LIKE ? " +
+                "AND bigIntColumn = ? " +
+                "AND decimalColumn = ? " +
+                "AND dateColumn < ? " +
+                "AND doubleColumn < ? ").get();
+        final ResultSet resultSet = statement.executeQuery(42,
+                "4242",
+                42L,
+                new BigDecimal("42"),
+                new Date(),
+                42.4200001).get();
+        final Row row = resultSet.get(0);
+        Assert.assertNotNull(row);
+
+
+        connection.close().get();
+
+    }
+    @Test
+    public void canBindNullToParameter() {
+        Assert.fail();
+    }
 
     private void assertValuesOfResult(Row row) {
-        Assert.assertEquals(row.get(0).getInt(), 42);
-        Assert.assertEquals(row.get(1).getString(),"4242");
-        Assert.assertEquals(row.get(2).getLong(),42L);
-        Assert.assertEquals(row.get(3).getBigDecimal(),new BigDecimal("42"));
-        Assert.assertTrue(row.get(4).getDate().getTime() < System.currentTimeMillis());
-        Assert.assertEquals(row.get(5).getDouble(),42.42,0.0001);
+        Assert.assertEquals(row.get("intColumn").getInt(), 42);
+        Assert.assertEquals(row.get("varCharColumn").getString(),"4242");
+        Assert.assertEquals(row.get("bigIntColumn").getLong(),42L);
+        Assert.assertEquals(row.get("decimalColumn").getBigDecimal(),new BigDecimal("42"));
+        Assert.assertTrue(row.get("dateColumn").getDate().getTime() < System.currentTimeMillis());
+        Assert.assertEquals(row.get("doubleColumn").getDouble(),42.42,0.0001);
         Assert.assertEquals(row.get(6).getString(),null);
     }
 }

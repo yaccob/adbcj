@@ -35,22 +35,22 @@ INSERT INTO table_with_some_values (auto_int, can_be_null_int, can_be_null_varch
 
 DROP TABLE IF EXISTS supporteddatatypes;
 CREATE TABLE IF NOT EXISTS `supporteddatatypes` (
-  `intValue` int(11) NOT NULL,
-  `varChar` varchar(255) NOT NULL,
-  `bigInt` bigint(20) NOT NULL,
-  `decimal` decimal(10,0) NOT NULL,
-  `date` date NOT NULL,
-  `double` double NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=UTF8;
+  intColumn int(11) NOT NULL,
+  varCharColumn varchar(255) NOT NULL,
+  bigIntColumn bigint(20) NOT NULL,
+  decimalColumn decimal(10,0) NOT NULL,
+  dateColumn date NOT NULL,
+  doubleColumn double NOT NULL
+)  ENGINE=InnoDB  DEFAULT CHARSET=UTF8;
 
 
 INSERT INTO `adbcjtck`.`supportedDataTypes` (
-  `intValue` ,
-  `varChar` ,
-  `bigInt` ,
-  `decimal` ,
-  `date` ,
-  `double`
+  intColumn,
+  varCharColumn,
+  bigIntColumn,
+  decimalColumn,
+  dateColumn,
+  doubleColumn
 )
 VALUES (
 '42', '4242', '42', '42', '2012-05-03', '42.42'

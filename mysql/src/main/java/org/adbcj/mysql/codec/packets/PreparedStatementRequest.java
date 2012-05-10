@@ -19,9 +19,9 @@ public class PreparedStatementRequest extends CommandRequest {
     private final int statementId;
     private final List<MysqlType> types;
     private final Object[] data;
-    private byte[] writtenForm =null;
+    private byte[] writtenForm = null;
 
-    public PreparedStatementRequest(int statementId,List<MysqlType> types, Object[] data) {
+    public PreparedStatementRequest(int statementId, List<MysqlType> types, Object[] data) {
         super(Command.STATEMENT_EXECUTE);
         this.statementId = statementId;
         this.types = types;
@@ -43,33 +43,42 @@ public class PreparedStatementRequest extends CommandRequest {
 
     @Override
     public int getLength(String charset) throws UnsupportedEncodingException {
-        return 1+writtenBytes().length;
+        return 1 + writtenBytes().length;
     }
 
-    byte[] writtenBytes(){
-        if(writtenForm==null){
+    byte[] writtenBytes() {
+        if (writtenForm == null) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-            try{
-            IoUtils.writeInt(out, statementId);
-            out.write((byte) 0); // flags: 0: CURSOR_TYPE_NO_CURSOR
-            IoUtils.writeInt(out, 1); // reserved for future use. Currently always 1.
-            out.write(IoUtils.nullMask(data));  //null_bit_map
-            out.write(1); //  new_parameter_bound_flag
-            for (MysqlType type : types) {
-                IoUtils.writeShort(out, type.getId());
-            }
-            for (Object param : data) {
-                if(param instanceof String){
-                    IoUtils.writeLengthCodedString(out, (String) param, "UTF-8");
-                } else {
-                    throw new Error("TODO");
+            try {
+                IoUtils.writeInt(out, statementId);
+                out.write((byte) 0); // flags: 0: CURSOR_TYPE_NO_CURSOR
+                IoUtils.writeInt(out, 1); // reserved for future use. Currently always 1.
+                out.write(IoUtils.nullMask(data));  //null_bit_map
+                out.write(1); //  new_parameter_bound_flag
+                for (MysqlType type : types) {
+                    IoUtils.writeShort(out, type.getId());
                 }
-            }}catch (IOException e){
+                writeParameters(out);
+            } catch (IOException e) {
                 throw throwUnchecked(e);
             }
             writtenForm = out.toByteArray();
         }
         return writtenForm;
+    }
+
+    private void writeParameters(ByteArrayOutputStream out) throws IOException {
+        for (Object param : data) {
+            if (param instanceof String) {
+                IoUtils.writeLengthCodedString(out, (String) param, "UTF-8");
+            } else if(param instanceof Integer){
+                IoUtils.writeLong(out, ((Integer) param).longValue(),4);
+            } else if(param instanceof Long){
+                IoUtils.writeLong(out, ((Long) param),8);
+            } else {
+                throw new UnsupportedOperationException("Not yet implemented:"+param.getClass());
+            }
+        }
     }
 }

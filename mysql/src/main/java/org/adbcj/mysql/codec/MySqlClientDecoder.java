@@ -18,6 +18,8 @@
  */
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.codec.decoding.DecoderState;
+import org.adbcj.mysql.codec.decoding.ResultAndState;
 import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,20 +85,14 @@ public class MySqlClientDecoder {
         }
         final int packetNumber = IoUtils.safeRead(input);
         BoundedInputStream in = new BoundedInputStream(input, length);
-        try {
-
-            logger.trace("Decoding in state {}", state);
-            ResultAndState stateAndResult = state.parse(length, packetNumber, in, connection);
-            state = stateAndResult.getNewState();
-            if (in.getRemaining() > 0) {
-                throw new IllegalStateException("Buffer underrun occured; remaining bytes: " + in.getRemaining());
-            }
-            return stateAndResult.getResult();
-        } catch (IOException e) {
-            throw e;
-        } catch (RuntimeException e) {
-            throw e;
+        logger.trace("Decoding in state {}", state);
+        ResultAndState stateAndResult = state.parse(length, packetNumber, in, connection);
+        state = stateAndResult.getNewState();
+        if (in.getRemaining() > 0) {
+            throw new IllegalStateException("Buffer underrun occured; remaining bytes: " + in.getRemaining());
         }
+        return stateAndResult.getResult();
+
     }
 
 
