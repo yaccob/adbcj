@@ -62,12 +62,12 @@ DROP TABLE IF EXISTS textcontent;
 CREATE TABLE IF NOT EXISTS textcontent (
   id int(11) NOT NULL AUTO_INCREMENT,
   lang varchar(16) COLLATE utf8_roman_ci NOT NULL,
-  `text` varchar(255) COLLATE utf8_roman_ci NOT NULL,
+  textData varchar(255) COLLATE utf8_roman_ci NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_roman_ci AUTO_INCREMENT=6 ;
 
 
-INSERT INTO textContent (id, lang, text) VALUES
+INSERT INTO textContent (id, lang, textData) VALUES
 (1, 'kr', '한국어 너무 좋다'),
 (2, 'en', 'English is a nice language'),
 (3, 'de', 'Die äüö sind toll'),

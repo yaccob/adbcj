@@ -38,7 +38,11 @@ public class LoginRequest extends ClientRequest {
 
 	private final byte[] salt;
 
-	public LoginRequest(LoginCredentials credentials, Set<ClientCapabilities> capabilities, Set<ExtendedClientCapabilities> extendedCapabilities, MysqlCharacterSet charset, byte[] salt) {
+	public LoginRequest(LoginCredentials credentials,
+                        Set<ClientCapabilities> capabilities,
+                        Set<ExtendedClientCapabilities> extendedCapabilities,
+                        MysqlCharacterSet charset,
+                        byte[] salt) {
 		this.credentials = credentials;
 		this.capabilities = capabilities;
 		this.extendedCapabilities = extendedCapabilities;

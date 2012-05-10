@@ -25,7 +25,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	private volatile Request<Void> closeRequest;
 
-	private final MysqlCharacterSet charset = MysqlCharacterSet.LATIN1_SWEDISH_CI;
+	private final MysqlCharacterSet charset = MysqlCharacterSet.UTF8_UNICODE_CI;
 
 	protected AbstractMySqlConnection(AbstractMySqlConnectionManager connectionManager, LoginCredentials credentials) {
 		super(connectionManager.isPipeliningEnabled());
