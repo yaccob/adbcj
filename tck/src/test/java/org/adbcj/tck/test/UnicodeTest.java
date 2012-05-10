@@ -36,7 +36,7 @@ public class UnicodeTest {
         Assert.assertEquals(resultSet.get(0).get("textData").getString(),"Die äüö sind toll");
         Assert.assertEquals(resultSet.get(1).get("textData").getString(),"English is a nice language");
         Assert.assertEquals(resultSet.get(2).get("textData").getString(),"ウィキペディア（英: Wikipedia）");
-        Assert.assertEquals(resultSet.get(3).get("textData").getString(),"한국어 너무 좋다");
+        Assert.assertEquals(resultSet.get(3).get("textData").getString(),"난 한국어 너무 좋아해요");
         Assert.assertEquals(resultSet.get(4).get("textData").getString(),"维基百科（英语：Wikipedia）");
     }
     @Test
@@ -54,5 +54,16 @@ public class UnicodeTest {
 
         ResultSet checkDeleted = connection.executeQuery("SELECT textData FROM textContent WHERE lang LIKE 'fa'").get();
         Assert.assertEquals(checkDeleted.size(),0);
+    }
+    @Test
+    public void worksWithPreparedStatements() throws Exception{
+        Connection connection = connectionManager.connect().get();
+        PreparedStatement statement = connection.prepareStatement("SELECT textData FROM textContent WHERE textData LIKE ?").get();
+        ResultSet resultSet = statement.executeQuery("%한국어%").get();
+
+
+        Assert.assertEquals(resultSet.get(0).get("textData").getString(),"난 한국어 너무 좋아해요");
+
+        statement.close();
     }
 }

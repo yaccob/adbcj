@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS textcontent (
 
 
 INSERT INTO textContent (id, lang, textData) VALUES
-(1, 'kr', '한국어 너무 좋다'),
+(1, 'kr', '난 한국어 너무 좋아해요'),
 (2, 'en', 'English is a nice language'),
 (3, 'de', 'Die äüö sind toll'),
 (4, 'zh', '维基百科（英语：Wikipedia）'),
