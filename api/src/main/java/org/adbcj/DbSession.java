@@ -16,7 +16,6 @@
  */
 package org.adbcj;
 
-// TODO Add some way of registering a callback that gets invoked when the DbSession has been idle
 public interface DbSession {
 
     /**
