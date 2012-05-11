@@ -91,6 +91,30 @@ public class TransactionTest {
 		}
 	}
 
+    public void testAfterCommitNotTransactionIsActive() throws Exception {
+        Connection connection = connectionManager.connect().get();
+
+        connection.beginTransaction();
+
+        connection.executeQuery("SELECT * FROM updates ").get();
+
+        connection.commit().get();
+
+        Assert.assertFalse(connection.isInTransaction());
+    }
+
+    public void testAfterRollbackNotTransactionIsActive() throws Exception {
+        Connection connection = connectionManager.connect().get();
+
+        connection.beginTransaction();
+
+        connection.executeQuery("SELECT * FROM updates ").get();
+
+        connection.rollback().get();
+
+        Assert.assertFalse(connection.isInTransaction());
+    }
+
 	public void testRollback() throws Exception {
 		Connection connection = connectionManager.connect().get();
 		try {

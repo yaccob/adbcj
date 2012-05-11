@@ -199,15 +199,17 @@ public abstract class AbstractDbSession implements DbSession {
         synchronized (lock) {
             if (transaction.isBeginScheduled()) {
                 future = enqueueCommit(transaction);
+                markTransactionAsCompleteWhenDone(future);
                 return future;
             } else {
+                transaction = null;
                 // If transaction was not started, don't worry about committing transaction
                 future = DefaultDbSessionFuture.createCompletedFuture(this, null);
             }
-            transaction = null;
         }
         return future;
     }
+
 
     public DbSessionFuture<Void> rollback() {
         checkClosed();
@@ -219,10 +221,11 @@ public abstract class AbstractDbSession implements DbSession {
             if (transaction.isBeginScheduled()) {
                 transaction.cancelPendingRequests();
                 future = enqueueRollback(transaction);
+                markTransactionAsCompleteWhenDone(future);
             } else {
+                this.transaction = null;
                 future = DefaultDbSessionFuture.createCompletedFuture(this, null);
             }
-            transaction = null;
         }
         return future;
     }
@@ -289,6 +292,16 @@ public abstract class AbstractDbSession implements DbSession {
 
     protected Request<Void> createCommitRequest(final Transaction transaction) {
         return new CommitRequest(this, transaction);
+    }
+    private void markTransactionAsCompleteWhenDone(DbSessionFuture<Void> future) {
+        future.addListener(new DbListener<Void>() {
+            @Override
+            public void onCompletion(DbFuture<Void> voidDbFuture) throws Exception {
+                synchronized (lock){
+                    transaction = null;
+                }
+            }
+        });
     }
 
     /**
