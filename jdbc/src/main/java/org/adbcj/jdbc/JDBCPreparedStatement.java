@@ -25,6 +25,16 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
 
     // Implements the execute interface method of the sub types
     public DbFuture execute(final Object... params) {
+        final int parameterCount;
+        try {
+            parameterCount = sqlStatement.getParameterMetaData().getParameterCount();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Expect that PreparedStatement.getParameterMetaData() works",e);
+        }
+        if(params.length!=parameterCount){
+            throw new IllegalArgumentException("Wrong amount of arguments." +
+                    "This statement expects "+parameterCount+" but received "+params.length+" arguments");
+        }
         return connection.enqueueTransactionalRequest(new AbstractDbSession.Request<T>(connection) {
             @Override
             protected void execute() throws Exception {

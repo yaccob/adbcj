@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
  * @author roman.stoffel@gamlor.info
  * @since 05.04.12
  */
-@Test(invocationCount=10, threadPoolSize=5, timeOut = 500000)
+@Test(invocationCount=3, threadPoolSize=5, timeOut = 500000)
 public class PreparedStatementsTest {
     private ConnectionManager connectionManager;
 
@@ -36,10 +36,10 @@ public class PreparedStatementsTest {
     }
     public void testOrderIsCorrect() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
-        PreparedStatement statement = connection.prepareStatement("SELECT * FROM simple_values" +
+        PreparedQuery statement = connection.prepareQuery("SELECT * FROM simple_values" +
                 " WHERE int_val > 0 ORDER BY int_val DESC").get();
 
-        ResultSet resultSet = statement.executeQuery().get();
+        ResultSet resultSet = statement.execute().get();
         Assert.assertEquals(resultSet.size(),4);
         Assert.assertEquals(resultSet.get(0).get(0).getInt(),4);
         Assert.assertEquals(resultSet.get(1).get(0).getInt(),3);
@@ -117,8 +117,11 @@ public class PreparedStatementsTest {
                 " WHERE str_val LIKE ?").get();
         try{
             statement.execute("1","2","3").get();
+            Assert.fail("Expect exception");
         } catch (DbException e){
             Assert.assertTrue(e.getCause() instanceof IllegalArgumentException);
+        } catch (IllegalArgumentException e){
+            // expected
         }
         connection.close();
     }
