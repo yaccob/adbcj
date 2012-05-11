@@ -17,8 +17,6 @@
 package org.adbcj.support;
 
 import org.adbcj.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,8 +26,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class AbstractDbSession implements DbSession {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractDbSession.class);
-
     protected final Object lock = this;
 
     protected final Queue<Request<?>> requestQueue = new ConcurrentLinkedQueue<Request<?>>();
@@ -38,12 +34,12 @@ public abstract class AbstractDbSession implements DbSession {
 
     private Transaction transaction; // Access must by synchronized on lock
 
-    private final boolean pipelined;
+    private final boolean pipeliningIsEnabled;
 
     private boolean pipelining = false; // Access must be synchronized on lock
 
-    protected AbstractDbSession(boolean pipelined) {
-        this.pipelined = pipelined;
+    protected AbstractDbSession(boolean pipeliningIsEnabled) {
+        this.pipeliningIsEnabled = pipeliningIsEnabled;
     }
 
     protected <E> Request<E> enqueueRequest(final Request<E> request) {
@@ -81,7 +77,7 @@ public abstract class AbstractDbSession implements DbSession {
             request = (Request<E>) requestQueue.poll();
 
             // Determine if we need to execute pipelinable requests
-            if (pipelined && request != null) {
+            if (pipeliningIsEnabled && request != null) {
                 if (request.isPipelinable()) {
                     executePipelining = !pipelining;
                 } else {
@@ -105,7 +101,7 @@ public abstract class AbstractDbSession implements DbSession {
                     if (next.isPipelinable()) {
                         invokeExecuteWithCatch(next);
 
-                        // If there are nore more requests to iterate over, put DbSession in pipelining enabled state
+                        // If there are no more requests to iterate over, put DbSession in pipelining enabled state
                         if (!iterator.hasNext()) {
                             pipelining = true;
                         }
@@ -148,11 +144,7 @@ public abstract class AbstractDbSession implements DbSession {
         for (Iterator<Request<?>> i = requestQueue.iterator(); i.hasNext(); ) {
             Request<?> request = i.next();
             if (!request.isDone()) {
-                try {
-                    request.setException(exception);
-                } catch (IllegalStateException e) {
-                    // Disregard exception
-                }
+                request.setException(exception);
             }
         }
     }

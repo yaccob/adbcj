@@ -57,7 +57,7 @@ public class InitMysql {
     private List<String> setupSQL(String resourceName) {
         InputStream sqlData = getClass().getClassLoader().getResourceAsStream(resourceName);
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(sqlData));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(sqlData,"UTF8"));
             StringBuilder wholeFile = new StringBuilder();
             String line = reader.readLine();
             while (null != line) {
