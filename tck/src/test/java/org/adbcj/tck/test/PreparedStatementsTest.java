@@ -95,6 +95,17 @@ public class PreparedStatementsTest {
         Assert.assertTrue(statement.isClosed());
         connection.close();
     }
+    public void testThrowsOnInvalidArgumentCount() throws DbException, InterruptedException{
+        Connection connection = connectionManager.connect().get();
+        PreparedQuery statement = connection.prepareQuery("SELECT * FROM simple_values" +
+                " WHERE str_val LIKE ?").get();
+        try{
+            statement.execute("1","2","3").get();
+        } catch (DbException e){
+            Assert.assertTrue(e.getCause() instanceof IllegalArgumentException);
+        }
+        connection.close();
+    }
 
     private void assertQueryFor(PreparedQuery statement, String valueToQueryFor) throws InterruptedException {
         ResultSet resultSet = statement.execute(valueToQueryFor).get();
