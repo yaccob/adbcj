@@ -63,6 +63,9 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	public synchronized boolean isClosed() {
 		return closeRequest != null || isTransportClosing();
 	}
+	public synchronized boolean isOpen() {
+		return !isClosed();
+	}
 
 	public <T> DbSessionFuture<T> executeQuery(final String sql, ResultEventHandler<T> eventHandler, T accumulator) {
 		checkClosed();
