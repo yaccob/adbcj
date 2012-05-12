@@ -82,7 +82,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         try {
             return jdbcConnection.isClosed();
         } catch (SQLException e) {
-            throw new DbException(this, e);
+            throw new DbException(e);
         }
     }
 
@@ -224,7 +224,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     @Override
     protected void checkClosed() {
         if (isClosed()) {
-            throw new DbSessionClosedException(this, "Connection is closed");
+            throw new DbSessionClosedException("Connection is closed");
         }
     }
 
@@ -260,7 +260,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                 complete(value);
                 return value;
             } catch (Exception e) {
-                error(DbException.wrap(JdbcConnection.this, e));
+                error(DbException.wrap(e));
                 if (jdbcConnection.isClosed()) {
                     connectionManager.removeConnection(JdbcConnection.this);
                 }

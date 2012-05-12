@@ -31,7 +31,7 @@ public class ProtocolHandler {
     public Throwable handleException(AbstractMySqlConnection connection, Throwable cause) throws Exception {
         logger.debug("Caught exception: ", cause);
 
-        DbException dbException = DbException.wrap(connection, cause);
+        DbException dbException = DbException.wrap( cause);
         if (connection != null) {
             DefaultDbFuture<Connection> connectFuture = connection.getConnectFuture();
             if (!connectFuture.isDone()) {
@@ -126,7 +126,7 @@ public class ProtocolHandler {
     }
 
     private void handleErrorResponse(AbstractMySqlConnection connection, ErrorResponse message) {
-        throw new MysqlException(connection, message.getSqlState() + " " + message.getMessage());
+        throw new MysqlException(message.getSqlState() + " " + message.getMessage());
     }
 
     private void handleResultSetResponse(AbstractMySqlConnection connection, ResultSetResponse message) {
@@ -177,7 +177,7 @@ public class ProtocolHandler {
 			activeRequest.complete(activeRequest.getAccumulator());
 			break;
 		default:
-			throw new MysqlException(connection, "Unkown eof response type");
+			throw new MysqlException("Unkown eof response type");
 		}
 	}
 

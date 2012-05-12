@@ -72,7 +72,7 @@ public abstract class AbstractDbSession implements DbSession {
         boolean executePipelining = false;
         synchronized (lock) {
             if (activeRequest != null && !activeRequest.isDone()) {
-                throw new ActiveRequestIncomplete(this, "Active request is not done: " + activeRequest);
+                throw new ActiveRequestIncomplete("Active request is not done: " + activeRequest);
             }
             request = (Request<E>) requestQueue.poll();
 
@@ -121,7 +121,7 @@ public abstract class AbstractDbSession implements DbSession {
         try {
             request.invokeExecute();
         } catch (Throwable e) {
-            request.error(DbException.wrap(this, e));
+            request.error(DbException.wrap(e));
         }
     }
 
@@ -184,7 +184,7 @@ public abstract class AbstractDbSession implements DbSession {
         checkClosed();
         synchronized (lock) {
             if (isInTransaction()) {
-                throw new DbException(this, "Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
+                throw new DbException("Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
             }
             transaction = new Transaction();
         }
@@ -193,7 +193,7 @@ public abstract class AbstractDbSession implements DbSession {
     public DbSessionFuture<Void> commit() {
         checkClosed();
         if (!isInTransaction()) {
-            throw new DbException(this, "Not currently in a transaction, cannot commit");
+            throw new DbException("Not currently in a transaction, cannot commit");
         }
         DbSessionFuture<Void> future;
         synchronized (lock) {
@@ -214,7 +214,7 @@ public abstract class AbstractDbSession implements DbSession {
     public DbSessionFuture<Void> rollback() {
         checkClosed();
         if (!isInTransaction()) {
-            throw new DbException(this, "Not currently in a transaction, cannot rollback");
+            throw new DbException( "Not currently in a transaction, cannot rollback");
         }
         DbSessionFuture<Void> future;
         synchronized (lock) {
@@ -236,7 +236,7 @@ public abstract class AbstractDbSession implements DbSession {
             if (transaction != null) {
                 if (transaction.isCanceled()) {
                     return DefaultDbSessionFuture.createCompletedErrorFuture(
-                            this, new DbException(this, "Could not execute request; transaction is in failed state"));
+                            this, new DbException("Could not execute request; transaction is in failed state"));
                 }
                 // Schedule starting transaction with database if possible
                 if (!transaction.isBeginScheduled()) {

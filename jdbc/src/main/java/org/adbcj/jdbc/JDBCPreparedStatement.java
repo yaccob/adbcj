@@ -29,7 +29,7 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
         try {
             parameterCount = sqlStatement.getParameterMetaData().getParameterCount();
         } catch (SQLException e) {
-            throw new IllegalStateException("Expect that PreparedStatement.getParameterMetaData() works",e);
+            throw new DbException("Expect that PreparedStatement.getParameterMetaData() works",e);
         }
         if(params.length!=parameterCount){
             throw new DbException("Wrong amount of arguments." +

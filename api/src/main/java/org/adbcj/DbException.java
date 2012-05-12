@@ -20,48 +20,24 @@ public class DbException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	private final DbSession session;
 	
-	public static DbException wrap(DbSession session, Throwable cause) {
+	public static DbException wrap(Throwable cause) {
 		if (cause instanceof DbException) {
 			return(DbException)cause;
 		} else {
-			return new DbException(session, cause);
+			return new DbException(cause.getMessage(),cause);
 		}
 	}
-	
-	public DbException(String message) {
-		super(message);
-		session = null;
-	}
-	
-	public DbException(Throwable cause) {
-		super(cause);
-		session = null;
-	}
-	
-	public DbException(DbSession session) {
-		super();
-		this.session = session;
-	}
 
-	public DbException(DbSession session, String message, Throwable cause) {
-		super(message, cause);
-		this.session = session;
-	}
+    public DbException(String message) {
+        super(message);
+    }
 
-	public DbException(DbSession session, String message) {
-		super(message);
-		this.session = session;
-	}
+    public DbException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public DbException(DbSession session, Throwable cause) {
-		super(cause);
-		this.session = session;
-	}
-
-	public DbSession getSession() {
-		return session;
-	}
-	
+    public DbException(Throwable cause) {
+        super(cause);
+    }
 }

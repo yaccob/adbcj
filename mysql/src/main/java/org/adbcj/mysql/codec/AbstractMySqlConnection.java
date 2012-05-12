@@ -164,7 +164,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	protected void checkClosed() {
 		if (isClosed()) {
-			throw new DbSessionClosedException(this, "This connection has been closed");
+			throw new DbSessionClosedException("This connection has been closed");
 		}
 	}
 
