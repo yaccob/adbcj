@@ -86,6 +86,11 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
     }
 
+    @Override
+    public boolean isOpen() throws DbException {
+        return !isClosed();
+    }
+
     public <T> DbSessionFuture<T> executeQuery(final String sql, final ResultEventHandler<T> eventHandler, final T accumulator) {
         checkClosed();
         logger.trace("Scheduling query '{}'", sql);

@@ -64,5 +64,6 @@ public interface DbSession {
 	DbFuture<Void> close() throws DbException;
 	
 	boolean isClosed() throws DbException;
+	boolean isOpen() throws DbException;
 
 }
