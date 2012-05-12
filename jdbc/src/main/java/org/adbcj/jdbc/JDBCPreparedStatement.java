@@ -32,7 +32,7 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
             throw new DbException("Expect that PreparedStatement.getParameterMetaData() works",e);
         }
         if(params.length!=parameterCount){
-            throw new DbException("Wrong amount of arguments." +
+            throw new IllegalArgumentException("Wrong amount of arguments." +
                     "This statement expects "+parameterCount+" but received "+params.length+" arguments");
         }
         return connection.enqueueTransactionalRequest(new AbstractDbSession.Request<T>(connection) {
