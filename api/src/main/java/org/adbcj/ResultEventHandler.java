@@ -18,7 +18,7 @@ package org.adbcj;
 
 /**
  * Receives notification of the logical results of a database query.  You may think of this as the SAX
- * {@link org.sax.ContentHandler} for database resultset parsing.
+ * {@link org.sax.ContentHandler} for database result set parsing.
  * 
  * <p>Each method accepts an accumulator that may be used for holding the parsing state.
  * 
@@ -49,10 +49,10 @@ public interface ResultEventHandler<T> {
 	 * @param accumulator
 	 */
 	void endFields(T accumulator);
-	
+
 	/**
 	 * Invoked when rest rows are about to be received.
-	 * 
+	 *
 	 * @param accumulator
 	 */
 	void startResults(T accumulator);
