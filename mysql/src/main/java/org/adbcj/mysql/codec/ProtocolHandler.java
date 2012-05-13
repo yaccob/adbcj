@@ -171,6 +171,7 @@ public class ProtocolHandler {
 		switch (eof.getType()) {
 		case FIELD:
 			activeRequest.getEventHandler().endFields(activeRequest.getAccumulator());
+			activeRequest.getEventHandler().startResults(activeRequest.getAccumulator());
 			break;
 		case ROW:
 			activeRequest.getEventHandler().endResults(activeRequest.getAccumulator());

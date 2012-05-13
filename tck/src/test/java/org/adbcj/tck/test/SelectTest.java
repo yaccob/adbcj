@@ -147,6 +147,64 @@ public class SelectTest {
             }
         }
     }
+    public void testWorksWithCallback() throws Exception {
+        Connection connection = connectionManager.connect().get();
+
+
+        DbSessionFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
+                "WHERE str_val LIKE 'Zero'", new ResultEventHandler<StringBuilder>() {
+            @Override
+            public void startFields(StringBuilder accumulator) {
+                accumulator.append("startFields-");
+            }
+
+            @Override
+            public void field(Field field, StringBuilder accumulator) {
+                accumulator.append("field(").append(field.getColumnLabel()).append(")-");
+            }
+
+            @Override
+            public void endFields(StringBuilder accumulator) {
+                accumulator.append("endFields-");
+            }
+
+            @Override
+            public void startResults(StringBuilder accumulator) {
+                accumulator.append("startResults-");
+            }
+
+            @Override
+            public void startRow(StringBuilder accumulator) {
+                accumulator.append("startRow-");
+            }
+
+            @Override
+            public void value(Value value, StringBuilder accumulator) {
+                accumulator.append("value(").append(value.getString()).append(")-");
+            }
+
+            @Override
+            public void endRow(StringBuilder accumulator) {
+                accumulator.append("endRow-");
+            }
+
+            @Override
+            public void endResults(StringBuilder accumulator) {
+                accumulator.append("endResults");
+            }
+
+            @Override
+            public void exception(Throwable t, StringBuilder accumulator) {
+            }
+        }, new StringBuilder());
+
+        StringBuilder result = resultFuture.get();
+        Assert.assertEquals(result.toString(),"startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults");
+
+
+
+
+    }
 
     public void testBrokenSelect() throws Exception {
         Connection connection = connectionManager.connect().get();

@@ -34,7 +34,7 @@ INSERT INTO table_with_some_values (auto_int, can_be_null_int, can_be_null_varch
 (2, 42, '42');
 
 DROP TABLE IF EXISTS supporteddatatypes;
-CREATE TABLE IF NOT EXISTS `supporteddatatypes` (
+CREATE TABLE IF NOT EXISTS supporteddatatypes (
   intColumn int(11) NOT NULL,
   varCharColumn varchar(255) NOT NULL,
   bigIntColumn bigint(20) NOT NULL,
