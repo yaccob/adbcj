@@ -1,7 +1,7 @@
 package org.adbcj.support;
 
 import org.adbcj.Field;
-import org.adbcj.ResultEventHandler;
+import org.adbcj.ResultHandler;
 import org.adbcj.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 * @author roman.stoffel@gamlor.info
 * @since 10.05.12
 */
-public class DefaultResultEventsHandler implements ResultEventHandler<DefaultResultSet> {
+public class DefaultResultEventsHandler implements ResultHandler<DefaultResultSet> {
     private static final Logger logger = LoggerFactory.getLogger(DefaultResultEventsHandler.class);
 
     private Value[] currentRow;

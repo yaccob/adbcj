@@ -117,7 +117,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		}
 	}
 
-	public <T> DbSessionFuture<T> executeQuery(final String sql, ResultEventHandler<T> eventHandler, T accumulator) {
+	public <T> DbSessionFuture<T> executeQuery(final String sql, ResultHandler<T> eventHandler, T accumulator) {
 		checkClosed();
 		Request<T> request = new ExpectResultRequest<T>(this,eventHandler, accumulator) {
 			@Override

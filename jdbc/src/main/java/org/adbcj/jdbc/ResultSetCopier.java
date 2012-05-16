@@ -1,7 +1,7 @@
 package org.adbcj.jdbc;
 
 import org.adbcj.Field;
-import org.adbcj.ResultEventHandler;
+import org.adbcj.ResultHandler;
 import org.adbcj.Type;
 import org.adbcj.support.DefaultField;
 import org.adbcj.support.DefaultValue;
@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class ResultSetCopier {
     static <T> void fillResultSet(java.sql.ResultSet jdbcResultSet,
-                                  ResultEventHandler<T> eventHandler, T accumulator) throws SQLException {
+                                  ResultHandler<T> eventHandler, T accumulator) throws SQLException {
         ResultSetMetaData metaData = jdbcResultSet.getMetaData();
         int columnCount = metaData.getColumnCount();
         List<Field> fields = new ArrayList<Field>(columnCount);

@@ -92,7 +92,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         return !isClosed();
     }
 
-    public <T> DbSessionFuture<T> executeQuery(final String sql, final ResultEventHandler<T> eventHandler, final T accumulator) {
+    public <T> DbSessionFuture<T> executeQuery(final String sql, final ResultHandler<T> eventHandler, final T accumulator) {
         checkClosed();
         logger.trace("Scheduling query '{}'", sql);
         return enqueueTransactionalRequest(new CallableRequest<T>() {

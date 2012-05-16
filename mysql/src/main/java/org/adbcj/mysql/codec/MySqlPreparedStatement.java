@@ -25,14 +25,14 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeWithCallback(ResultEventHandler<T> eventHandler, T accumulator, Object... params) {
+    public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
         return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, accumulator, params));
     }
 
     @Override
     public DbFuture execute(final Object... params) {
         validateParameters(params);
-        ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
+        ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
 
 
@@ -72,7 +72,7 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
     public class ExecutePrepareStatement<T> extends ExpectResultRequest {
         private final Object[] params;
 
-        public ExecutePrepareStatement(ResultEventHandler<T> eventHandler, T resultSet, Object... params) {
+        public ExecutePrepareStatement(ResultHandler<T> eventHandler, T resultSet, Object... params) {
             super(MySqlPreparedStatement.this.connection, eventHandler, resultSet);
             this.params = params;
         }

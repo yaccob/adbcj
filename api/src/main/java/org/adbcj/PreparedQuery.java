@@ -5,6 +5,6 @@ public interface PreparedQuery extends PreparedStatement {
 	DbFuture<ResultSet> execute(Object... params);
 
     <T> DbSessionFuture<T> executeWithCallback(
-            ResultEventHandler<T> eventHandler,
+            ResultHandler<T> eventHandler,
             T accumulator,Object... params);
 }

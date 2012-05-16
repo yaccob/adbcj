@@ -67,7 +67,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		return !isClosed();
 	}
 
-	public <T> DbSessionFuture<T> executeQuery(final String sql, ResultEventHandler<T> eventHandler, T accumulator) {
+	public <T> DbSessionFuture<T> executeQuery(final String sql, ResultHandler<T> eventHandler, T accumulator) {
 		checkClosed();
 		return enqueueTransactionalRequest(new ExpectResultRequest<T>(this,eventHandler, accumulator) {
 			@Override

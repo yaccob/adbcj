@@ -95,7 +95,7 @@ class JDBCPreparedQuery extends JDBCPreparedStatement<ResultSet> implements Prep
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeWithCallback(final ResultEventHandler<T> eventHandler,final T accumulator, Object... params) {
+    public <T> DbSessionFuture<T> executeWithCallback(final ResultHandler<T> eventHandler,final T accumulator, Object... params) {
         return executeWithCompletion(new CompletionProducerFunction<T>() {
             @Override
             public T complete() throws Exception {
@@ -109,7 +109,7 @@ class JDBCPreparedQuery extends JDBCPreparedStatement<ResultSet> implements Prep
         return executeStatement(new DefaultResultEventsHandler(),new DefaultResultSet());
     }
 
-    private <T> T executeStatement(ResultEventHandler<T> eventHandler,T accumulator) throws Exception {
+    private <T> T executeStatement(ResultHandler<T> eventHandler,T accumulator) throws Exception {
         java.sql.ResultSet nativeResult = null;
         try {
             nativeResult = sqlStatement.executeQuery();

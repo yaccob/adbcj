@@ -166,8 +166,8 @@ public class SelectTest {
         return "startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults";
     }
 
-    static ResultEventHandler<StringBuilder> buildStringInCallback() {
-        return new ResultEventHandler<StringBuilder>() {
+    static ResultHandler<StringBuilder> buildStringInCallback() {
+        return new ResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 accumulator.append("startFields-");
@@ -219,7 +219,7 @@ public class SelectTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
         DbSessionFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
-                "WHERE str_val LIKE 'Zero'", new AbstractEventHandler<StringBuilder>() {
+                "WHERE str_val LIKE 'Zero'", new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 throw new RuntimeException("Failure here");
@@ -243,7 +243,7 @@ public class SelectTest {
         Connection connection = connectionManager.connect().get();
 
         DbSessionFuture<StringBuilder> errorCause = connection.executeQuery("SELECT str_val FROM simple_values " +
-                "WHERE str_val LIKE 'Zero'", new AbstractEventHandler<StringBuilder>() {
+                "WHERE str_val LIKE 'Zero'", new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 throw new RuntimeException("Failure here");

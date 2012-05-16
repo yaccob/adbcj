@@ -157,13 +157,13 @@ public abstract class AbstractDbSession implements DbSession {
     protected abstract void checkClosed() throws DbSessionClosedException;
 
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
-        ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
+        ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
         return executeQuery0(sql, eventHandler, resultSet);
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends ResultSet> DbSessionFuture<ResultSet> executeQuery0(String sql, ResultEventHandler<T> eventHandler, T accumulator) {
+    private <T extends ResultSet> DbSessionFuture<ResultSet> executeQuery0(String sql, ResultHandler<T> eventHandler, T accumulator) {
         return (DbSessionFuture<ResultSet>) executeQuery(sql, eventHandler, accumulator);
     }
 

@@ -26,7 +26,7 @@ package org.adbcj;
  *
  * @param <T>  The accumulator type.
  */
-public interface ResultEventHandler<T> {
+public interface ResultHandler<T> {
 
 	/**
 	 * Invoked when field definitions are about to be received.

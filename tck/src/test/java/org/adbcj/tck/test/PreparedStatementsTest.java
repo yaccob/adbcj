@@ -155,7 +155,7 @@ public class PreparedStatementsTest {
 
         PreparedQuery query = connection.prepareQuery("SELECT str_val FROM simple_values " +
                 " WHERE str_val LIKE ?").get();
-        DbSessionFuture<StringBuilder> resultFuture = query.executeWithCallback(new AbstractEventHandler<StringBuilder>() {
+        DbSessionFuture<StringBuilder> resultFuture = query.executeWithCallback(new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 throw new RuntimeException("Failure here");
@@ -181,7 +181,7 @@ public class PreparedStatementsTest {
 
         PreparedQuery query = connection.prepareQuery("SELECT str_val FROM simple_values " +
                 " WHERE str_val LIKE ?").get();
-        DbSessionFuture<StringBuilder> causeOfError = query.executeWithCallback(new AbstractEventHandler<StringBuilder>() {
+        DbSessionFuture<StringBuilder> causeOfError = query.executeWithCallback(new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 throw new RuntimeException("Failure here");
