@@ -117,7 +117,10 @@ class JDBCPreparedQuery extends JDBCPreparedStatement<ResultSet> implements Prep
             fillResultSet(nativeResult, eventHandler, accumulator);
 
             return accumulator;
-        } finally {
+        } catch (Exception e){
+            eventHandler.exception(e,accumulator);
+            throw e;
+        } finally{
             if (nativeResult != null) {
                 nativeResult.close();
             }

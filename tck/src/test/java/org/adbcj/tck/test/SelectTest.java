@@ -238,8 +238,6 @@ public class SelectTest {
             Assert.assertTrue(e.getMessage().contains("Failure here"));
 
         }
-
-
     }
 
 
