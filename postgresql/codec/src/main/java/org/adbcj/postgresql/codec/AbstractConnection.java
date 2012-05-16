@@ -55,15 +55,10 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		return connectionManager;
 	}
 
-	public DbFuture<Void> ping() {
-		// TODO Implement Postgresql ping
-		throw new Error("ping() is not yet implemented");
-	}
-
 	@Override
 	protected void checkClosed() {
 		if (isClosed()) {
-			throw new DbSessionClosedException(this, "This connection has been closed");
+			throw new DbSessionClosedException( "This connection has been closed");
 		}
 	}
 
@@ -107,7 +102,12 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		}
 	}
 
-	public void finalizeClose() throws DbException {
+    @Override
+    public boolean isOpen() throws DbException {
+        return !isClosed();
+    }
+
+    public void finalizeClose() throws DbException {
 		// TODO Make a DbSessionClosedException and use here
 		errorPendingRequests(new DbException("Connection closed"));
 		synchronized (lock) {

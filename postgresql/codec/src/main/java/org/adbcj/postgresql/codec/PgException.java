@@ -16,39 +16,27 @@
  */
 package org.adbcj.postgresql.codec;
 
-import java.util.Map;
-
 import org.adbcj.DbException;
-import org.adbcj.postgresql.codec.ErrorField;
-import org.adbcj.postgresql.codec.AbstractConnection;
+
+import java.util.Map;
 
 public class PgException extends DbException {
 	private static final long serialVersionUID = 1L;
 
 	private final Map<ErrorField, String> fields;
-	
-	public PgException(AbstractConnection connection, Map<ErrorField, String> fields) {
-		super(connection);
-		this.fields = fields;
-	}
 
-	public PgException(AbstractConnection connection, String message) {
-		super(connection, message);
+	public PgException(String message) {
+		super( message);
 		this.fields = null;
 	}
 
-	public PgException(AbstractConnection connection, String message, Map<ErrorField, String> fields) {
-		super(connection, message);
+	public PgException(String message, Map<ErrorField, String> fields) {
+		super( message);
 		this.fields = fields;
 	}
 
 	public Map<ErrorField, String> getFields() {
 		return fields;
-	}
-	
-	@Override
-	public AbstractConnection getSession() {
-		return (AbstractConnection)super.getSession();
 	}
 	
 }

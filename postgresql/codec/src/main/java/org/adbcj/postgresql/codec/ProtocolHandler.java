@@ -80,7 +80,7 @@ public class ProtocolHandler {
 	private void errorOutFuture(AbstractConnection connection, DefaultDbFuture<?> future, Throwable cause) {
 		logger.debug("Erroring out future: {}", future);
 		if (!future.isDone()) {
-			future.setException(DbException.wrap(connection, cause));
+			future.setException(DbException.wrap(cause));
 		}
 	}
 
@@ -227,7 +227,7 @@ public class ProtocolHandler {
 		case IDLE:
 			break;
 		case ERROR:
-			throw new DbException(connection, "Transaction is in error state");
+			throw new DbException( "Transaction is in error state");
 		default:
 			throw new IllegalStateException("Don't know hot to handle backend status of " + backendMessage.getStatus());
 		}
