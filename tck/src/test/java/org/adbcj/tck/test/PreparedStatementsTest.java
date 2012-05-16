@@ -115,7 +115,7 @@ public class PreparedStatementsTest {
         Assert.assertTrue(statement.isClosed());
         connection.close();
     }
-    public void _testThrowsOnInvalidArgumentCount() throws DbException, InterruptedException{
+    public void testThrowsOnInvalidArgumentCount() throws DbException, InterruptedException{
         Connection connection = connectionManager.connect().get();
         PreparedQuery statement = connection.prepareQuery("SELECT * FROM simple_values" +
                 " WHERE str_val LIKE ?").get();
@@ -130,7 +130,7 @@ public class PreparedStatementsTest {
         connection.close();
     }
 
-    public void _testWorksWithCallback() throws Exception{
+    public void testWorksWithCallback() throws Exception{
 
         Connection connection = connectionManager.connect().get();
 
