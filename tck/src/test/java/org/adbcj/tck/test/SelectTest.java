@@ -31,25 +31,25 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 
-@Test(invocationCount=10, threadPoolSize=5, timeOut = 50000)
+@Test(invocationCount = 10, threadPoolSize = 5, timeOut = 50000)
 public class SelectTest {
 
-	private ConnectionManager connectionManager;
-	
-	@Parameters({"url", "user", "password"})
-	@BeforeTest
-	public void createConnectionManager(String url, String user, String password) {
-		connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-	}
+    private ConnectionManager connectionManager;
 
-	@AfterTest
-	public void closeConnectionManager() {
-		DbFuture<Void> closeFuture = connectionManager.close();
-		closeFuture.getUninterruptably();
-	}
+    @Parameters({"url", "user", "password"})
+    @BeforeTest
+    public void createConnectionManager(String url, String user, String password) {
+        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
+    }
+
+    @AfterTest
+    public void closeConnectionManager() {
+        DbFuture<Void> closeFuture = connectionManager.close();
+        closeFuture.getUninterruptably();
+    }
 
 
-    public void testSelectWhichReturnsNothing() throws Exception{
+    public void testSelectWhichReturnsNothing() throws Exception {
         Connection connection = connectionManager.connect().get();
         final CountDownLatch latch = new CountDownLatch(1);
         ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val FROM simple_values where str_val LIKE 'Not-In-Database-Value'").addListener(new DbListener<ResultSet>() {
@@ -64,7 +64,7 @@ public class SelectTest {
         connection.close();
     }
 
-	public void testSimpleSelect() throws DbException, InterruptedException {
+    public void testSimpleSelect() throws DbException, InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
 
         Connection connection = connectionManager.connect().get();
@@ -111,7 +111,7 @@ public class SelectTest {
 
             Assert.assertTrue(!i.hasNext(), "There were too many rows in result set");
 
-            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS),"Expect callback call");
+            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS), "Expect callback call");
         } finally {
             connection.close().get();
         }
@@ -122,8 +122,8 @@ public class SelectTest {
 
         ResultSet resultSet = connection.executeQuery("SELECT * FROM `table_with_some_values` WHERE `can_be_null_int` IS NULL").get();
 
-        Assert.assertEquals(resultSet.get(0).get(1).getString(),null);
-        Assert.assertEquals(resultSet.get(0).get(2).getString(),null);
+        Assert.assertEquals(resultSet.get(0).get(1).getString(), null);
+        Assert.assertEquals(resultSet.get(0).get(2).getString(), null);
 
         connection.close().get();
 
@@ -147,12 +147,27 @@ public class SelectTest {
             }
         }
     }
+
     public void testWorksWithCallback() throws Exception {
         Connection connection = connectionManager.connect().get();
 
 
         DbSessionFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
-                "WHERE str_val LIKE 'Zero'", new ResultEventHandler<StringBuilder>() {
+                "WHERE str_val LIKE 'Zero'", buildStringInCallback(), new StringBuilder());
+
+        StringBuilder result = resultFuture.get();
+        Assert.assertEquals(result.toString(), expectedStringFromCallback());
+
+        connection.close();
+
+    }
+
+    static String expectedStringFromCallback() {
+        return "startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults";
+    }
+
+    static ResultEventHandler<StringBuilder> buildStringInCallback() {
+        return new ResultEventHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 accumulator.append("startFields-");
@@ -196,11 +211,7 @@ public class SelectTest {
             @Override
             public void exception(Throwable t, StringBuilder accumulator) {
             }
-        }, new StringBuilder());
-
-        StringBuilder result = resultFuture.get();
-        Assert.assertEquals(result.toString(),"startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults");
-
+        };
     }
 
     public void testExceptionInCallbackHandler() throws Exception {
@@ -219,11 +230,11 @@ public class SelectTest {
                 latch.countDown();
             }
         }, new StringBuilder());
-        Assert.assertTrue(latch.await(5,TimeUnit.SECONDS),"Expect that exception method is called");
-        try{
+        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS), "Expect that exception method is called");
+        try {
             resultFuture.get();
             Assert.fail("Expected exception to be propagated");
-        }catch (DbException e){
+        } catch (DbException e) {
             Assert.assertTrue(e.getMessage().contains("Failure here"));
 
         }
@@ -245,5 +256,5 @@ public class SelectTest {
             connection.close().get();
         }
     }
-	
+
 }

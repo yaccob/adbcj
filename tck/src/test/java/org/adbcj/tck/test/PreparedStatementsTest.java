@@ -126,6 +126,24 @@ public class PreparedStatementsTest {
         connection.close();
     }
 
+    public void testWorksWithCallback() throws Exception{
+
+        Connection connection = connectionManager.connect().get();
+
+        PreparedQuery query = connection.prepareQuery("SELECT str_val FROM simple_values " +
+                " WHERE str_val LIKE ?").get();
+
+
+        DbSessionFuture<StringBuilder> resultFuture = query.executeWithCallback(SelectTest.buildStringInCallback(),
+                new StringBuilder(),"Zero");
+
+        StringBuilder result = resultFuture.get();
+        Assert.assertEquals(result.toString(), SelectTest.expectedStringFromCallback());
+
+        connection.close();
+
+    }
+
     private void assertQueryFor(PreparedQuery statement, String valueToQueryFor) throws InterruptedException {
         ResultSet resultSet = statement.execute(valueToQueryFor).get();
 

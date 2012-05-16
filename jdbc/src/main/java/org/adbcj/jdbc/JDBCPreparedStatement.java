@@ -24,7 +24,31 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
     }
 
     // Implements the execute interface method of the sub types
+    @SuppressWarnings("UnusedDeclaration")
     public DbFuture execute(final Object... params) {
+        return executeWithCompletion(new CompletionProducerFunction() {
+            public T complete() throws Exception{
+                return executeStatement();
+            }
+        }, params);
+    }
+
+    protected <TResult> DbSessionFuture executeWithCompletion(final CompletionProducerFunction<TResult> createCompletionAction,final Object[] params) {
+        validateParameters(params);
+        return connection.enqueueTransactionalRequest(new AbstractDbSession.Request<TResult>(connection) {
+            @Override
+            protected void execute() throws Exception {
+                int index = 1;
+                for (Object param : params) {
+                    sqlStatement.setObject(index, param);
+                    index++;
+                }
+                complete(createCompletionAction.complete());
+            }
+        });
+    }
+
+    protected void validateParameters(Object[] params) {
         final int parameterCount;
         try {
             parameterCount = sqlStatement.getParameterMetaData().getParameterCount();
@@ -35,17 +59,6 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
             throw new IllegalArgumentException("Wrong amount of arguments." +
                     "This statement expects "+parameterCount+" but received "+params.length+" arguments");
         }
-        return connection.enqueueTransactionalRequest(new AbstractDbSession.Request<T>(connection) {
-            @Override
-            protected void execute() throws Exception {
-                int index = 1;
-                for (Object param : params) {
-                    sqlStatement.setObject(index, param);
-                    index++;
-                }
-                complete(executeStatement());
-            }
-        });
     }
 
     protected abstract T executeStatement() throws Exception;
@@ -69,6 +82,10 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
             }
         });
     }
+
+    static abstract class CompletionProducerFunction<T>{
+        public abstract T complete() throws Exception;
+    }
 }
 
 class JDBCPreparedQuery extends JDBCPreparedStatement<ResultSet> implements PreparedQuery {
@@ -78,16 +95,28 @@ class JDBCPreparedQuery extends JDBCPreparedStatement<ResultSet> implements Prep
     }
 
     @Override
+    public <T> DbSessionFuture<T> executeWithCallback(final ResultEventHandler<T> eventHandler,final T accumulator, Object... params) {
+        return executeWithCompletion(new CompletionProducerFunction<T>() {
+            @Override
+            public T complete() throws Exception {
+                return executeStatement(eventHandler,accumulator);
+            }
+        }, params);
+    }
+
+    @Override
     protected ResultSet executeStatement() throws Exception {
+        return executeStatement(new DefaultResultEventsHandler(),new DefaultResultSet());
+    }
+
+    private <T> T executeStatement(ResultEventHandler<T> eventHandler,T accumulator) throws Exception {
         java.sql.ResultSet nativeResult = null;
         try {
-            ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
-            DefaultResultSet resultSet = new DefaultResultSet();
             nativeResult = sqlStatement.executeQuery();
 
-            fillResultSet(nativeResult, eventHandler, resultSet);
+            fillResultSet(nativeResult, eventHandler, accumulator);
 
-            return resultSet;
+            return accumulator;
         } finally {
             if (nativeResult != null) {
                 nativeResult.close();

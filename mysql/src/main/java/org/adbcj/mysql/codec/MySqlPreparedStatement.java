@@ -25,6 +25,11 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
     }
 
     @Override
+    public <T> DbSessionFuture<T> executeWithCallback(ResultEventHandler<T> eventHandler, T accumulator, Object... params) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public DbFuture execute(final Object... params) {
         if(isClosed()){
             throw new IllegalStateException("Cannot execute closed statement");

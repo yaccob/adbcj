@@ -13,7 +13,7 @@
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <class name="org.adbcj.tck.test.SelectTest"/>
+            <class name="org.adbcj.tck.test.PreparedStatementsTest"/>
         </classes>
 	</test>
 	<test name="MySQL-JDBC">
@@ -26,7 +26,7 @@
 		</packages>
 		<classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <class name="org.adbcj.tck.test.SelectTest"/>
+            <class name="org.adbcj.tck.test.PreparedStatementsTest"/>
 		</classes>
 	</test>
 	<!--<test name="Postgresql">-->
