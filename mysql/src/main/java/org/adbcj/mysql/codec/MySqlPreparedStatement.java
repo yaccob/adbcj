@@ -26,11 +26,20 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
 
     @Override
     public <T> DbSessionFuture<T> executeWithCallback(ResultEventHandler<T> eventHandler, T accumulator, Object... params) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, accumulator, params));
     }
 
     @Override
     public DbFuture execute(final Object... params) {
+        validateParameters(params);
+        ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
+        DefaultResultSet resultSet = new DefaultResultSet();
+
+
+        return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, resultSet, params));
+    }
+
+    private void validateParameters(Object[] params) {
         if(isClosed()){
             throw new IllegalStateException("Cannot execute closed statement");
         }
@@ -38,11 +47,6 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
             throw new IllegalArgumentException("Expect " + statementInfo.getParametersTypes().size() + " paramenters " +
                     "but got " + params.length + " parameters");
         }
-        ResultEventHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
-        DefaultResultSet resultSet = new DefaultResultSet();
-
-
-        return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, resultSet, params));
     }
 
     @Override
@@ -65,10 +69,10 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
         return future;
     }
 
-    public class ExecutePrepareStatement extends ExpectResultRequest {
+    public class ExecutePrepareStatement<T> extends ExpectResultRequest {
         private final Object[] params;
 
-        public ExecutePrepareStatement(ResultEventHandler<DefaultResultSet> eventHandler, DefaultResultSet resultSet, Object... params) {
+        public ExecutePrepareStatement(ResultEventHandler<T> eventHandler, T resultSet, Object... params) {
             super(MySqlPreparedStatement.this.connection, eventHandler, resultSet);
             this.params = params;
         }
