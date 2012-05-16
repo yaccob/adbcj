@@ -199,9 +199,9 @@ public class ProtocolHandler {
 		String message = errorResponseMessage.getFields().get(ErrorField.MESSAGE);
 		DbException exception;
 		if (message == null) {
-			exception = new PgException(connection, errorResponseMessage.getFields());
+			exception = new PgException("Unknown error",errorResponseMessage.getFields());
 		} else {
-			exception = new PgException(connection, message, errorResponseMessage.getFields());
+			exception = new PgException(message, errorResponseMessage.getFields());
 		}
 		throw exception;
 	}
