@@ -18,9 +18,7 @@
  */
 package org.adbcj.mysql.codec.packets;
 
-import org.adbcj.mysql.codec.packets.ServerPacket;
-
-public class ErrorResponse extends ServerPacket {
+public class ErrorResponse extends ServerPacket implements ResponseStart {
 
 	private final int errorNumber;
 	private final String sqlState;

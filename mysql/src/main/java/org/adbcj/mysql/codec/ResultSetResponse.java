@@ -18,9 +18,10 @@
  */
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.codec.packets.ResponseStart;
 import org.adbcj.mysql.codec.packets.ServerPacket;
 
-public class ResultSetResponse extends ServerPacket {
+public class ResultSetResponse extends ServerPacket implements ResponseStart{
 
 	private final int fieldCount;
 	private final Long extra;

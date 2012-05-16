@@ -2,7 +2,6 @@ package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.mysql.codec.MysqlType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,12 +14,6 @@ public final class StatementPreparedEOF extends ServerPacket {
     private final int colums;
     private List<MysqlType> parametersTypes;
 
-    public StatementPreparedEOF(int packetLength, int packetNumber, OkResponse.PreparedStatementOK preparedStatement) {
-        super(packetLength, packetNumber);
-        this.handlerId = preparedStatement.getHandlerId();
-        this.colums = preparedStatement.getColumns();
-        this.parametersTypes = new ArrayList<MysqlType>();
-    }
     public StatementPreparedEOF(int packetLength, int packetNumber, PreparedStatementToBuild preparedStatement) {
         super(packetLength, packetNumber);
         this.handlerId = preparedStatement.getHandlerId();
