@@ -163,21 +163,20 @@ class Encoder implements ChannelDownstreamHandler {
 
 class Handler extends SimpleChannelHandler {
 
-	private final MysqlConnection connection;
-	private final ProtocolHandler handler = new ProtocolHandler();
+	private final ProtocolHandler handler;
 
-	public Handler(MysqlConnection connection) {
-		this.connection = connection;
+    public Handler(MysqlConnection connection) {
+		this.handler =  new ProtocolHandler(connection);
 	}
 
 	@Override
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		handler.messageReceived(connection, e.getMessage());
+		handler.messageReceived(e.getMessage());
 	}
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		Throwable t = handler.handleException(connection, e.getCause());
+		Throwable t = handler.handleException(e.getCause());
 		if (t != null) {
 			// TODO: Pass exception on to connectionManager
 			t.printStackTrace();
@@ -186,7 +185,7 @@ class Handler extends SimpleChannelHandler {
 
 	@Override
 	public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-		handler.connectionClosed(connection);
+		handler.connectionClosed();
 	}
 
 }

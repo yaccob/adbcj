@@ -17,9 +17,15 @@ import java.util.List;
  * @author Mike Heath <mheath@apache.org>
  */
 public class ProtocolHandler {
+    private final AbstractMySqlConnection connection;
     private final Logger logger = LoggerFactory.getLogger(ProtocolHandler.class);
 
-    public void connectionClosed(AbstractMySqlConnection connection) throws Exception {
+
+    public ProtocolHandler(AbstractMySqlConnection connection) {
+        this.connection = connection;
+    }
+
+    public void connectionClosed() throws Exception {
         logger.trace("IoSession closed");
         connection.doClose();
     }
@@ -28,7 +34,7 @@ public class ProtocolHandler {
      * @return any exception that couldn't be handled, null if the exception was successfully handled
      * @throws Exception
      */
-    public Throwable handleException(AbstractMySqlConnection connection, Throwable cause) throws Exception {
+    public Throwable handleException(Throwable cause) throws Exception {
         logger.debug("Caught exception: ", cause);
 
         DbException dbException = DbException.wrap( cause);
@@ -58,26 +64,26 @@ public class ProtocolHandler {
         return dbException;
     }
 
-    public void messageReceived(AbstractMySqlConnection connection, Object message) throws Exception {
+    public void messageReceived(Object message) throws Exception {
         logger.trace("Received message: {}", message);
         if (message instanceof ServerGreeting) {
             handleServerGreeting(connection, (ServerGreeting) message);
         } else if (message instanceof OkResponse.RegularOK) {
-            handleOkResponse(connection, ((OkResponse.RegularOK) message));
+            handleOkResponse(((OkResponse.RegularOK) message));
         } else if (message instanceof OkResponse.PreparedStatementOK) {
             // no action right now
         } else if (message instanceof PreparedStatementToBuild) {
             // no action right now
         } else if (message instanceof StatementPreparedEOF) {
-            handlePreparedStatement(connection, (StatementPreparedEOF) message);
+            handlePreparedStatement((StatementPreparedEOF) message);
         } else if (message instanceof ErrorResponse) {
-            handleErrorResponse(connection, (ErrorResponse) message);
+            handleErrorResponse((ErrorResponse) message);
         } else if (message instanceof ResultSetResponse) {
-            handleResultSetResponse(connection, (ResultSetResponse) message);
+            handleResultSetResponse((ResultSetResponse) message);
         } else if (message instanceof ResultSetFieldResponse) {
-            handleResultSetFieldResponse(connection, (ResultSetFieldResponse) message);
+            handleResultSetFieldResponse( (ResultSetFieldResponse) message);
         } else if (message instanceof ResultSetRowResponse) {
-            handleResultSetRowResponse(connection, (ResultSetRowResponse) message);
+            handleResultSetRowResponse((ResultSetRowResponse) message);
         } else if (message instanceof EofResponse) {
             handleEofResponse(connection, (EofResponse) message);
         } else {
@@ -85,7 +91,7 @@ public class ProtocolHandler {
         }
     }
 
-    private void handlePreparedStatement(AbstractMySqlConnection connection, StatementPreparedEOF preparationInfo) {
+    private void handlePreparedStatement(StatementPreparedEOF preparationInfo) {
         AbstractMySqlConnection.PreparedStatementRequest activeRequest
                 = (AbstractMySqlConnection.PreparedStatementRequest) connection.<PreparedUpdate>getActiveRequest();
         activeRequest.complete(new MySqlPreparedStatement(connection, preparationInfo));
@@ -101,7 +107,7 @@ public class ProtocolHandler {
         connection.write(request);
     }
 
-    private void handleOkResponse(AbstractMySqlConnection connection, OkResponse.RegularOK response) {
+    private void handleOkResponse(OkResponse.RegularOK response) {
         logger.trace("Response '{}' on connection {}", response, connection);
 
         List<String> warnings = new ArrayList<String>(response.getWarningCount());
@@ -129,11 +135,11 @@ public class ProtocolHandler {
         activeRequest.complete(result);
     }
 
-    private void handleErrorResponse(AbstractMySqlConnection connection, ErrorResponse message) {
+    private void handleErrorResponse(ErrorResponse message) {
         throw new MysqlException(message.getSqlState() + " " + message.getMessage());
     }
 
-    private void handleResultSetResponse(AbstractMySqlConnection connection, ResultSetResponse message) {
+    private void handleResultSetResponse(ResultSetResponse message) {
         ExpectResultRequest<ResultSet> activeRequest = (ExpectResultRequest<ResultSet>) connection.<ResultSet>getActiveRequest();
 
         if (activeRequest == null) {
@@ -144,17 +150,17 @@ public class ProtocolHandler {
         activeRequest.getEventHandler().startFields(activeRequest.getAccumulator());
     }
 
-    private void handleResultSetFieldResponse(AbstractMySqlConnection connection, ResultSetFieldResponse message) {
+    private void handleResultSetFieldResponse(ResultSetFieldResponse message) {
         ExpectResultRequest<ResultSet> activeRequest = (ExpectResultRequest<ResultSet>) connection.<ResultSet>getActiveRequest();
 
-        ResultSetFieldResponse fieldResponse = (ResultSetFieldResponse) message;
+        ResultSetFieldResponse fieldResponse = message;
         activeRequest.getEventHandler().field(fieldResponse.getField(), activeRequest.getAccumulator());
     }
 
-    private void handleResultSetRowResponse(AbstractMySqlConnection connection, ResultSetRowResponse message) {
+    private void handleResultSetRowResponse(ResultSetRowResponse message) {
         ExpectResultRequest<ResultSet> activeRequest = (ExpectResultRequest<ResultSet>) connection.<ResultSet>getActiveRequest();
 
-        ResultSetRowResponse rowResponse = (ResultSetRowResponse) message;
+        ResultSetRowResponse rowResponse = message;
 
         activeRequest.getEventHandler().startRow(activeRequest.getAccumulator());
         for (Value value : rowResponse.getValues()) {
@@ -171,7 +177,7 @@ public class ProtocolHandler {
 			throw new IllegalStateException("No active request for response: " + message);
 		}
 
-		EofResponse eof = (EofResponse)message;
+		EofResponse eof = message;
 		switch (eof.getType()) {
 		case FIELD:
 			activeRequest.getEventHandler().endFields(activeRequest.getAccumulator());
