@@ -72,7 +72,13 @@ public class ResultSetCopier {
                         value = jdbcResultSet.getString(i);
                         break;
                     case DATE:
-                        value = jdbcResultSet.getDate(i);
+                        value = jdbcResultSet.getString(i);
+                        break;
+                    case TIME:
+                        value = jdbcResultSet.getString(i);
+                        break;
+                    case TIMESTAMP:
+                        value = jdbcResultSet.getString(i);
                         break;
                     case DOUBLE:
                         value = jdbcResultSet.getDouble(i);

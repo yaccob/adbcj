@@ -40,6 +40,9 @@ CREATE TABLE IF NOT EXISTS supporteddatatypes (
   bigIntColumn bigint(20) NOT NULL,
   decimalColumn decimal(10,2) NOT NULL,
   dateColumn date NOT NULL,
+  dateTimeColumn datetime NOT NULL,
+  timeColumn time NOT NULL,
+  timeStampColumn timestamp NOT NULL,
   doubleColumn double NOT NULL
 )  ENGINE=InnoDB  DEFAULT CHARSET=UTF8;
 
@@ -50,10 +53,13 @@ INSERT INTO adbcjtck.supportedDataTypes (
   bigIntColumn,
   decimalColumn,
   dateColumn,
+  dateTimeColumn,
+  timeColumn,
+  timeStampColumn,
   doubleColumn
 )
 VALUES (
-'42', '4242', '42', '42.42', '2012-05-03', '42.42'
+'42', '4242', '42', '42.42', '2012-05-03','2012-05-16 16:57:51', '12:05:42', '2012-05-16 17:10:36', '42.42'
 );
 
 

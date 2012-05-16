@@ -19,7 +19,6 @@
 package org.adbcj.mysql.codec;
 
 import java.io.*;
-import java.sql.Date;
 import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.Set;
@@ -269,21 +268,32 @@ public final class IoUtils {
         return nullBitsBuffer;
     }
 
-    public static Date readDate(BoundedInputStream in) throws IOException {
+    public static String readDate(BoundedInputStream in) throws IOException {
         int length = in.read();
         byte[] data = new byte[length];
         in.read(data);
-        if(length!=4){
+        if(length<4){
             throw new UnsupportedOperationException("This date format is not yet implemented");
         }
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, ((data[1] & 0xFF) << 8)
-     					+ (data[0] & 0xFF));
-        final int CALENDAR_START_WITH_MONTH_ZERO_CORRECTION = 1;
-        calendar.set(Calendar.MONTH, (data[2] & 0xFF)- CALENDAR_START_WITH_MONTH_ZERO_CORRECTION);
-     			calendar.set(Calendar.DAY_OF_MONTH, data[3] & 0xFF);
-     	return new java.sql.Date(calendar.getTime().getTime());
+        int year =  ((data[1] & 0xFF) << 8)+ (data[0] & 0xFF);
+        int month = (data[2] & 0xFF);
+        int day = (data[3] & 0xFF);
+        if(length==4){
+            return String.format("%04d-%02d-%02d",year,month,day);
+        } else if(length==7){
+            int hours =  (data[4] & 0xFF);
+            int minutes =  (data[5] & 0xFF);
+            int seconds =  (data[6] & 0xFF);
+            return String.format("%04d-%02d-%02d %02d:%02d:%02d",year,month,day,hours,minutes,seconds);
+        } else if(length==8){
+            int hours =  (data[5] & 0xFF);
+            int minutes =  (data[6] & 0xFF);
+            int seconds =  (data[7] & 0xFF);
+            return String.format("%02d:%02d:%02d",hours,minutes,seconds);
+        }  else{
+            throw new UnsupportedOperationException("This date format is not yet implemented");
+        }
     }
 
     public static void writeDate(OutputStream out,java.util.Date dateToWrite) throws IOException {

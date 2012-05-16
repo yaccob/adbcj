@@ -10,6 +10,9 @@ import org.testng.annotations.Test;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
 /**
  * @author roman.stoffel@gamlor.info
  * @since 03.05.12
@@ -91,12 +94,19 @@ public class SupportedDataTypesTest {
     }
 
     private void assertValuesOfResult(Row row) {
-        Assert.assertEquals(row.get("intColumn").getInt(), 42);
-        Assert.assertEquals(row.get("varCharColumn").getString(),"4242");
-        Assert.assertEquals(row.get("bigIntColumn").getLong(),42L);
-        Assert.assertEquals(row.get("decimalColumn").getBigDecimal(),new BigDecimal("42.42"));
-        Assert.assertTrue(row.get("dateColumn").getDate().getTime() < System.currentTimeMillis());
-        Assert.assertEquals(row.get("doubleColumn").getDouble(),42.42,0.0001);
-        Assert.assertEquals(row.get(6).getString(),null);
+        assertEquals(row.get("intColumn").getInt(), 42);
+        assertEquals(row.get("varCharColumn").getString(), "4242");
+        assertEquals(row.get("bigIntColumn").getLong(), 42L);
+        assertEquals(row.get("decimalColumn").getBigDecimal(), new BigDecimal("42.42"));
+        assertEquals(row.get("dateColumn").getString(), "2012-05-03");
+        assertTrue(row.get("dateColumn").getDate().getTime() < System.currentTimeMillis());
+        assertTrue(row.get("dateTimeColumn").getString().startsWith("2012-05-16 16:57:51"));
+        assertTrue(row.get("dateTimeColumn").getDate().getTime() < System.currentTimeMillis());
+        assertEquals(row.get("timeColumn").getString(), "12:05:42");
+        assertTrue(row.get("timeColumn").getDate().getTime() < System.currentTimeMillis());
+        assertTrue(row.get("timeStampColumn").getString().startsWith("2012-05-16 17:10:36"));
+        assertTrue(row.get("timeStampColumn").getDate().getTime() < System.currentTimeMillis());
+        assertEquals(row.get("doubleColumn").getDouble(), 42.42, 0.0001);
+        assertEquals(row.get(9).getString(), null);
     }
 }

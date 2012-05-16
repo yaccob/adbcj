@@ -16,17 +16,20 @@
  */
 package org.adbcj.support;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import org.adbcj.DbException;
 import org.adbcj.Field;
 import org.adbcj.Value;
+
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class DefaultValue implements Value {
 
 	private final Field field;
 	private final Object value;
+    private final static String[] SUPPORTED_DATE_FORMATS = {"yyyy-MM-dd HH:mm:ss.S","yyyy-MM-dd","HH:mm:ss"};
 
 	public DefaultValue(Field field, Object value) {
 		this.field = field;
@@ -66,7 +69,15 @@ public class DefaultValue implements Value {
 		}
 		if (value instanceof Date) {
 			return (Date)value;
-		}
+		} else if(value instanceof String){
+            for(String format : SUPPORTED_DATE_FORMATS) {
+                try {
+                    return new SimpleDateFormat(format).parse((String) value);
+                } catch (ParseException e) {
+                    // expected
+                }
+            }
+        }
 		throw new DbException(String.format("%s is not a date", value.toString()));
 	}
 

@@ -10,7 +10,6 @@ import org.adbcj.support.DefaultValue;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -72,6 +71,15 @@ class Row extends DecoderState {
                     case DATE:
                         value =  IoUtils.readDate(in);
                         break;
+                    case DATETIME:
+                        value =  IoUtils.readDate(in);
+                        break;
+                    case TIME:
+                        value =  IoUtils.readDate(in);
+                        break;
+                    case TIMESTAMP:
+                        value =  IoUtils.readDate(in);
+                        break;
                     case DOUBLE:
                         value =  Double.longBitsToDouble(IoUtils.readLong(in));
                         break;
@@ -110,7 +118,6 @@ class Row extends DecoderState {
 
     private void stringDecode(BoundedInputStream in, int fieldCount, Value[] values) throws IOException,ParseException {
         int i=0;
-        SimpleDateFormat dateDecoder = new SimpleDateFormat("yyyy-MM-dd");
         for (Field field : fields  ) {
             Object value = null;
             if (fieldCount != IoUtils.NULL_VALUE) {
@@ -134,7 +141,13 @@ class Row extends DecoderState {
                         value = new BigDecimal(strVal);
                         break;
                     case DATE:
-                        value = dateDecoder.parse(strVal);
+                        value = strVal;
+                        break;
+                    case TIME:
+                        value = strVal;
+                        break;
+                    case TIMESTAMP:
+                        value = strVal;
                         break;
                     case DOUBLE:
                         value = Double.parseDouble(strVal);
