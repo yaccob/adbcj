@@ -40,6 +40,10 @@ public class ProtocolHandler {
             }
             Request<?> activeRequest = connection.getActiveRequest();
             if (activeRequest != null) {
+                if(activeRequest instanceof ExpectResultRequest){
+                    ExpectResultRequest<ResultSet> resultHandlingRequest = (ExpectResultRequest<ResultSet>) activeRequest;
+                    resultHandlingRequest.getEventHandler().exception(cause,resultHandlingRequest.getAccumulator() );
+                }
                 if (!activeRequest.isDone()) {
                     try {
                         activeRequest.error(dbException);

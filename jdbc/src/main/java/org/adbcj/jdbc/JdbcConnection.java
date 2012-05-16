@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import static org.adbcj.jdbc.ResultSetCopier.fillResultSet;
+import static org.adbcj.support.UncheckedThrow.throwUnchecked;
 
 public class JdbcConnection extends AbstractDbSession implements Connection {
 
@@ -107,7 +108,10 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
 
 
                     return accumulator;
-                } finally {
+                }catch (Exception e){
+                    eventHandler.exception(e,accumulator);
+                    throw throwUnchecked(e);
+                }finally {
                     if (jdbcResultSet != null) {
                         jdbcResultSet.close();
                     }

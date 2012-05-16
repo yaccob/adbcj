@@ -201,10 +201,36 @@ public class SelectTest {
         StringBuilder result = resultFuture.get();
         Assert.assertEquals(result.toString(),"startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults");
 
+    }
 
+    public void testExceptionInCallbackHandler() throws Exception {
+        Connection connection = connectionManager.connect().get();
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        DbSessionFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
+                "WHERE str_val LIKE 'Zero'", new AbstractEventHandler<StringBuilder>() {
+            @Override
+            public void startFields(StringBuilder accumulator) {
+                throw new RuntimeException("Failure here");
+            }
+
+            @Override
+            public void exception(Throwable t, StringBuilder accumulator) {
+                latch.countDown();
+            }
+        }, new StringBuilder());
+        Assert.assertTrue(latch.await(5,TimeUnit.SECONDS),"Expect that exception method is called");
+        try{
+            resultFuture.get();
+            Assert.fail("Expected exception to be propagated");
+        }catch (DbException e){
+            Assert.assertTrue(e.getMessage().contains("Failure here"));
+
+        }
 
 
     }
+
 
     public void testBrokenSelect() throws Exception {
         Connection connection = connectionManager.connect().get();
