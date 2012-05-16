@@ -239,6 +239,23 @@ public class SelectTest {
 
         }
     }
+    public void testExceptionInCallbackHandlerDoesNotAffectNextCall() throws Exception {
+        Connection connection = connectionManager.connect().get();
+
+        DbSessionFuture<StringBuilder> errorCause = connection.executeQuery("SELECT str_val FROM simple_values " +
+                "WHERE str_val LIKE 'Zero'", new AbstractEventHandler<StringBuilder>() {
+            @Override
+            public void startFields(StringBuilder accumulator) {
+                throw new RuntimeException("Failure here");
+            }
+        }, new StringBuilder());
+        ResultSet nextCall = connection.executeQuery("SELECT str_val FROM simple_values " +
+                "WHERE str_val LIKE 'Two'").get();
+
+
+        String result = nextCall.get(0).get(0).getString();
+        Assert.assertEquals(result,"Two");
+    }
 
 
     public void testBrokenSelect() throws Exception {
