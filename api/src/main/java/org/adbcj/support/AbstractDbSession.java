@@ -351,6 +351,14 @@ public abstract class AbstractDbSession implements DbSession {
         }
 
         @Override
+        public void tryComplete(Void result) {
+            // Avoid casting exception in case
+            // the underlying implementation
+            // actually returns a result
+            super.tryComplete(null);
+        }
+
+        @Override
         public boolean cancelRequest(boolean mayInterruptIfRunning) {
             transaction.cancelPendingRequests();
             return true;
@@ -378,6 +386,14 @@ public abstract class AbstractDbSession implements DbSession {
         @Override
         public void execute() throws Exception {
             sendRollback();
+        }
+
+        @Override
+        public void tryComplete(Void result) {
+            // Avoid casting exception in case
+            // the underlying implementation
+            // actually returns a result
+            super.tryComplete(null);
         }
 
         @Override

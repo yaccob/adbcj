@@ -187,24 +187,20 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         return result;
     }
 
-    public void setResult(T result) {
-        synchronized (lock) {
-            if (done) {
-                throw new IllegalStateException("Should not set result if future is completed");
-            }
-
-            setResultAndNotify(result);
+    public final void setResult(T result) {
+        if (!trySetResult(result)) {
+            throw new IllegalStateException("Should not set result if future is completed");
         }
-
     }
 
-    public void trySetResult(T result) {
+    public boolean trySetResult(T result) {
         synchronized (lock) {
             if (done) {
-                return;
+                return false;
             }
 
             setResultAndNotify(result);
+            return true;
         }
 
     }
