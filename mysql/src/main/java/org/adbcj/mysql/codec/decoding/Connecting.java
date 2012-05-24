@@ -36,7 +36,7 @@ class Connecting extends DecoderState {
         return result(RESPONSE,serverGreeting);
     }
 
-    protected ServerGreeting decodeServerGreeting(InputStream in, int length, int packetNumber) throws IOException {
+    protected ServerGreeting decodeServerGreeting(BoundedInputStream in, int length, int packetNumber) throws IOException {
         int protocol = IoUtils.safeRead(in);
         String version = IoUtils.readNullTerminatedString(in, "ASCII");
         int threadId = IoUtils.readInt(in);
@@ -51,6 +51,8 @@ class Connecting extends DecoderState {
         in.skip(GREETING_UNUSED_SIZE);
 
         in.read(salt, SALT_SIZE, SALT2_SIZE);
+        // skip all plugin data for now
+        in.read(new byte[in.getRemaining()-1]);
         in.read(); // Throw away 0 byte
 
         return new ServerGreeting(length, packetNumber, protocol, version, threadId, salt, serverCapabilities, charSet,
