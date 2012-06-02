@@ -37,11 +37,9 @@ public class JdbcConnectionManager implements ConnectionManager {
 
 	private volatile boolean pipeliningEnabled = false;
 
-	public JdbcConnectionManager(JDBCConnectionProvider connectionProvider) {
-		this(createPool(), connectionProvider);
-	}
 
-    public JdbcConnectionManager(ExecutorService executorService, JDBCConnectionProvider connectionProvider) {
+    public JdbcConnectionManager(ExecutorService executorService,
+                                 JDBCConnectionProvider connectionProvider) {
         this.executorService = executorService;
         this.connectionProvider = connectionProvider;
     }

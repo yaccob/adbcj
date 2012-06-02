@@ -18,7 +18,9 @@ package org.adbcj.postgresql.mina;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 
 import org.adbcj.ConnectionManager;
 import org.adbcj.ConnectionManagerFactory;
@@ -29,7 +31,11 @@ public class MinaConnectionManagerFactory implements ConnectionManagerFactory {
 	public static final String PROTOCOL = "postgresql-mina";
 	public static final int DEFAULT_PORT = 5432; 
 
-	public ConnectionManager createConnectionManager(String url, String username, String password, Properties properties) throws DbException {
+	public ConnectionManager createConnectionManager(String url,
+                                                     String username,
+                                                     String password,
+                                                     Map<String,String> properties,
+                                                     ExecutorService service) throws DbException {
 		try {
 			/*
 			 * Parse URL
@@ -45,7 +51,7 @@ public class MinaConnectionManagerFactory implements ConnectionManagerFactory {
 			}
 			String schema = uri.getPath().substring(1);
 
-			return new MinaConnectionManager(host, port, username, password, schema, properties);
+			return new MinaConnectionManager(host, port, username, password, schema, properties,service);
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}

@@ -4,9 +4,11 @@ import org.adbcj.ConnectionManager;
 import org.adbcj.DbException;
 import org.adbcj.ConnectionManagerFactory;
 
+import java.util.Map;
 import java.util.Properties;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author Mike Heath
@@ -16,7 +18,11 @@ public class NettyConnectionManagerFactory implements ConnectionManagerFactory {
 	public static final String PROTOCOL = "postgresql-netty";
 	public static final int DEFAULT_PORT = 5432;
 
-	public ConnectionManager createConnectionManager(String url, String username, String password, Properties properties) throws DbException {
+	public ConnectionManager createConnectionManager(String url,
+                                                     String username,
+                                                     String password,
+                                                     Map<String,String> properties,
+                                                     ExecutorService dispatcher) throws DbException {
 		try {
 			/*
 			 * Parse URL
@@ -32,7 +38,12 @@ public class NettyConnectionManagerFactory implements ConnectionManagerFactory {
 			}
 			String schema = uri.getPath().substring(1);
 
-			return new NettyConnectionManager(host, port, username, password, schema, properties);
+			return new NettyConnectionManager(host,
+                    port,
+                    username,
+                    password,
+                    schema,
+                    properties,dispatcher);
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}

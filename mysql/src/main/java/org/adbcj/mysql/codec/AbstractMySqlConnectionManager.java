@@ -27,7 +27,7 @@ public abstract class AbstractMySqlConnectionManager implements
 
 	private volatile boolean pipeliningEnabled = true;
 
-	public AbstractMySqlConnectionManager(String username, String password, String schema, Properties properties) {
+	public AbstractMySqlConnectionManager(String username, String password, String schema) {
 		this.credentials = new LoginCredentials(username, password, schema);
 	}
 

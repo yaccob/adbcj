@@ -26,9 +26,11 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Properties;
 import java.net.InetSocketAddress;
 import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author Mike Heath
@@ -99,7 +101,7 @@ public class MinaConnectionManager extends AbstractConnectionManager {
 	};
 
 	public MinaConnectionManager(String host, int port, String username, String password, String database,
-			Properties properties) {
+			Map<String,String> properties,ExecutorService service) {
 		super(username, password, database);
 		logger.debug("Creating new Postgresql ConnectionManager");
 

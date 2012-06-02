@@ -29,7 +29,7 @@
 		<module>api</module>
 		<module>jdbc</module>
 		<module>mysql</module>
-		<module>postgresql</module>
+		<!--<module>postgresql</module>-->
 		<module>tck</module>
 	</modules>
 

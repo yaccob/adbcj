@@ -36,6 +36,7 @@ import org.jboss.netty.buffer.ChannelBufferOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -61,16 +62,16 @@ public class NettyConnectionManager extends AbstractConnectionManager {
 
     private volatile boolean pipeliningEnabled = true;
 
-    public NettyConnectionManager(String host, int port, String username, String password, String database, Properties properties, ChannelFactory channelFactory) {
-        super(username, password, database);
-        executorService = null;
-        bootstrap = initBootstrap(channelFactory, host, port);
-    }
-
-    public NettyConnectionManager(String host, int port, String username, String password, String database, Properties properties) {
+    public NettyConnectionManager(String host,
+                                  int port,
+                                  String username,
+                                  String password,
+                                  String database,
+                                  Map<String,String> properties,
+                                  ExecutorService dispatcher) {
         super(username, password, database);
         executorService = Executors.newCachedThreadPool();
-        ChannelFactory channelFactory = new NioClientSocketChannelFactory(executorService, executorService);
+        ChannelFactory channelFactory = new NioClientSocketChannelFactory(executorService, dispatcher);
         bootstrap = initBootstrap(channelFactory, host, port);
     }
 

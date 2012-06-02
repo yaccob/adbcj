@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,12 +33,17 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 	private final ExecutorService executorService;
 	private final ClientBootstrap bootstrap;
 
-	public MysqlConnectionManager(String host, int port, String username,
-                                  String password, String schema, Properties properties) {
-		super(username, password, schema, properties);
+	public MysqlConnectionManager(String host,
+                                  int port,
+                                  String username,
+                                  String password,
+                                  String schema,
+                                  Map<String,String> properties,
+                                  ExecutorService workDispatcher) {
+		super(username, password, schema);
 		executorService = Executors.newCachedThreadPool();
 
-		ChannelFactory factory = new NioClientSocketChannelFactory(executorService, executorService);
+		ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), workDispatcher);
 		bootstrap = new ClientBootstrap(factory);
 		init(host, port);
 	}

@@ -6,7 +6,9 @@ import org.adbcj.DbException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 
 public class MySqlConnectionManagerFactory implements ConnectionManagerFactory {
 
@@ -14,7 +16,11 @@ public class MySqlConnectionManagerFactory implements ConnectionManagerFactory {
 	public static final int DEFAULT_PORT = 3306;
 
 	@Override
-	public ConnectionManager createConnectionManager(String url, String username, String password, Properties properties) throws DbException {
+	public ConnectionManager createConnectionManager(String url,
+                                                     String username,
+                                                     String password,
+                                                     Map<String,String> properties,
+                                                     ExecutorService dispatcher) throws DbException {
 		try {
 			/*
 			 * Parse URL
@@ -34,7 +40,7 @@ public class MySqlConnectionManagerFactory implements ConnectionManagerFactory {
 			}
 			String schema = path.substring(1);
 
-			return new MysqlConnectionManager(host, port, username, password, schema, properties);
+			return new MysqlConnectionManager(host, port, username, password, schema, properties,dispatcher);
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}

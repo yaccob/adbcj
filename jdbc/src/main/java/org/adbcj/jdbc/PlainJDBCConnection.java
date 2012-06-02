@@ -3,6 +3,7 @@ package org.adbcj.jdbc;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -17,9 +18,12 @@ public final class PlainJDBCConnection implements JDBCConnectionProvider {
     private final String jdbcUrl;
     private final Properties properties;
 
-    public PlainJDBCConnection(String jdbcUrl, String username,String password, Properties properties) {
+    public PlainJDBCConnection(String jdbcUrl, String username,String password, Map<String,String> properties) {
         this.jdbcUrl = jdbcUrl;
-        this.properties = new Properties(properties);
+        this.properties = new Properties();
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            properties.put(entry.getKey(),entry.getValue());
+        }
 
         this.properties.put(USER, username);
         this.properties.put(PASSWORD, password);

@@ -22,15 +22,20 @@ import org.adbcj.DbException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 
 
 public class JdbcConnectionManagerFactory implements ConnectionManagerFactory {
 
 	private static final String PROTOCOL = "jdbc";
 
-	public ConnectionManager createConnectionManager(String url, String username, String password,
-	                                                 Properties properties) throws DbException {
+	public ConnectionManager createConnectionManager(String url,
+                                                     String username,
+                                                     String password,
+	                                                 Map<String,String> properties,
+                                                     ExecutorService dispatcher) throws DbException {
 		try {
 			URI uri = new URI(url);
 			// Throw away the 'adbcj' protocol part of the URL
@@ -38,14 +43,14 @@ public class JdbcConnectionManagerFactory implements ConnectionManagerFactory {
 
 			String jdbcUrl = uri.toString();
 
-			return new JdbcConnectionManager(new PlainJDBCConnection(jdbcUrl, username, password, properties));
+			return new JdbcConnectionManager(dispatcher,new PlainJDBCConnection(jdbcUrl, username, password, properties));
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}
 	}
 
-    public ConnectionManager createConnectionManager(JDBCConnectionProvider jdbcConnectionProvider){
-        return new JdbcConnectionManager(jdbcConnectionProvider);
+    public ConnectionManager createConnectionManager(ExecutorService dispatcher,JDBCConnectionProvider jdbcConnectionProvider){
+        return new JdbcConnectionManager(dispatcher,jdbcConnectionProvider);
     }
 
 	@Override

@@ -18,8 +18,12 @@ package org.adbcj;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ConnectionManagerProvider {
 
@@ -28,10 +32,21 @@ public class ConnectionManagerProvider {
 	private ConnectionManagerProvider () {}
 	
 	public static ConnectionManager createConnectionManager(String url, String username, String password) throws DbException {
-		return createConnectionManager(url, username, password, null);
+		return createConnectionManager(url, username, password, Collections.<String,String>emptyMap());
 	}
 
-	public static ConnectionManager createConnectionManager(String url, String username, String password, Properties properties) throws DbException {
+    public static ConnectionManager createConnectionManager(String url,
+                                                            String username,
+                                                            String password,
+                                                            Map<String,String> properties){
+        return createConnectionManager(url, username, password,properties, Executors.newCachedThreadPool());
+    }
+
+	public static ConnectionManager createConnectionManager(String url,
+                                                            String username,
+                                                            String password,
+                                                            Map<String,String> properties,
+                                                            ExecutorService dispatcher) throws DbException {
 		if (url == null) {
 			throw new IllegalArgumentException("Connection url can not be null");
 		}
@@ -48,7 +63,7 @@ public class ConnectionManagerProvider {
 			ServiceLoader<ConnectionManagerFactory> serviceLoader = ServiceLoader.load(ConnectionManagerFactory.class);
 			for (ConnectionManagerFactory factory : serviceLoader) {
 				if (factory.canHandle(protocol)) {
-					return factory.createConnectionManager(url, username, password, properties);
+					return factory.createConnectionManager(url, username, password, properties,dispatcher);
 				}
 			}
 			throw new DbException("Could not find ConnectionManagerFactory for protocol '" + protocol + "'");

@@ -13,8 +13,10 @@ import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
 
 public class InitMysql {
 
@@ -34,7 +36,7 @@ public class InitMysql {
 
     private void runSQLScript(String jdbcUrl, String user, String password, String script) {
         try {
-            Connection connection = new PlainJDBCConnection(jdbcUrl, user, password, new Properties()).getConnection();
+            Connection connection = new PlainJDBCConnection(jdbcUrl, user, password, new HashMap<String, String>()).getConnection();
             try {
                 for (String line : setupSQL(script)) {
                     Statement stmt = connection.createStatement();
