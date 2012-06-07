@@ -49,8 +49,8 @@ public class JdbcConnectionManager implements ConnectionManager {
 			throw new DbException("This connection manager is closed");
 		}
 		final DefaultDbFuture<Connection> future = new DefaultDbFuture<Connection>();
-		executorService.submit(new Callable<Connection>() {
-			public Connection call() throws Exception {
+		executorService.execute(new Runnable() {
+			public void run() {
 				try {
 					java.sql.Connection jdbcConnection = connectionProvider.getConnection();
 					JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this, jdbcConnection,getExecutorService());
@@ -63,10 +63,11 @@ public class JdbcConnectionManager implements ConnectionManager {
 							future.setResult(connection);
 						}
 					}
-					return connection;
 				} catch (Exception e) {
 					future.setException(new DbException(e));
-					throw e;
+                    // We throw the original exception here.
+                    // No nesting is used.
+                    throw UncheckedThrow.throwUnchecked(e);
 				} catch (Throwable e) {
 					future.setException(new DbException(e));
                     // We throw the original exception here.

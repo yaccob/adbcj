@@ -171,7 +171,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
 
     @Override
     protected <E> void invokeExecuteWithCatch(final Request<E> request) {
-        threadPool.submit(new Runnable() {
+        threadPool.execute(new Runnable() {
             @Override
             public void run() {
                 JdbcConnection.super.invokeExecuteWithCatch(request);

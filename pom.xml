@@ -6,7 +6,7 @@
 
 	<groupId>org.adbcj</groupId>
 	<artifactId>adbcj</artifactId>
-	<version>0.3-SNAPSHOT</version>
+	<version>0.3.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>ADBCJ</name>
@@ -29,7 +29,7 @@
 		<module>api</module>
 		<module>jdbc</module>
 		<module>mysql</module>
-		<!--<module>postgresql</module>-->
+		<module>postgresql</module>
 		<module>tck</module>
 	</modules>
 
