@@ -34,12 +34,9 @@ public abstract class AbstractDbSession implements DbSession {
 
     private Transaction transaction; // Access must by synchronized on lock
 
-    private final boolean pipeliningIsEnabled;
-
     private boolean pipelining = false; // Access must be synchronized on lock
 
-    protected AbstractDbSession(boolean pipeliningIsEnabled) {
-        this.pipeliningIsEnabled = pipeliningIsEnabled;
+    protected AbstractDbSession() {
     }
 
     protected <E> Request<E> enqueueRequest(final Request<E> request) {
@@ -76,8 +73,7 @@ public abstract class AbstractDbSession implements DbSession {
             }
             request = (Request<E>) requestQueue.poll();
 
-            // Determine if we need to execute pipelinable requests
-            if (pipeliningIsEnabled && request != null) {
+            if(request!=null){
                 if (request.isPipelinable()) {
                     executePipelining = !pipelining;
                 } else {
@@ -441,16 +437,18 @@ public abstract class AbstractDbSession implements DbSession {
 
             // The the request was cancelled and it can be removed
             if (cancelled && canRemove()) {
-                // Remove the quest and if the removal was successful and this request is active, go to the next request
-                if (canRemove() && getSession().requestQueue.remove(this)) {
+                    // Remove the quest and if the removal was successful and this request is active, go to the next request
                     synchronized (getSession().lock) {
+                    if (getSession().requestQueue.remove(this)) {
                         if (this == getSession().activeRequest) {
                             getSession().makeNextRequestActive();
                         }
                     }
                 }
+                return cancelled;
+            } else{
+                throw new Error("Not expected branch");
             }
-            return cancelled;
         }
 
         protected abstract void execute() throws Exception;

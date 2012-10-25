@@ -13,6 +13,7 @@
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
+            <!--<class name="org.adbcj.tck.test.CancelingRequests"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
         </classes>
 	</test>
@@ -26,6 +27,7 @@
 		</packages>
 		<classes>
             <class name="org.adbcj.tck.InitMysql" />
+            <!--<class name="org.adbcj.tck.test.CancelingRequests"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
 		</classes>
 	</test>

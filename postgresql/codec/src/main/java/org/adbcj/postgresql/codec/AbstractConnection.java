@@ -46,7 +46,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 	private static final DescribeMessage DEFAULT_DESCRIBE = DescribeMessage.createDescribePortalMessage(null);
 
 	public AbstractConnection(AbstractConnectionManager connectionManager) {
-		super(connectionManager.isPipeliningEnabled());
+		super();
 		this.connectionManager = connectionManager;
 		this.connectionState = new ConnectionState(connectionManager.getDatabase());
 	}
