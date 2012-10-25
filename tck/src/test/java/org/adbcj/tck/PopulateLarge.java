@@ -15,8 +15,8 @@ public class PopulateLarge {
 		ConnectionManager mysqlCM = ConnectionManagerProvider.createConnectionManager("adbcj:mysqlnetty://localhost/adbcjtck", "adbcjtck", "adbcjtck");
 		ConnectionManager pgCM = ConnectionManagerProvider.createConnectionManager("adbcj:postgresql-netty://localhost/adbcjtck", "adbcjtck", "adbcjtck");
 
-		Connection mysql = mysqlCM.connect().getUninterruptably();
-		Connection pg = pgCM.connect().getUninterruptably();
+		Connection mysql = mysqlCM.connect().get();
+		Connection pg = pgCM.connect().get();
 
 		final String insertTemplate = "INSERT INTO large (a, b, c) VALUES ('%s', '%s', '%s')"; 
 		for (int i = 0; i < 998; i++) {

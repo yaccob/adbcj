@@ -27,9 +27,9 @@ public class SupportedDataTypesTest {
     }
 
     @AfterTest
-    public void closeConnectionManager() {
+    public void closeConnectionManager() throws InterruptedException {
         DbFuture<Void> closeFuture = connectionManager.close();
-        closeFuture.getUninterruptably();
+        closeFuture.get();
     }
 
     @Test

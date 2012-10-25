@@ -134,41 +134,12 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             return getResult();
         }
         synchronized (lock) {
-            if (done) {
-                return getResult();
-            }
             final long startTime = System.nanoTime();
             while (!done &&(startTime+timeoutNanos) > System.nanoTime() ){
                 lock.wait(timeoutMillis);
             }
             if (!done) {
                 throw new TimeoutException();
-            }
-        }
-        return getResult();
-    }
-
-    public T getUninterruptably() throws DbException {
-        if (done) {
-            return getResult();
-        }
-        synchronized (lock) {
-            if (done) {
-                return getResult();
-            }
-            boolean interrupted = false;
-            try {
-                while (!done) {
-                    try {
-                        lock.wait();
-                    } catch (InterruptedException e) {
-                        interrupted = true;
-                    }
-                }
-            } finally {
-                if (interrupted) {
-                    Thread.currentThread().interrupt();
-                }
             }
         }
         return getResult();

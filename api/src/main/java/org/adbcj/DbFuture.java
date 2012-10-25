@@ -85,15 +85,4 @@ public interface DbFuture<T> extends Future<T> {
      */
 	public T get(long timeout, TimeUnit unit) throws DbException, InterruptedException, TimeoutException;
 	
-    /**
-     * Waits if necessary for the database operation to complete, and then retrieves its result without the possibility
-     * of being interrupted.
-     *
-     * @return the operation result
-     * 
-     * @throws CancellationException if the operation was cancelled
-     * @throws DbException if the operation threw an exception
-     */
-	public T getUninterruptably() throws DbException;
-	
 }
