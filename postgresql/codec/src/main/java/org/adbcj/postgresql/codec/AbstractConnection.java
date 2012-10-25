@@ -107,7 +107,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
         return !isClosed();
     }
 
-    public void finalizeClose() throws DbException {
+    void finalizeClose() throws DbException {
 		// TODO Make a DbSessionClosedException and use here
 		errorPendingRequests(new DbException("Connection closed"));
 		synchronized (lock) {

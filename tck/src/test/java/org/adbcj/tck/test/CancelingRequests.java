@@ -38,6 +38,8 @@ public class CancelingRequests {
 
         Assert.assertFalse(cannotBeCanceled);
 
+        connection.close();
+
     }
     @Test
     public void canChancelNotYetRunningStatement() throws InterruptedException {
@@ -55,6 +57,7 @@ public class CancelingRequests {
         } catch (CancellationException expected){
             //expected
         }
+        connection.close();
 
     }
 }
