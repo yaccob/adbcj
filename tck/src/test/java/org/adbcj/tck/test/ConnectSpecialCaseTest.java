@@ -31,7 +31,7 @@ public class ConnectSpecialCaseTest {
 		ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, "__BADPASSWORD__");
 		try {
 			DbFuture<Connection> connectFuture = connectionManager.connect().addListener(new DbListener<Connection>() {
-				public void onCompletion(DbFuture<Connection> future) throws Exception {
+				public void onCompletion(DbFuture<Connection> future) {
 					callbacks[0] = true;
 					latch.countDown();
 				}

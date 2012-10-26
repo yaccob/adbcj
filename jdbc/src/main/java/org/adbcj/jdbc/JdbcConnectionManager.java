@@ -18,7 +18,6 @@ package org.adbcj.jdbc;
 
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.UncheckedThrow;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -63,16 +62,10 @@ public class JdbcConnectionManager implements ConnectionManager {
 							future.setResult(connection);
 						}
 					}
-				} catch (Exception e) {
-					future.setException(new DbException(e));
-                    // We throw the original exception here.
-                    // No nesting is used.
-                    throw UncheckedThrow.throwUnchecked(e);
 				} catch (Throwable e) {
-					future.setException(new DbException(e));
-                    // We throw the original exception here.
-                    // No nesting is used.
-                    throw UncheckedThrow.throwUnchecked(e);
+                    DbException ex = DbException.wrap(e);
+					future.setException(ex);
+                    throw ex;
 				}
 			}
 		});
@@ -85,7 +78,7 @@ public class JdbcConnectionManager implements ConnectionManager {
 				closeFuture = new DefaultDbFuture<Void>();
 				closeFuture.addListener(new DbListener<Void>() {
 					@Override
-					public void onCompletion(DbFuture<Void> future) throws Exception {
+					public void onCompletion(DbFuture<Void> future) {
 						executorService.shutdown();
 					}
 				});

@@ -22,7 +22,6 @@ import org.adbcj.mysql.codec.ClientRequest;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 
 
 public class CommandRequest extends ClientRequest {
@@ -38,7 +37,7 @@ public class CommandRequest extends ClientRequest {
     }
 
     @Override
-    public int getLength(String charset) throws UnsupportedEncodingException {
+    public int getLength(String charset) {
         return 1;
     }
 

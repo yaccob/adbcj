@@ -17,7 +17,8 @@
 package org.adbcj.jdbc;
 
 import org.adbcj.*;
-import org.adbcj.support.*;
+import org.adbcj.support.AbstractDbSession;
+import org.adbcj.support.DefaultDbSessionFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import static org.adbcj.jdbc.ResultSetCopier.fillResultSet;
-import static org.adbcj.support.UncheckedThrow.throwUnchecked;
 
 public class JdbcConnection extends AbstractDbSession implements Connection {
 
@@ -110,7 +110,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                     return accumulator;
                 }catch (Exception e){
                     eventHandler.exception(e,accumulator);
-                    throw throwUnchecked(e);
+                    throw e;
                 }finally {
                     if (jdbcResultSet != null) {
                         jdbcResultSet.close();

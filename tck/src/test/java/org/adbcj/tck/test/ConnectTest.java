@@ -53,7 +53,7 @@ public class ConnectTest {
 		final CountDownLatch latch = new CountDownLatch(2);
 
 		DbFuture<Connection> connectFuture = connectionManager.connect().addListener(new DbListener<Connection>() {
-			public void onCompletion(DbFuture<Connection> future) throws Exception {
+			public void onCompletion(DbFuture<Connection> future) {
 				// Indicate that callback has been invoked
 				callbacks[0] = true;
 				latch.countDown();
@@ -62,7 +62,7 @@ public class ConnectTest {
 		Connection connection = connectFuture.get(10, TimeUnit.SECONDS);
 		assertTrue(!connection.isClosed());
 		DbFuture<Void> closeFuture = connection.close().addListener(new DbListener<Void>() {
-			public void onCompletion(DbFuture<Void> future) throws Exception {
+			public void onCompletion(DbFuture<Void> future) {
 				// Indicate that callback has been invoked
 				callbacks[1] = true;
 				latch.countDown();
@@ -81,7 +81,7 @@ public class ConnectTest {
 		Connection connection = connectionManager.connect().get();
 		assertTrue(!connection.isClosed());
 		connection.close().addListener(new DbListener<Void>() {
-			public void onCompletion(DbFuture<Void> future) throws Exception {
+			public void onCompletion(DbFuture<Void> future) {
 				// Indicate that finalizeClose callback has been invoked
 				latch.countDown();
 			}

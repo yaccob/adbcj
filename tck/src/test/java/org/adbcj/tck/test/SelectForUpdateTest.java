@@ -66,7 +66,7 @@ public class SelectForUpdateTest {
 		// Get lock on locks table
 		conn1.beginTransaction();
 		TestUtils.selectForUpdate(conn1, new DbListener<ResultSet>() {
-			public void onCompletion(DbFuture<ResultSet> future) throws Exception {
+			public void onCompletion(DbFuture<ResultSet> future) {
 				logger.debug("In first callback");
 				locked.set(true);
 				invoked[0] = true;
@@ -78,7 +78,7 @@ public class SelectForUpdateTest {
 		// Try to get lock with second connection
 		conn2.beginTransaction();
 		DbFuture<ResultSet> future = TestUtils.selectForUpdate(conn2, new DbListener<ResultSet>() {
-			public void onCompletion(DbFuture<ResultSet> future) throws Exception {
+			public void onCompletion(DbFuture<ResultSet> future) {
 				logger.debug("In second callback");
 				invoked[1] = true;
 				if (!locked.get()) {

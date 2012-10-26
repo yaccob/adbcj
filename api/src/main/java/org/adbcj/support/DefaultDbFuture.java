@@ -177,11 +177,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     private void notifyListener(DbListener<T> listener) {
-        try {
-            listener.onCompletion(this);
-        } catch (Throwable t) {
-            throw UncheckedThrow.throwUnchecked(t);
-        }
+        listener.onCompletion(this);
     }
 
     private void setResultAndNotify(T result) {

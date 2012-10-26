@@ -6,10 +6,7 @@ import org.adbcj.mysql.codec.MysqlType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
-
-import static org.adbcj.support.UncheckedThrow.throwUnchecked;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -42,7 +39,7 @@ public class PreparedStatementRequest extends CommandRequest {
     }
 
     @Override
-    public int getLength(String charset) throws UnsupportedEncodingException {
+    public int getLength(String charset)  {
         return 1 + writtenBytes().length;
     }
 
@@ -61,7 +58,7 @@ public class PreparedStatementRequest extends CommandRequest {
                 }
                 writeParameters(out);
             } catch (IOException e) {
-                throw throwUnchecked(e);
+                throw new RuntimeException("Unexpected IO Exception: "+e.getMessage(),e);
             }
             writtenForm = out.toByteArray();
         }

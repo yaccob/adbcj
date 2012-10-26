@@ -1,6 +1,6 @@
 package org.adbcj.mysql.codec.packets;
 
-import org.adbcj.support.UncheckedThrow;
+import org.adbcj.DbException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,7 +39,7 @@ public class StringCommandRequest extends CommandRequest {
         try {
             return payload.getBytes(charset);
         } catch (UnsupportedEncodingException e) {
-            throw UncheckedThrow.throwUnchecked(e);
+            throw DbException.wrap(e);
         }
     }
 

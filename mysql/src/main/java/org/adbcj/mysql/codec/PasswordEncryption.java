@@ -18,7 +18,7 @@
 */
 package org.adbcj.mysql.codec;
 
-import org.adbcj.support.UncheckedThrow;
+import org.adbcj.DbException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,26 +26,27 @@ import java.security.NoSuchAlgorithmException;
 
 public class PasswordEncryption {
 
-	public static byte[] encryptPassword(String password, byte[] salt)  {
-        try{
-		MessageDigest md = MessageDigest.getInstance("SHA-1");
+    public static byte[] encryptPassword(String password, byte[] salt) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
 
-		byte[] hash1 = md.digest(password.getBytes());
+            byte[] hash1 = md.digest(password.getBytes());
 
-		md.reset();
-		byte[] hash2 = md.digest(hash1);
+            md.reset();
+            byte[] hash2 = md.digest(hash1);
 
-		md.reset();
-		md.update(salt);
-		md.update(hash2);
+            md.reset();
+            md.update(salt);
+            md.update(hash2);
 
-		byte[] digest = md.digest();
-		for (int i = 0; i < digest.length; i++) {
-			digest[i] = (byte)(digest[i] ^ hash1[i]);
-		}
-		return digest; }catch (NoSuchAlgorithmException e){
-            throw UncheckedThrow.throwUnchecked(e);
+            byte[] digest = md.digest();
+            for (int i = 0; i < digest.length; i++) {
+                digest[i] = (byte) (digest[i] ^ hash1[i]);
+            }
+            return digest;
+        } catch (NoSuchAlgorithmException e) {
+            throw DbException.wrap(e);
         }
-	}
+    }
 
 }

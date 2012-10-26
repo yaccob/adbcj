@@ -4,7 +4,6 @@ import org.adbcj.mysql.codec.IoUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -24,7 +23,7 @@ public class ClosePreparedStatementRequest extends CommandRequest {
         return true;
     }
     @Override
-    public int getLength(String charset) throws UnsupportedEncodingException {
+    public int getLength(String charset) {
         return 1+4;
     }
     @Override

@@ -53,9 +53,13 @@ public class SelectTest {
         Connection connection = connectionManager.connect().get();
         final CountDownLatch latch = new CountDownLatch(1);
         ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val FROM simple_values where str_val LIKE 'Not-In-Database-Value'").addListener(new DbListener<ResultSet>() {
-            public void onCompletion(DbFuture<ResultSet> future) throws Exception {
-                future.get().size();
-                latch.countDown();
+            public void onCompletion(DbFuture<ResultSet> future) {
+                try {
+                    Assert.assertNotNull(future.get());
+                    latch.countDown();
+                } catch (InterruptedException e) {
+                    throw new AssertionError(e);
+                }
             }
         }).get();
         Iterator<Row> i = resultSet.iterator();
@@ -70,9 +74,13 @@ public class SelectTest {
         Connection connection = connectionManager.connect().get();
         try {
             ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val FROM simple_values ORDER BY int_val").addListener(new DbListener<ResultSet>() {
-                public void onCompletion(DbFuture<ResultSet> future) throws Exception {
-                    future.get().size();
-                    latch.countDown();
+                public void onCompletion(DbFuture<ResultSet> future) {
+                    try {
+                        Assert.assertNotNull(future.get());
+                        latch.countDown();
+                    } catch (InterruptedException e) {
+                        throw new AssertionError(e);
+                    }
                 }
             }).get();
 

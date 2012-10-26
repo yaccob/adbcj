@@ -294,7 +294,7 @@ public abstract class AbstractDbSession implements DbSession {
     private void markTransactionAsCompleteWhenDone(DbSessionFuture<Void> future) {
         future.addListener(new DbListener<Void>() {
             @Override
-            public void onCompletion(DbFuture<Void> voidDbFuture) throws Exception {
+            public void onCompletion(DbFuture<Void> voidDbFuture) {
                 synchronized (lock){
                     transaction = null;
                 }

@@ -18,6 +18,6 @@ package org.adbcj;
 
 public interface DbListener<T> {
 
-	void onCompletion(DbFuture<T> future) throws Exception;
+	void onCompletion(DbFuture<T> future);
 	
 }
