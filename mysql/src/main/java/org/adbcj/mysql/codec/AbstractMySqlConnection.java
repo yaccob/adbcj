@@ -51,13 +51,13 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		if (isClosed()) {
 			return DefaultDbFuture.completed(null);
 		} if(closeRequest!=null){
-            return closeRequest;
+            return closeRequest.getFuture();
         }else {
             closeRequest = new CloseRequest();
             enqueueRequest(closeRequest);
 		}
 		logger.trace("Exiting close()");
-		return closeRequest;
+		return closeRequest.getFuture();
 	}
 
 	public synchronized boolean isClosed() {

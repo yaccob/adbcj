@@ -73,7 +73,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                     return false;
                 }
             };
-            return enqueueRequest(closeRequest);
+            return enqueueRequest(closeRequest).getFuture();
         } else{
             return DefaultDbSessionFuture.completed(null);
         }
@@ -256,7 +256,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
 
         final public E call() throws Exception {
-            if (isCancelled()) {
+            if (getFuture().isCancelled()) {
                 return null;
             }
             try {

@@ -69,7 +69,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 			if (isClosed()) {
 				return DefaultDbFuture.completed(null);
 			} if(null!=closeRequest){
-                return closeRequest;
+                return closeRequest.getFuture();
             } else {
 					// If the finalizeClose is NOT immediate, schedule the finalizeClose
                 this.closeRequest =  new Request<Void>(this) {
@@ -91,7 +91,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 							return "close request";
 						}
 					};
-					return enqueueRequest(closeRequest);
+					return enqueueRequest(closeRequest).getFuture();
 			}
 		}
 	}

@@ -196,7 +196,7 @@ public abstract class AbstractDbSession implements DbSession {
         DbSessionFuture<Void> future;
         synchronized (lock) {
             if (transaction.isBeginScheduled()) {
-                future = enqueueCommit(transaction);
+                future = enqueueCommit(transaction).getFuture();
                 markTransactionAsCompleteWhenDone(future);
                 return future;
             } else {
@@ -218,7 +218,7 @@ public abstract class AbstractDbSession implements DbSession {
         synchronized (lock) {
             if (transaction.isBeginScheduled()) {
                 transaction.cancelPendingRequests();
-                future = enqueueRollback(transaction);
+                future = enqueueRollback(transaction).getFuture();
                 markTransactionAsCompleteWhenDone(future);
             } else {
                 this.transaction = null;
@@ -246,7 +246,7 @@ public abstract class AbstractDbSession implements DbSession {
             }
         }
         enqueueRequest(request);
-        return request;
+        return request.getFuture();
     }
 
     private Request<Void> enqueueStartTransaction(final Transaction transaction) {
@@ -338,7 +338,7 @@ public abstract class AbstractDbSession implements DbSession {
         }
 
         public void execute() throws Exception {
-            if (isCancelled()) {
+            if (getFuture().isCancelled()) {
                 // If the transaction has started, send a rollback
                 if (transaction.isStarted()) {
                     sendRollback();
@@ -401,15 +401,23 @@ public abstract class AbstractDbSession implements DbSession {
         }
     }
 
-    public static abstract class Request<T> extends DefaultDbSessionFuture<T> {
+    public static abstract class Request<T>  {
         private volatile Transaction transaction;
+        private final DefaultDbSessionFuture<T> futureToComplete;
+        private final AbstractDbSession session;
 
         private boolean cancelled; // Access must be synchronized on this
         private boolean executed; // Access must be synchronized on this
 
 
         public Request(AbstractDbSession session) {
-            super(session);
+            this.futureToComplete = new DefaultDbSessionFuture<T>(session){
+                @Override
+                protected boolean doCancel(boolean mayInterruptIfRunning) {
+                    return Request.this.doCancel(mayInterruptIfRunning);
+                }
+            };
+            this.session = session;
         }
 
         /**
@@ -420,9 +428,9 @@ public abstract class AbstractDbSession implements DbSession {
          */
         public final synchronized void invokeExecute() throws Exception {
             if (cancelled || executed) {
-                synchronized (getSession().lock) {
-                    if (isDone() && getSession().getActiveRequest() == this) {
-                        getSession().makeNextRequestActive();
+                synchronized (session.lock) {
+                    if (futureToComplete.isDone() && session.getActiveRequest() == this) {
+                        session.makeNextRequestActive();
                     }
                 }
             } else {
@@ -440,10 +448,10 @@ public abstract class AbstractDbSession implements DbSession {
             // The the request was cancelled and it can be removed
             if (cancelled && canRemove()) {
                     // Remove the quest and if the removal was successful and this request is active, go to the next request
-                    synchronized (getSession().lock) {
-                    if (getSession().requestQueue.remove(this)) {
-                        if (this == getSession().activeRequest) {
-                            getSession().makeNextRequestActive();
+                    synchronized (session.lock) {
+                    if (session.requestQueue.remove(this)) {
+                        if (this == session.getActiveRequest()) {
+                            session.makeNextRequestActive();
                         }
                     }
                 }
@@ -471,22 +479,23 @@ public abstract class AbstractDbSession implements DbSession {
             this.transaction = transaction;
         }
 
-        public AbstractDbSession getSession() {
-            return (AbstractDbSession) super.getSession();
-        }
 
         public void complete(T result) {
-            setResult(result);
+            futureToComplete.setResult(result);
             makeNextRequestActive();
         }
 
         public void tryComplete(T result) {
-            trySetResult(result);
+            futureToComplete.trySetResult(result);
             makeNextRequestActive();
         }
 
+        public boolean isDone() {
+            return futureToComplete.isDone();
+        }
+
         public void error(DbException exception) {
-            super.setException(exception);
+            futureToComplete.setException(exception);
             if (transaction != null) {
                 transaction.cancelPendingRequests();
             }
@@ -494,11 +503,19 @@ public abstract class AbstractDbSession implements DbSession {
         }
 
         private void makeNextRequestActive() {
-            synchronized (getSession().lock) {
-                if (getSession().activeRequest == this) {
-                    getSession().makeNextRequestActive();
+            synchronized (session.lock) {
+                if (session.getActiveRequest() == this) {
+                    session.makeNextRequestActive();
                 }
             }
+        }
+
+        public DbSessionFuture<T> getFuture(){
+            return this.futureToComplete;
+        }
+
+        public boolean cancel(boolean mayInterrupt){
+            return getFuture().cancel(mayInterrupt);
         }
     }
 

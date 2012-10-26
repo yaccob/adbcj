@@ -1,30 +1,23 @@
 package org.adbcj.postgresql.codec;
 
-import org.adbcj.postgresql.codec.frontend.StartupMessage;
-import org.adbcj.postgresql.codec.frontend.SimpleFrontendMessage;
+import org.adbcj.Connection;
+import org.adbcj.DbException;
+import org.adbcj.Field;
+import org.adbcj.Value;
+import org.adbcj.postgresql.codec.backend.*;
 import org.adbcj.postgresql.codec.frontend.FrontendMessageType;
-import org.adbcj.postgresql.codec.backend.AbstractBackendMessage;
-import org.adbcj.postgresql.codec.backend.AuthenticationMessage;
-import org.adbcj.postgresql.codec.backend.CommandCompleteMessage;
-import org.adbcj.postgresql.codec.backend.DataRowMessage;
-import org.adbcj.postgresql.codec.backend.ErrorResponseMessage;
-import org.adbcj.postgresql.codec.backend.KeyMessage;
-import org.adbcj.postgresql.codec.backend.ReadyMessage;
-import org.adbcj.postgresql.codec.backend.RowDescriptionMessage;
+import org.adbcj.postgresql.codec.frontend.SimpleFrontendMessage;
+import org.adbcj.postgresql.codec.frontend.StartupMessage;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResult;
-import org.adbcj.Connection;
-import org.adbcj.DbException;
-import org.adbcj.Value;
-import org.adbcj.Field;
 import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Mike Heath
@@ -55,14 +48,14 @@ public class ProtocolHandler {
 		if (connection != null) {
 			DefaultDbFuture<?> future = connection.getConnectFuture();
 			if (future != null && !future.isDone()) {
-				errorOutFuture(connection, future, cause);
+                future.setException(cause);
 				return;
 			} else {
 				AbstractDbSession.Request<?> request = connection.getActiveRequest();
 				if (request != null) {
 					if (!request.isDone()) {
 						try {
-							errorOutFuture(connection, request, cause);
+							errorOutFuture(request, cause);
 
 							return;
 						} catch (Exception e) {
@@ -77,10 +70,10 @@ public class ProtocolHandler {
 		cause.printStackTrace();
 	}
 
-	private void errorOutFuture(AbstractConnection connection, DefaultDbFuture<?> future, Throwable cause) {
+	private void errorOutFuture(AbstractDbSession.Request<?> future, Throwable cause) {
 		logger.debug("Erroring out future: {}", future);
 		if (!future.isDone()) {
-			future.setException(DbException.wrap(cause));
+            future.error(DbException.wrap(cause));
 		}
 	}
 
