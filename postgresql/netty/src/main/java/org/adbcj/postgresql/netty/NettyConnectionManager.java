@@ -1,5 +1,6 @@
 package org.adbcj.postgresql.netty;
 
+import org.adbcj.CloseMode;
 import org.adbcj.DbException;
 import org.adbcj.DbFuture;
 import org.adbcj.postgresql.codec.*;
@@ -22,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -36,24 +36,19 @@ public class NettyConnectionManager extends AbstractConnectionManager {
     private static final String ENCODER = NettyConnectionManager.class.getName() + ".encoder";
     private static final String DECODER = NettyConnectionManager.class.getName() + ".decoder";
 
-    private final ExecutorService executorService;
     private final ClientBootstrap bootstrap;
 
     // Access must be synchronized on 'this'
     private DefaultDbFuture<Void> closeFuture = null;
-
-    private volatile boolean pipeliningEnabled = true;
 
     public NettyConnectionManager(String host,
                                   int port,
                                   String username,
                                   String password,
                                   String database,
-                                  Map<String,String> properties,
-                                  ExecutorService dispatcher) {
+                                  Map<String,String> properties) {
         super(username, password, database);
-        executorService = Executors.newCachedThreadPool();
-        ChannelFactory channelFactory = new NioClientSocketChannelFactory(executorService, dispatcher);
+        ChannelFactory channelFactory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
         bootstrap = initBootstrap(channelFactory, host, port);
     }
 
@@ -85,13 +80,16 @@ public class NettyConnectionManager extends AbstractConnectionManager {
         }
         synchronized (this) {
             closeFuture = new DefaultDbFuture<Void>();
-            if (executorService != null) {
-                executorService.shutdownNow();
-            }
+            this.bootstrap.releaseExternalResources();
             closeFuture.setResult(null);
             return closeFuture;
         }
 
+    }
+
+    @Override
+    public DbFuture<Void> close(CloseMode mode) throws DbException {
+        throw new Error("Not implemented");
     }
 
     @Override

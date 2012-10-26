@@ -3,6 +3,7 @@ package org.adbcj.tck.test;
 import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.support.AbstractDbSession;
+import org.adbcj.tck.NoArgAction;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
@@ -27,10 +28,113 @@ public class CloseConnectionsTest {
         closeFuture.get();
     }
 
+    @Parameters({"url", "user", "password"})
+    @Test
+    public void closingManagerClosesConnections(String url, String user, String password) throws InterruptedException {
+        final ConnectionManager manager = ConnectionManagerProvider.createConnectionManager(url, user, password);
+        final Connection c1 = manager.connect().get();
+        final DbSessionFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(2)");
+        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(2)");
+        final Connection c2 = manager.connect().get();
+        c2.beginTransaction();
+        manager.close().get();
+
+
+        checkClosed(c1, runningQuery, runningQuery2, c2);
+    }
+
+    private void checkClosed(final Connection c1, DbSessionFuture<ResultSet> runningQuery, DbSessionFuture<ResultSet> runningQuery2, Connection c2) {
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                c1.executeQuery("SELECT 1");
+            }
+        });
+
+        Assert.assertTrue(c1.isClosed());
+        Assert.assertTrue(c2.isClosed());
+        Assert.assertTrue(runningQuery.isDone());
+        Assert.assertTrue(runningQuery2.isDone());
+    }
+
+    @Parameters({"url", "user", "password"})
+    @Test
+    public void foreClosingManagerClosesConnections(String url, String user, String password) throws InterruptedException {
+        final ConnectionManager manager = ConnectionManagerProvider.createConnectionManager(url, user, password);
+        final Connection c1 = manager.connect().get();
+        final DbSessionFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(2)");
+        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(2)");
+        final Connection c2 = manager.connect().get();
+        c2.beginTransaction();
+        manager.close(CloseMode.CANCEL_PENDING_OPERATIONS).get();
+
+
+        checkClosed(c1, runningQuery, runningQuery2, c2);
+
+        try{
+            runningQuery2.get();
+            Assert.fail("Should have been failed due to closing");
+        }catch (DbException e){
+            Assert.assertTrue(e.getMessage().contains("closed"));
+        }
+    }
+
+    @Test
+    public void closingConnectionDoesNotAcceptNewRequests() throws InterruptedException {
+        final Connection connection = connectionManager.connect().get();
+        final PreparedQuery preparedSelect = connection.prepareQuery("SELECT 1").get();
+        final PreparedUpdate preparedUpdate = connection.prepareUpdate("SELECT 1").get();
+        final DbSessionFuture<ResultSet> runningQuery = connection.executeQuery("SELECT SLEEP(5)");
+        connection.close();
+        Assert.assertTrue(connection.isClosed());
+
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                connection.executeQuery("SELECT 1");
+            }
+        });
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                connection.beginTransaction();
+            }
+        });
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                connection.prepareQuery("SELECT 1");
+            }
+        });
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                preparedSelect.execute();
+            }
+        });
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                preparedUpdate.execute();
+            }
+        });
+
+    }
+
+    private void shouldThrowException(NoArgAction toInvoke) {
+        try {
+            toInvoke.invoke();
+            Assert.fail("Expect exception telling us that the connection is closing");
+        } catch (DbSessionClosedException e) {
+            Assert.assertTrue(e.getMessage().contains("closed"));
+        } catch (IllegalStateException e) {
+            Assert.assertTrue(e.getMessage().contains("closed"));
+        }
+    }
 
 
     @Test
-    public void canCancelSelect() throws InterruptedException {
+    public void forceCloseConnections() throws InterruptedException {
         final Connection connection = connectionManager.connect().get();
 
         final DbSessionFuture<ResultSet> rs1 = connection.executeQuery("SELECT int_val, str_val " +
@@ -41,13 +145,13 @@ public class CloseConnectionsTest {
                 "FROM simple_values where str_val LIKE 'Not-In-Database-Value'");
 
 
-        ((AbstractDbSession)connection).errorPendingRequests(new Exception("Expect This Exception"));
+        ((AbstractDbSession) connection).errorPendingRequests(new Exception("Expect This Exception"));
 
-        try{
+        try {
             rs1.get();
             rs2.get();
             rs3.get();
-        }catch (Exception e){
+        } catch (Exception e) {
             Assert.assertTrue(e.getMessage().contains("Expect This Exception"));
         }
 

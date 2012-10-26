@@ -17,15 +17,13 @@
 package org.adbcj;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 public interface ConnectionManagerFactory {
 
 	ConnectionManager createConnectionManager(String url,
                                               String username,
                                               String password,
-                                              Map<String,String> properties,
-                                              ExecutorService dispatcher) throws DbException;
+                                              Map<String,String> properties) throws DbException;
 
 	public boolean canHandle(String protocol);
 

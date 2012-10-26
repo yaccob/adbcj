@@ -15,8 +15,6 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.Executors;
 
 public class InitMysql {
 
@@ -44,8 +42,6 @@ public class InitMysql {
                     stmt.close();
 
                 }
-
-                System.out.println("Setup done");
             } finally {
                 connection.close();
             }

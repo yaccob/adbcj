@@ -96,7 +96,12 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 		}
 	}
 
-	public boolean isClosed() throws DbException {
+    @Override
+    public DbFuture<Void> close(CloseMode closeMode) throws DbException {
+        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+    }
+
+    public boolean isClosed() throws DbException {
 		synchronized (lock) {
 			return isConnectionClosing();
 		}

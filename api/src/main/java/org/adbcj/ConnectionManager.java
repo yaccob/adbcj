@@ -34,16 +34,28 @@ public interface ConnectionManager extends DbSessionProvider {
 	/**
 	 * Closes all the database connections managed by this {@code ConnectionManager} and releases any resources
 	 * used for managing asynchronous database connections.
-	 * 
-	 * It will close the manager and all connection immediately, even when operations are still running.
-     * Those operations will fail.
+     *
+     * This will close the connections gracefully {@link CloseMode#CLOSE_GRACEFULLY}. Running operations
+     * will finish before the manager is closed
 	 *
 	 * @return  a future object that will complete when all database connections managed by this
 	 *          {@code ConnectionManager} have closed.
 	 * @throws DbException  if there's an error closing all the database connections
 	 */
 	DbFuture<Void> close() throws DbException;
-	
+
+    /**
+     * Closes all the database connections managed by this {@code ConnectionManager} and releases any resources
+     * used for managing asynchronous database connections.
+     *
+     * Closes according to the given {@link CloseMode}.
+     *
+     * @return  a future object that will complete when all database connections managed by this
+     *          {@code ConnectionManager} have closed.
+     * @throws DbException  if there's an error closing all the database connections
+     */
+	DbFuture<Void> close(CloseMode mode) throws DbException;
+
 	/**
 	 * Indicates if this {@code ConnectionManager} is closed.
 	 * 

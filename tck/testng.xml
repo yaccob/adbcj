@@ -8,12 +8,14 @@
 		<parameter name="user" value="adbcjtck" />
 		<parameter name="password" value="adbcjtck" />
 		<packages>
-			<package name="org.adbcj.tck.test" />
+			<!--<package name="org.adbcj.tck.test" />-->
 		</packages>
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
+            <class name="org.adbcj.tck.test.CloseConnectionsTest"/>
             <!--<class name="org.adbcj.tck.test.CancelingRequests"/>-->
+            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
         </classes>
 	</test>
@@ -23,11 +25,12 @@
 		<parameter name="user" value="adbcjtck" />
 		<parameter name="password" value="adbcjtck" />
 		<packages>
-			<package name="org.adbcj.tck.test" />
+			<!--<package name="org.adbcj.tck.test" />-->
 		</packages>
 		<classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.CancelingRequests"/>-->
+            <class name="org.adbcj.tck.test.CloseConnectionsTest"/>
+            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
 		</classes>
 	</test>

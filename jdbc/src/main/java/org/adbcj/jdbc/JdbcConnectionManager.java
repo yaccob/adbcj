@@ -22,7 +22,6 @@ import org.adbcj.support.DefaultDbFuture;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class JdbcConnectionManager implements ConnectionManager {
@@ -73,51 +72,43 @@ public class JdbcConnectionManager implements ConnectionManager {
 	}
 
 	public DbFuture<Void> close() throws DbException {
-		synchronized (lock) {
-			if (closeFuture == null) {
-				closeFuture = new DefaultDbFuture<Void>();
-				closeFuture.addListener(new DbListener<Void>() {
-					@Override
-					public void onCompletion(DbFuture<Void> future) {
-						executorService.shutdown();
-					}
-				});
-			} else {
-				return closeFuture;
-			}
-		}
-		final AtomicInteger countDown = new AtomicInteger();
-		final AtomicBoolean allClosed = new AtomicBoolean(false);
-		
-		DbListener<Void> listener = new DbListener<Void>() {
-			@Override
-			public void onCompletion(DbFuture<Void> future) {
-				try {
-					int count = countDown.decrementAndGet();
-					future.get();
-					if (allClosed.get() && count == 0) {
-						closeFuture.setResult(null);
-					}
-				} catch (Exception e) {
-					// If the connection close errored out, error out our closeFuture too
-					closeFuture.setException(e);
-				}
-			}
-		};
-		synchronized (lock) {
-			for (JdbcConnection connection : connections) {
-				countDown.incrementAndGet();
-				connection.close().addListener(listener);
-			}
-		}
-		allClosed.set(true);
-		if (countDown.get() == 0) {
-			closeFuture.setResult(null);
-		}
-		return closeFuture;
+        return close(CloseMode.CLOSE_GRACEFULLY);
 	}
 
-	public boolean isClosed() {
+    @Override
+    public DbFuture<Void> close(CloseMode mode) throws DbException {
+        synchronized (lock) {
+            if (closeFuture == null) {
+                closeFuture = new DefaultDbFuture<Void>();
+                closeFuture.addListener(new DbListener<Void>() {
+                    @Override
+                    public void onCompletion(DbFuture<Void> future) {
+                        executorService.shutdown();
+                    }
+                });
+            } else {
+                return closeFuture;
+            }
+        }
+
+        synchronized (lock) {
+            final AtomicInteger latch = new AtomicInteger(connections.size());
+            for (JdbcConnection connection : connections) {
+                connection.close(mode).addListener(new DbListener<Void>() {
+                    @Override
+                    public void onCompletion(DbFuture<Void> future) {
+                        final int currentCount = latch.decrementAndGet();
+                        if(currentCount==0){
+                            closeFuture.trySetResult(null);
+                        }
+                    }
+                });
+            }
+        }
+        return closeFuture;
+    }
+
+    public boolean isClosed() {
 		return closeFuture != null;
 	}
 	

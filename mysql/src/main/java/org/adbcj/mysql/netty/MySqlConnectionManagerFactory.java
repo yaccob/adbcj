@@ -19,8 +19,7 @@ public class MySqlConnectionManagerFactory implements ConnectionManagerFactory {
 	public ConnectionManager createConnectionManager(String url,
                                                      String username,
                                                      String password,
-                                                     Map<String,String> properties,
-                                                     ExecutorService dispatcher) throws DbException {
+                                                     Map<String,String> properties) throws DbException {
 		try {
 			/*
 			 * Parse URL
@@ -40,7 +39,7 @@ public class MySqlConnectionManagerFactory implements ConnectionManagerFactory {
 			}
 			String schema = path.substring(1);
 
-			return new MysqlConnectionManager(host, port, username, password, schema, properties,dispatcher);
+			return new MysqlConnectionManager(host, port, username, password, schema, properties);
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}

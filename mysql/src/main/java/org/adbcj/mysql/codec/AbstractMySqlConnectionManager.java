@@ -1,16 +1,12 @@
 package org.adbcj.mysql.codec;
 
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
+import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,13 +21,15 @@ public abstract class AbstractMySqlConnectionManager implements
 
 	private DbFuture<Void> closeFuture = null;
 
-	private volatile boolean pipeliningEnabled = true;
-
 	public AbstractMySqlConnectionManager(String username, String password, String schema) {
 		this.credentials = new LoginCredentials(username, password, schema);
 	}
 
-	public synchronized DbFuture<Void> close() throws DbException {
+    public DbFuture<Void> close(){
+        return close(CloseMode.CLOSE_GRACEFULLY);
+    }
+
+	public DbFuture<Void> close(CloseMode closeMode) throws DbException {
 		if (isClosed()) {
 			return closeFuture;
 		}
@@ -40,7 +38,7 @@ public abstract class AbstractMySqlConnectionManager implements
             connectionsCopy = new ArrayList<AbstractMySqlConnection>(connections);
         }
         for (AbstractMySqlConnection connection : connectionsCopy) {
-            connection.close();
+            connection.close(closeMode);
         }
         dispose();
         DefaultDbFuture<Void> future = new DefaultDbFuture<Void>();
@@ -66,13 +64,7 @@ public abstract class AbstractMySqlConnectionManager implements
 
 	protected abstract DefaultDbFuture<Connection> createConnectionFuture();
 
-	public boolean isPipeliningEnabled() {
-		return pipeliningEnabled;
-	}
 
-	public void setPipeliningEnabled(boolean pipeliningEnabled) {
-		this.pipeliningEnabled = pipeliningEnabled;
-	}
 
 	protected void addConnection(AbstractMySqlConnection connection) {
 		synchronized (connections) {
@@ -86,7 +78,7 @@ public abstract class AbstractMySqlConnectionManager implements
 		}
 	}
 
-	public int nextId() {
+	int nextId() {
 		return id.incrementAndGet();
 	}
 

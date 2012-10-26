@@ -55,6 +55,11 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     }
 
     public synchronized DbFuture<Void> close() throws DbException {
+        return close(CloseMode.CLOSE_GRACEFULLY);
+    }
+
+    @Override
+    public DbFuture<Void> close(CloseMode closeMode) throws DbException {
         if (!isClosed()) {
             Request<Void> closeRequest = new Request<Void>(this) {
                 @Override
@@ -73,6 +78,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                     return false;
                 }
             };
+            if(closeMode!=CloseMode.CLOSE_GRACEFULLY){
+                errorPendingRequests(new DbException("Connection was closed"));
+            }
             return enqueueRequest(closeRequest).getFuture();
         } else{
             return DefaultDbSessionFuture.completed(null);

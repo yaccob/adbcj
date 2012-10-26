@@ -27,6 +27,10 @@ public class ProtocolHandler {
     final State NORMAL = new State() {
         @Override
         void handleMessage(Object message) {
+            if(connection.isClosed() && connection.getActiveRequest()==null){
+                logger.warn("Received data for closed connection: "+connection + " data: "+message);
+                return;
+            }
             if (message instanceof ServerGreeting) {
                 handleServerGreeting(connection, (ServerGreeting) message);
             } else if (message instanceof OkResponse.RegularOK) {
@@ -88,18 +92,20 @@ public class ProtocolHandler {
             if (!connectFuture.isDone()) {
                 connectFuture.setException(dbException);
                 return null;
-            }
-            Request<?> activeRequest = connection.getActiveRequest();
-            if (activeRequest != null) {
-                if (!activeRequest.isDone()) {
-                    try {
-                        activeRequest.error(dbException);
+            } else{
+                Request<?> activeRequest = connection.getActiveRequest();
+                if (activeRequest != null) {
+                    if (!activeRequest.isDone()) {
+                        try {
+                            activeRequest.error(dbException);
 
-                        return null;
-                    } catch (Throwable e) {
-                        return e;
+                            return null;
+                        } catch (Throwable e) {
+                            return e;
+                        }
                     }
                 }
+
             }
         }
         return dbException;

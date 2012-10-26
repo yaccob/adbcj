@@ -21,8 +21,7 @@ public class NettyConnectionManagerFactory implements ConnectionManagerFactory {
 	public ConnectionManager createConnectionManager(String url,
                                                      String username,
                                                      String password,
-                                                     Map<String,String> properties,
-                                                     ExecutorService dispatcher) throws DbException {
+                                                     Map<String,String> properties) throws DbException {
 		try {
 			/*
 			 * Parse URL
@@ -43,7 +42,7 @@ public class NettyConnectionManagerFactory implements ConnectionManagerFactory {
                     username,
                     password,
                     schema,
-                    properties,dispatcher);
+                    properties);
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}

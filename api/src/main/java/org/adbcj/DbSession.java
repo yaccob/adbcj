@@ -63,8 +63,26 @@ public interface DbSession {
 	DbSessionFuture<PreparedQuery> prepareQuery(String sql);
 	DbSessionFuture<PreparedUpdate> prepareUpdate(String sql);
 
+    /**
+     * Closes this connection releases its resources.
+     *
+     * This will close the connection gracefully {@link CloseMode#CLOSE_GRACEFULLY}. Running operations
+     * will finish before the manager is closed. However no new requests will be accepted
+     *
+     * @return  a future object that will complete when the connection has closed
+     * @throws DbException  if there's an error closing all the database connections
+     */
 	DbFuture<Void> close() throws DbException;
-	
+    /**
+     * Closes this connection releases its resources.
+     *
+     * This will close the according to the given {@link CloseMode}.
+     *
+     * @return  a future object that will complete when the connection has closed
+     * @throws DbException  if there's an error closing all the database connections
+     */
+	DbFuture<Void> close(CloseMode closeMode) throws DbException;
+
 	boolean isClosed() throws DbException;
 	boolean isOpen() throws DbException;
 

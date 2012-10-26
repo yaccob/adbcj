@@ -46,21 +46,29 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	}
 
 	public synchronized DbFuture<Void> close() throws DbException {
-		// If the connection is already closed, return existing close future
-		logger.debug("Closing");
-		if (isClosed()) {
-			return DefaultDbFuture.completed(null);
-		} if(closeRequest!=null){
-            return closeRequest.getFuture();
-        }else {
-            closeRequest = new CloseRequest();
-            enqueueRequest(closeRequest);
-		}
-		logger.trace("Exiting close()");
-		return closeRequest.getFuture();
+        return close(CloseMode.CLOSE_GRACEFULLY);
 	}
 
-	public synchronized boolean isClosed() {
+    @Override
+    public DbFuture<Void> close(CloseMode closeMode) throws DbException {
+        // If the connection is already closed, return existing close future
+        logger.debug("Closing");
+        if (isClosed()) {
+            return DefaultDbFuture.completed(null);
+        } if(closeRequest!=null){
+            return closeRequest.getFuture();
+        }else {
+            if(closeMode==CloseMode.CANCEL_PENDING_OPERATIONS){
+                errorPendingRequests(new DbException("Connection was closed"));
+            }
+            closeRequest = new CloseRequest();
+            enqueueRequest(closeRequest);
+        }
+        logger.trace("Exiting close()");
+        return closeRequest.getFuture();
+    }
+
+    public synchronized boolean isClosed() {
 		return closeRequest != null || isTransportClosing();
 	}
 	public synchronized boolean isOpen() {

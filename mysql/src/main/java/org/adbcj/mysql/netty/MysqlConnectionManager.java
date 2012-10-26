@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,12 +37,11 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
                                   String username,
                                   String password,
                                   String schema,
-                                  Map<String,String> properties,
-                                  ExecutorService workDispatcher) {
+                                  Map<String,String> properties) {
 		super(username, password, schema);
 		executorService = Executors.newCachedThreadPool();
 
-		ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), workDispatcher);
+		ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 		bootstrap = new ClientBootstrap(factory);
 		init(host, port);
 	}
@@ -93,7 +91,7 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 					MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, getCredentials(), channel, MysqlConnectFuture.this);
 					channel.getPipeline().addLast("handler", new Handler(connection));
 
-                    MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
+                    final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
                     synchronized (queuingHandler) {
                         queuingHandler.flush();
                         channel.getPipeline().remove(queuingHandler);

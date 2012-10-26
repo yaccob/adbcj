@@ -34,8 +34,7 @@ public class MinaConnectionManagerFactory implements ConnectionManagerFactory {
 	public ConnectionManager createConnectionManager(String url,
                                                      String username,
                                                      String password,
-                                                     Map<String,String> properties,
-                                                     ExecutorService service) throws DbException {
+                                                     Map<String,String> properties) throws DbException {
 		try {
 			/*
 			 * Parse URL
@@ -51,7 +50,7 @@ public class MinaConnectionManagerFactory implements ConnectionManagerFactory {
 			}
 			String schema = uri.getPath().substring(1);
 
-			return new MinaConnectionManager(host, port, username, password, schema, properties,service);
+			return new MinaConnectionManager(host, port, username, password, schema, properties);
 		} catch (URISyntaxException e) {
 			throw new DbException(e);
 		}
