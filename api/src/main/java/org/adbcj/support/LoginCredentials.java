@@ -16,9 +16,9 @@
 
 	Copyright 2008  Mike Heath
 */
-package org.adbcj.mysql.codec;
+package org.adbcj.support;
 
-public class LoginCredentials {
+public final class LoginCredentials {
 
 	private final String userName;
 	private final String password;
@@ -42,4 +42,34 @@ public class LoginCredentials {
 		return userName;
 	}
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LoginCredentials that = (LoginCredentials) o;
+
+        if (!database.equals(that.database)) return false;
+        if (password != null ? !password.equals(that.password) : that.password != null) return false;
+        if (!userName.equals(that.userName)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = userName.hashCode();
+        result = 31 * result + (password != null ? password.hashCode() : 0);
+        result = 31 * result + database.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "LoginCredentials{" +
+                "userName='" + userName + '\'' +
+                ", password='" + password + '\'' +
+                ", database='" + database + '\'' +
+                '}';
+    }
 }

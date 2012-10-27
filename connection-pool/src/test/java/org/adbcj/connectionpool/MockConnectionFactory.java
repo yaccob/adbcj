@@ -8,12 +8,19 @@ import java.util.Map;
  * @author roman.stoffel@gamlor.info
  */
 public class MockConnectionFactory implements ConnectionManagerFactory {
+    private static ThreadLocal<MockConnectionManager> lastInstance = new ThreadLocal<MockConnectionManager>();
     @Override
     public ConnectionManager createConnectionManager(String url,
                                                      String username,
                                                      String password,
                                                      Map<String, String> properties) throws DbException {
-        return new MockConnectionManager();
+        final MockConnectionManager instance = new MockConnectionManager();
+        lastInstance.set(instance);
+        return instance;
+    }
+
+    public static MockConnectionManager lastInstanceRequestedOnThisThread(){
+        return lastInstance.get();
     }
 
     @Override
@@ -21,27 +28,4 @@ public class MockConnectionFactory implements ConnectionManagerFactory {
         return "mock".equals(protocol);
     }
 
-    private static class MockConnectionManager implements ConnectionManager {
-        @Override
-        public DbFuture<Connection> connect() {
-            throw new Error("Not implemented yet: TODO");  //TODO: Implement
-        }
-
-        @Override
-        public DbFuture<Void> close() throws DbException {
-            throw new Error("Not implemented yet: TODO");  //TODO: Implement
-        }
-
-        @Override
-        public DbFuture<Void> close(CloseMode mode) throws DbException {
-            throw new Error("Not implemented yet: TODO");  //TODO: Implement
-        }
-
-        @Override
-        public boolean isClosed() {
-            throw new Error("Not implemented yet: TODO");  //TODO: Implement
-        }
-
-
-    }
 }

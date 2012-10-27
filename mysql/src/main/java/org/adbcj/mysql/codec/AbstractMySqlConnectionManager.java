@@ -1,7 +1,12 @@
 package org.adbcj.mysql.codec;
 
-import org.adbcj.*;
+import org.adbcj.CloseMode;
+import org.adbcj.Connection;
+import org.adbcj.DbException;
+import org.adbcj.DbFuture;
+import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.LoginCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,8 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractMySqlConnectionManager implements
-		ConnectionManager {
+public abstract class AbstractMySqlConnectionManager extends AbstractConnectionManager {
 	private static final Logger logger = LoggerFactory.getLogger(AbstractMySqlConnectionManager.class);
 
 	private final LoginCredentials credentials;
@@ -24,10 +28,6 @@ public abstract class AbstractMySqlConnectionManager implements
 	public AbstractMySqlConnectionManager(String username, String password, String schema) {
 		this.credentials = new LoginCredentials(username, password, schema);
 	}
-
-    public DbFuture<Void> close(){
-        return close(CloseMode.CLOSE_GRACEFULLY);
-    }
 
 	public DbFuture<Void> close(CloseMode closeMode) throws DbException {
 		if (isClosed()) {

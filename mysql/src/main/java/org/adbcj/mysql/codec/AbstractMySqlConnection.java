@@ -7,6 +7,7 @@ import org.adbcj.mysql.codec.packets.StringCommandRequest;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.ExpectResultRequest;
+import org.adbcj.support.LoginCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

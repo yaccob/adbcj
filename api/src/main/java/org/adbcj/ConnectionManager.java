@@ -36,7 +36,7 @@ public interface ConnectionManager extends DbSessionProvider {
 	 * used for managing asynchronous database connections.
      *
      * This will close the connections gracefully {@link CloseMode#CLOSE_GRACEFULLY}. Running operations
-     * will finish before the manager is closed
+     * will finish before the manager is closed. The behavior is the same as calling close(CloseMode.LOSE_GRACEFULLY)
 	 *
 	 * @return  a future object that will complete when all database connections managed by this
 	 *          {@code ConnectionManager} have closed.

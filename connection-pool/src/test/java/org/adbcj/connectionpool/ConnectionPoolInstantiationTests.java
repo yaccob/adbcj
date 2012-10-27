@@ -28,6 +28,5 @@ public class ConnectionPoolInstantiationTests {
         }catch (IllegalArgumentException e){
             Assert.assertTrue(e.getMessage().contains(invalidUrl));
         }
-
     }
 }

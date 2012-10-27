@@ -22,7 +22,8 @@ public class PooledConnectionManagerFactory implements ConnectionManagerFactory 
         }
         String nativeUrl = firstAndSecondPart[0] + firstAndSecondPart[1];
 
-        return ConnectionManagerProvider.createConnectionManager(nativeUrl, username, password,properties);
+        return new PooledConnectionManager(
+                ConnectionManagerProvider.createConnectionManager(nativeUrl, username, password,properties));
     }
 
     @Override

@@ -18,6 +18,8 @@
 */
 package org.adbcj.mysql.codec;
 
+import org.adbcj.support.LoginCredentials;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;

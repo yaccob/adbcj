@@ -4,7 +4,7 @@ import org.adbcj.Connection;
 import org.adbcj.mysql.codec.AbstractMySqlConnection;
 import org.adbcj.mysql.codec.AbstractMySqlConnectionManager;
 import org.adbcj.mysql.codec.ClientRequest;
-import org.adbcj.mysql.codec.LoginCredentials;
+import org.adbcj.support.LoginCredentials;
 import org.adbcj.support.DefaultDbFuture;
 import org.jboss.netty.channel.Channel;
 
