@@ -1,8 +1,6 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
@@ -16,8 +14,6 @@ import static org.testng.Assert.fail;
  *
  */
 public class ConnectSpecialCaseTest {
-
-	private final Logger logger = LoggerFactory.getLogger(ConnectSpecialCaseTest.class);
 
 	@Parameters({"url", "user", "password"})
 	@Test(timeOut=60000)

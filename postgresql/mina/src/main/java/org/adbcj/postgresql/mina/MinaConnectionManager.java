@@ -174,14 +174,6 @@ public class MinaConnectionManager extends AbstractConnectionManager {
 		return closeFuture != null;
 	}
 
-	public boolean isPipeliningEnabled() {
-		return pipeliningEnabled;
-	}
-
-	public void setPipeliningEnabled(boolean pipeliningEnabled) {
-		this.pipeliningEnabled = pipeliningEnabled;
-	}
-
 	// ================================================================================================================
 	//
 	// Non-API methods

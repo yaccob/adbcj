@@ -70,8 +70,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         synchronized (lock) {
             if (done) {
                 notifyListener(listener);
+            } else{
+                otherListeners.add(listener);
             }
-            otherListeners.add(listener);
 
         }
         return this;
@@ -98,11 +99,8 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             cancelled = doCancel(mayInterruptIfRunning);
             if (cancelled) {
                 done = true;
-                lock.notifyAll();
+                notifyChanges();
             }
-        }
-        if (cancelled) {
-            notifyListeners();
         }
         return cancelled;
     }
@@ -111,7 +109,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         return false;
     }
 
-    public T get() throws InterruptedException, DbException {
+    public final T get() throws InterruptedException, DbException {
         if (done) {
             return getResult();
         }
@@ -126,7 +124,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         return getResult();
     }
 
-    public T get(long timeout, TimeUnit unit) throws InterruptedException, DbException, TimeoutException {
+    public final T get(long timeout, TimeUnit unit) throws InterruptedException, DbException, TimeoutException {
         long timeoutMillis = unit.toMillis(timeout);
         long timeoutNanos = unit.toNanos(timeout);
 
@@ -145,7 +143,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         return getResult();
     }
 
-    private T getResult() throws DbException {
+    private final T getResult() throws DbException {
         if (!done) {
             throw new IllegalStateException("Should not be calling this method when future is not done");
         }
@@ -170,7 +168,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
                 return false;
             }
 
-            setResultAndNotify(result);
+            this.result = result;
+            done = true;
+            notifyChanges();
             return true;
         }
 
@@ -180,18 +180,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         listener.onCompletion(this);
     }
 
-    private void setResultAndNotify(T result) {
-        this.result = result;
-        done = true;
-        lock.notifyAll();
-        notifyListeners();
-    }
-
-    private void notifyListeners() {
-        // There won't be any visibility problem or concurrent modification
-        // because 'ready' flag will be checked against both addListener and
-        // removeListener calls.
+    private void notifyChanges() {
         synchronized (lock) {
+            lock.notifyAll();
             if (otherListeners != null) {
                 for (DbListener<T> l : otherListeners) {
                     notifyListener(l);
@@ -216,9 +207,24 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             }
             this.exception = exception;
             done = true;
-            lock.notifyAll();
         }
-        notifyListeners();
+        notifyChanges();
+    }
+
+    public <TResult> DbFuture<TResult> map(final OneArgFunction<T,TResult> transformation){
+        final DefaultDbFuture<TResult> completion = new DefaultDbFuture<TResult>();
+        this.addListener(new DbListener<T>() {
+            @Override
+            public void onCompletion(DbFuture<T> future) {
+                if(DefaultDbFuture.this.exception !=null){
+                    completion.setException(DefaultDbFuture.this.exception);
+                } else{
+                    completion.setResult(transformation.apply(DefaultDbFuture.this.result));
+                }
+            }
+        });
+        return completion;
+
     }
 
 }

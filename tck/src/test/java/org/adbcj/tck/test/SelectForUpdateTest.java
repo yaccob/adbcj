@@ -16,13 +16,13 @@
  */
 package org.adbcj.tck.test;
 
-import org.adbcj.*;
+import org.adbcj.Connection;
+import org.adbcj.DbFuture;
+import org.adbcj.DbListener;
+import org.adbcj.ResultSet;
 import org.adbcj.tck.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -33,23 +33,9 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 @Test(timeOut = 5000)
-public class SelectForUpdateTest {
+public class SelectForUpdateTest extends AbstractWithConnectionManagerTest{
 
 	private final Logger logger = LoggerFactory.getLogger(SelectForUpdateTest.class);
-	
-	private ConnectionManager connectionManager;
-
-	@Parameters({"url", "user", "password"})
-	@BeforeTest
-	public void createConnectionManager(String url, String user, String password) {
-		connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-	}
-
-	@AfterTest
-	public void closeConnectionManager() throws InterruptedException {
-		DbFuture<Void> closeFuture = connectionManager.close();
-		closeFuture.get();
-	}
 
 	public void testSelectForUpdate() throws Exception {
 		logger.debug("Using connection manager: {}", connectionManager);

@@ -1,10 +1,9 @@
 package org.adbcj.tck.test;
 
 import junit.framework.Assert;
-import org.adbcj.*;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
+import org.adbcj.Connection;
+import org.adbcj.DbSessionFuture;
+import org.adbcj.ResultSet;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CancellationException;
@@ -12,21 +11,8 @@ import java.util.concurrent.CancellationException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class CancelingRequests {
+public class CancelingRequests extends AbstractWithConnectionManagerTest{
 
-    private ConnectionManager connectionManager;
-
-    @Parameters({"url", "user", "password"})
-    @BeforeTest
-    public void createConnectionManager(String url, String user, String password) {
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-    }
-
-    @AfterTest
-    public void closeConnectionManager() throws InterruptedException {
-        DbFuture<Void> closeFuture = connectionManager.close();
-        closeFuture.get();
-    }
 
     @Test
     public void canCancelSelect() throws InterruptedException {

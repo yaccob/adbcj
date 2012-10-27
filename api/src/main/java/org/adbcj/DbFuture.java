@@ -16,6 +16,8 @@
  */
 package org.adbcj;
 
+import org.adbcj.support.OneArgFunction;
+
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -84,5 +86,16 @@ public interface DbFuture<T> extends Future<T> {
      * @throws TimeoutException if the wait timed out
      */
 	public T get(long timeout, TimeUnit unit) throws DbException, InterruptedException, TimeoutException;
+
+    /**
+     * Maps this future to a new future with the given function.
+     * When this future completes successfully, it will apply the given transformantion function and return
+     * that result in the returned future.
+     * If the future fails, the returned future will also fail.
+     * @param transformation transformation function
+     * @param <TResult> return type of the transformation
+     * @return a new future with includes the transformation
+     */
+    public <TResult> DbFuture<TResult> map(final OneArgFunction<T,TResult> transformation);
 	
 }

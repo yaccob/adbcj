@@ -18,9 +18,6 @@ package org.adbcj.tck.test;
 
 import org.adbcj.*;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.util.Iterator;
@@ -32,22 +29,7 @@ import java.util.concurrent.TimeoutException;
 
 
 @Test(invocationCount = 10, threadPoolSize = 5, timeOut = 50000)
-public class SelectTest {
-
-    private ConnectionManager connectionManager;
-
-    @Parameters({"url", "user", "password"})
-    @BeforeTest
-    public void createConnectionManager(String url, String user, String password) {
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-    }
-
-    @AfterTest
-    public void closeConnectionManager() throws InterruptedException {
-        DbFuture<Void> closeFuture = connectionManager.close();
-        closeFuture.get();
-    }
-
+public class SelectTest extends AbstractWithConnectionManagerTest {
 
     public void testSelectWhichReturnsNothing() throws Exception {
         Connection connection = connectionManager.connect().get();

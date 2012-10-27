@@ -2,7 +2,6 @@ package org.adbcj.tck.test;
 
 import junit.framework.Assert;
 import org.adbcj.*;
-import org.adbcj.support.AbstractDbSession;
 import org.adbcj.tck.NoArgAction;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -145,15 +144,14 @@ public class CloseConnectionsTest {
         final DbSessionFuture<ResultSet> rs3 = connection.executeQuery("SELECT int_val, str_val " +
                 "FROM simple_values where str_val LIKE 'Not-In-Database-Value'");
 
-
-        ((AbstractDbSession) connection).errorPendingRequests(new Exception("Expect This Exception"));
+        connection.close(CloseMode.CANCEL_PENDING_OPERATIONS);
 
         try {
             rs1.get();
             rs2.get();
             rs3.get();
         } catch (Exception e) {
-            Assert.assertTrue(e.getMessage().contains("Expect This Exception"));
+            Assert.assertTrue(e.getMessage().contains("closed"));
         }
 
         connection.close();

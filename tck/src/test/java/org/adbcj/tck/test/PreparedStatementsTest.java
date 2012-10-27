@@ -2,9 +2,6 @@ package org.adbcj.tck.test;
 
 import org.adbcj.*;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -15,19 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @since 05.04.12
  */
 @Test(invocationCount=3, threadPoolSize=5, timeOut = 500000)
-public class PreparedStatementsTest {
-    private ConnectionManager connectionManager;
-
-    @Parameters({"url", "user", "password"})
-    @BeforeTest
-    public void createConnectionManager(String url, String user, String password) {
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-    }
-    @AfterTest
-    public void closeConnectionManager() throws InterruptedException{
-        DbFuture<Void> closeFuture = connectionManager.close();
-        closeFuture.get();
-    }
+public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
 
     public void testSimpleSelect() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();

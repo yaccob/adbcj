@@ -1,31 +1,16 @@
 package org.adbcj.tck.test;
 
-import org.adbcj.*;
+import org.adbcj.Connection;
+import org.adbcj.PreparedUpdate;
+import org.adbcj.Result;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 /**
  * @author roman.stoffel@gamlor.info
  * @since 10.05.12
  */
-public class InsertTest {
-
-    private ConnectionManager connectionManager;
-
-    @Parameters({"url", "user", "password"})
-    @BeforeTest
-    public void createConnectionManager(String url, String user, String password) {
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-    }
-    @AfterTest
-    public void closeConnectionManager() throws InterruptedException {
-        DbFuture<Void> closeFuture = connectionManager.close();
-        closeFuture.get();
-    }
-
+public class InsertTest extends AbstractWithConnectionManagerTest{
     @Test
     public void returnsAutoIncrement() throws Exception{
         Connection connection = connectionManager.connect().get();

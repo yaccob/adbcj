@@ -16,10 +16,10 @@
  */
 package org.adbcj.tck.test;
 
-import org.adbcj.*;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
+import org.adbcj.Connection;
+import org.adbcj.Result;
+import org.adbcj.ResultSet;
+import org.adbcj.Value;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -27,21 +27,8 @@ import static org.testng.Assert.assertNotNull;
 
 
 @Test(timeOut = 5000)
-public class UpdateTest {
+public class UpdateTest extends AbstractWithConnectionManagerTest{
 
-	private ConnectionManager connectionManager;
-
-	@Parameters({"url", "user", "password"})
-	@BeforeTest
-	public void createConnectionManager(String url, String user, String password) {
-		connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-	}
-
-	@AfterTest
-	public void closeConnectionManager() throws InterruptedException {
-		DbFuture<Void> closeFuture = connectionManager.close();
-		closeFuture.get();
-	}
 
 	public void testSimpleUpdates() throws InterruptedException {
 		Connection connection = connectionManager.connect().get();

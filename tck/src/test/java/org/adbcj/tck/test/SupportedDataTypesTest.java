@@ -2,9 +2,6 @@ package org.adbcj.tck.test;
 
 import org.adbcj.*;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
@@ -17,20 +14,8 @@ import static org.testng.Assert.assertTrue;
  * @author roman.stoffel@gamlor.info
  * @since 03.05.12
  */
-public class SupportedDataTypesTest {
-    private ConnectionManager connectionManager;
+public class SupportedDataTypesTest extends AbstractWithConnectionManagerTest {
 
-    @Parameters({"url", "user", "password"})
-    @BeforeTest
-    public void createConnectionManager(String url, String user, String password) {
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-    }
-
-    @AfterTest
-    public void closeConnectionManager() throws InterruptedException {
-        DbFuture<Void> closeFuture = connectionManager.close();
-        closeFuture.get();
-    }
 
     @Test
     public void supportedInSelect() throws Exception {

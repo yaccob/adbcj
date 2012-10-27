@@ -17,9 +17,6 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.*;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -32,21 +29,8 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 @Test(invocationCount = 10, threadPoolSize = 5, timeOut = 30000)
-public class ConnectTest {
+public class ConnectTest extends AbstractWithConnectionManagerTest{
 
-	private ConnectionManager connectionManager;
-
-	@Parameters({"url", "user", "password"})
-	@BeforeTest
-	public void createConnectionManager(String url, String user, String password) {
-		connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-	}
-
-	@AfterTest
-	public void closeConnectionManager() throws InterruptedException {
-		DbFuture<Void> closeFuture = connectionManager.close();
-		closeFuture.get();
-	}
 
 	public void testConnectImmediateClose() throws Exception {
 		final boolean[] callbacks = {false, false};
