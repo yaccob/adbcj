@@ -2,10 +2,9 @@ package org.adbcj.mysql.netty;
 
 import org.adbcj.Connection;
 import org.adbcj.mysql.codec.AbstractMySqlConnection;
-import org.adbcj.mysql.codec.AbstractMySqlConnectionManager;
 import org.adbcj.mysql.codec.ClientRequest;
-import org.adbcj.support.LoginCredentials;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.LoginCredentials;
 import org.jboss.netty.channel.Channel;
 
 public class MysqlConnection extends AbstractMySqlConnection {
@@ -13,7 +12,7 @@ public class MysqlConnection extends AbstractMySqlConnection {
 	private final Channel channel;
 	private final DefaultDbFuture<Connection> connectFuture;
 
-	public MysqlConnection(AbstractMySqlConnectionManager connectionManager, LoginCredentials credentials, Channel channel, DefaultDbFuture<Connection> connectFuture) {
+	public MysqlConnection(MysqlConnectionManager connectionManager, LoginCredentials credentials, Channel channel, DefaultDbFuture<Connection> connectFuture) {
 		super(connectionManager, credentials);
 		this.channel = channel;
 		this.connectFuture = connectFuture;

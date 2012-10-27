@@ -4,6 +4,7 @@ import org.adbcj.*;
 import org.adbcj.mysql.codec.packets.Command;
 import org.adbcj.mysql.codec.packets.CommandRequest;
 import org.adbcj.mysql.codec.packets.StringCommandRequest;
+import org.adbcj.mysql.netty.MysqlConnectionManager;
 import org.adbcj.support.AbstractDbSession;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.ExpectResultRequest;
@@ -18,7 +19,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractMySqlConnection.class);
 
-	private final AbstractMySqlConnectionManager connectionManager;
+	private final MysqlConnectionManager connectionManager;
 
 	private final int id;
 
@@ -28,7 +29,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	private final MysqlCharacterSet charset = MysqlCharacterSet.UTF8_UNICODE_CI;
 
-	protected AbstractMySqlConnection(AbstractMySqlConnectionManager connectionManager, LoginCredentials credentials) {
+	protected AbstractMySqlConnection(MysqlConnectionManager connectionManager, LoginCredentials credentials) {
 		super();
 		this.connectionManager = connectionManager;
 		this.credentials = credentials;

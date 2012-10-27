@@ -1,8 +1,13 @@
 package org.adbcj.mysql.netty;
 
+import org.adbcj.CloseMode;
 import org.adbcj.Connection;
+import org.adbcj.DbException;
+import org.adbcj.DbFuture;
 import org.adbcj.mysql.codec.*;
+import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.LoginCredentials;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -16,21 +21,29 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
+public class MysqlConnectionManager extends AbstractConnectionManager {
 
 	private static final Logger logger = LoggerFactory.getLogger(MysqlConnectionManager.class);
 
 	private static final String ENCODER = MysqlConnectionManager.class.getName() + ".encoder";
 	private static final String DECODER = MysqlConnectionManager.class.getName() + ".decoder";
 	private static final String MESSAGE_QUEUE = MysqlConnectionManager.class.getName() + ".queue";
+    private final LoginCredentials credentials;
 
 	private final ExecutorService executorService;
 	private final ClientBootstrap bootstrap;
+    private volatile DefaultDbFuture<Void> closeFuture = null;
+    private final Set<AbstractMySqlConnection> connections = new HashSet<AbstractMySqlConnection>();
+    private final AtomicInteger idCounter = new AtomicInteger();
 
 	public MysqlConnectionManager(String host,
                                   int port,
@@ -38,7 +51,7 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
                                   String password,
                                   String schema,
                                   Map<String,String> properties) {
-		super(username, password, schema);
+        credentials = new LoginCredentials(username, password, schema);
 		executorService = Executors.newCachedThreadPool();
 
 		ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
@@ -65,17 +78,58 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 		bootstrap.setOption("remoteAddress", new InetSocketAddress(host, port));
 	}
 
-	@Override
-	protected void dispose() {
-        executorService.shutdownNow();
-        bootstrap.releaseExternalResources();
-	}
+    public DbFuture<Void> close(CloseMode closeMode) throws DbException {
+        ArrayList<AbstractMySqlConnection> connectionsCopy;
+        synchronized (connections) {
+            if (isClosed()) {
+                return closeFuture;
+            }
+            closeFuture = new DefaultDbFuture<Void>();
+            connectionsCopy = new ArrayList<AbstractMySqlConnection>(connections);
+        }
+        for (AbstractMySqlConnection connection : connectionsCopy) {
+            connection.close(closeMode);
+        }
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                bootstrap.releaseExternalResources();
+                closeFuture.setResult(null);
+            }
+        });
+        return closeFuture;
+    }
 
-	@Override
-	protected DefaultDbFuture<Connection> createConnectionFuture() {
-		final ChannelFuture channelFuture = bootstrap.connect();
-		return new MysqlConnectFuture(channelFuture);
-	}
+    public DbFuture<Connection> connect() {
+        if (isClosed()) {
+            throw new DbException("Connection manager closed");
+        }
+        logger.debug("Starting connection");
+
+        final ChannelFuture channelFuture = bootstrap.connect();
+        return new MysqlConnectFuture(channelFuture);
+    }
+
+
+    public boolean isClosed() {
+        return closeFuture != null;
+    }
+
+    public int nextId() {
+        return idCounter.incrementAndGet();
+    }
+
+    public void addConnection(AbstractMySqlConnection connection) {
+        synchronized (connections) {
+            connections.add(connection);
+        }
+    }
+
+    public boolean removeConnection(AbstractMySqlConnection connection) {
+        synchronized (connections) {
+            return connections.remove(connection);
+        }
+    }
 
 	class MysqlConnectFuture extends DefaultDbFuture<Connection> {
 		private final ChannelFuture channelFuture;
@@ -88,7 +142,7 @@ public class MysqlConnectionManager extends AbstractMySqlConnectionManager {
 					logger.debug("Connect completed");
 					
 					Channel channel = future.getChannel();
-					MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, getCredentials(), channel, MysqlConnectFuture.this);
+					MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, credentials, channel, MysqlConnectFuture.this);
 					channel.getPipeline().addLast("handler", new Handler(connection));
 
                     final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
