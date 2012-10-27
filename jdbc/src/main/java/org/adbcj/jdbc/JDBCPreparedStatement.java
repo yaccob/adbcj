@@ -17,15 +17,22 @@ import static org.adbcj.jdbc.ResultSetCopier.fillResultSet;
 abstract class JDBCPreparedStatement<T> implements PreparedStatement {
     protected final java.sql.PreparedStatement sqlStatement;
     private JdbcConnection connection;
+    private final int paramenterCount;
 
     public JDBCPreparedStatement(JdbcConnection connection, java.sql.PreparedStatement sqlStatement) {
         this.connection = connection;
         this.sqlStatement = sqlStatement;
+        try {
+            paramenterCount = sqlStatement.getParameterMetaData().getParameterCount();
+        } catch (SQLException e) {
+            throw new DbException("Expect that PreparedStatement.getParameterMetaData() works",e);
+        }
     }
 
     // Implements the execute interface method of the sub types
     @SuppressWarnings("UnusedDeclaration")
     public DbFuture execute(final Object... params) {
+        connection.checkClosed();
         return executeWithCompletion(new CompletionProducerFunction() {
             public T complete() throws Exception{
                 return executeStatement();
@@ -49,15 +56,9 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
     }
 
     protected void validateParameters(Object[] params) {
-        final int parameterCount;
-        try {
-            parameterCount = sqlStatement.getParameterMetaData().getParameterCount();
-        } catch (SQLException e) {
-            throw new DbException("Expect that PreparedStatement.getParameterMetaData() works",e);
-        }
-        if(params.length!=parameterCount){
+        if(params.length!=paramenterCount){
             throw new IllegalArgumentException("Wrong amount of arguments." +
-                    "This statement expects "+parameterCount+" but received "+params.length+" arguments");
+                    "This statement expects "+paramenterCount+" but received "+params.length+" arguments");
         }
     }
 

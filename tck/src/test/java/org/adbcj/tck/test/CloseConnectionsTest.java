@@ -43,27 +43,13 @@ public class CloseConnectionsTest {
         checkClosed(c1, runningQuery, runningQuery2, c2);
     }
 
-    private void checkClosed(final Connection c1, DbSessionFuture<ResultSet> runningQuery, DbSessionFuture<ResultSet> runningQuery2, Connection c2) {
-        shouldThrowException(new NoArgAction() {
-            @Override
-            public void invoke() {
-                c1.executeQuery("SELECT 1");
-            }
-        });
-
-        Assert.assertTrue(c1.isClosed());
-        Assert.assertTrue(c2.isClosed());
-        Assert.assertTrue(runningQuery.isDone());
-        Assert.assertTrue(runningQuery2.isDone());
-    }
-
     @Parameters({"url", "user", "password"})
     @Test
     public void foreClosingManagerClosesConnections(String url, String user, String password) throws InterruptedException {
         final ConnectionManager manager = ConnectionManagerProvider.createConnectionManager(url, user, password);
         final Connection c1 = manager.connect().get();
-        final DbSessionFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(2)");
-        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(2)");
+        final DbSessionFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(3)");
+        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(3)");
         final Connection c2 = manager.connect().get();
         c2.beginTransaction();
         manager.close(CloseMode.CANCEL_PENDING_OPERATIONS).get();
@@ -79,13 +65,28 @@ public class CloseConnectionsTest {
         }
     }
 
+    private void checkClosed(final Connection c1, DbSessionFuture<ResultSet> runningQuery, DbSessionFuture<ResultSet> runningQuery2, Connection c2) {
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                c1.executeQuery("SELECT 1");
+            }
+        });
+
+        Assert.assertTrue(c1.isClosed());
+        Assert.assertTrue(c2.isClosed());
+        Assert.assertTrue(runningQuery.isDone());
+        Assert.assertTrue(runningQuery2.isDone());
+    }
+
+
     @Test
     public void closingConnectionDoesNotAcceptNewRequests() throws InterruptedException {
         final Connection connection = connectionManager.connect().get();
         final PreparedQuery preparedSelect = connection.prepareQuery("SELECT 1").get();
         final PreparedUpdate preparedUpdate = connection.prepareUpdate("SELECT 1").get();
         final DbSessionFuture<ResultSet> runningQuery = connection.executeQuery("SELECT SLEEP(5)");
-        connection.close();
+        connection.close().get();
         Assert.assertTrue(connection.isClosed());
 
         shouldThrowException(new NoArgAction() {

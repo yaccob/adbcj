@@ -133,9 +133,6 @@ public abstract class AbstractDbSession implements DbSession {
      */
     public void errorPendingRequests(Throwable exception) {
         synchronized (lock) {
-            if (activeRequest != null && !activeRequest.isDone()) {
-                activeRequest.error(DbException.wrap(exception));
-            }
             Request<?> request = requestQueue.poll();
             while(null!=request){
                 if (!request.isDone()) {
@@ -143,6 +140,9 @@ public abstract class AbstractDbSession implements DbSession {
                 }
 
                 request = requestQueue.poll();
+            }
+            if (activeRequest != null && !activeRequest.isDone()) {
+                activeRequest.error(DbException.wrap(exception));
             }
         }
     }
@@ -157,13 +157,9 @@ public abstract class AbstractDbSession implements DbSession {
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
         ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
-        return executeQuery0(sql, eventHandler, resultSet);
+        return (DbSessionFuture) executeQuery(sql, eventHandler, resultSet);
     }
 
-    @SuppressWarnings("unchecked")
-    private <T extends ResultSet> DbSessionFuture<ResultSet> executeQuery0(String sql, ResultHandler<T> eventHandler, T accumulator) {
-        return (DbSessionFuture<ResultSet>) executeQuery(sql, eventHandler, accumulator);
-    }
 
     //*****************************************************************************************************************
     //

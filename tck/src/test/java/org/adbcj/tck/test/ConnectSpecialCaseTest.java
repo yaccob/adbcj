@@ -1,14 +1,11 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.*;
-import org.adbcj.tck.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -50,43 +47,5 @@ public class ConnectSpecialCaseTest {
 		}
 	}
 
-	@Parameters({"url", "user", "password"})
-	@Test(timeOut=60000)
-	public void testImmediateClose(String url, String user, String password) throws InterruptedException {
-		ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-		try {
-			Connection lockingConnection = connectionManager.connect().get();
-			Connection connection = connectionManager.connect().get();
-
-			lockingConnection.beginTransaction();
-			TestUtils.selectForUpdate(lockingConnection).get();
-
-			List<DbSessionFuture<ResultSet>> futures = new ArrayList<DbSessionFuture<ResultSet>>();
-
-			connection.beginTransaction();
-
-			TestUtils.selectForUpdate(connection);
-			for (int i = 0; i < 5; i++) {
-				futures.add(connection.executeQuery(String.format("SELECT *, %d FROM simple_values", i)));
-			}
-
-			logger.debug("Closing connection");
-			connection.close().get();
-			logger.debug("Closed");
-
-			logger.debug("Closing locking connection");
-			lockingConnection.rollback().get();
-			lockingConnection.close().get();
-			logger.debug("Locking connection finalizeClose");
-
-			assertTrue(connection.isClosed(), "Connection should be closed");
-			for (DbSessionFuture<ResultSet> future : futures) {
-				assertTrue(future.isCancelled(), "Future should have been cancelled at finalizeClose: " + future);
-				assertTrue(future.isDone(), "Request did not finish before connection was closed: " + future);
-			}
-		} finally {
-			connectionManager.close().get();
-		}
-	}
 
 }
