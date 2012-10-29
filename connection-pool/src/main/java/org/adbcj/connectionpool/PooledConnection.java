@@ -6,9 +6,7 @@ import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.FutureUtils;
 import org.adbcj.support.OneArgFunction;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -18,13 +16,15 @@ public final class PooledConnection implements Connection, PooledResource {
     private final PooledConnectionManager pooledConnectionManager;
     private volatile DefaultDbFuture<Void> closingFuture;
     private final Map<DbFuture,DefaultDbFuture> runningOperations = new HashMap<DbFuture, DefaultDbFuture>();
+    private final Set<AbstractPooledPreparedStatement> openStatements = new HashSet<AbstractPooledPreparedStatement>();
+    private final Object collectionsLock = new Object();
     private final DbListener operationsListener = new DbListener() {
         @Override
         public void onCompletion(DbFuture future) {
-            synchronized (runningOperations) {
+            synchronized (collectionsLock) {
                 runningOperations.remove(future);
-                if (isClosed() && runningOperations.isEmpty()) {
-                    finallyClose();
+                if (isClosed()) {
+                    mayFinallyCloseConnection();
                 }
             }
         }
@@ -88,7 +88,9 @@ public final class PooledConnection implements Connection, PooledResource {
         return monitor(nativeConnection.prepareQuery(sql), new OneArgFunction<PreparedQuery, PreparedQuery>() {
             @Override
             public PreparedQuery apply(PreparedQuery arg) {
-                return new PooledPreparedQuery(arg, PooledConnection.this);
+                final PooledPreparedQuery pooledPreparedQuery = new PooledPreparedQuery(arg, PooledConnection.this);
+                addStatement(pooledPreparedQuery);
+                return pooledPreparedQuery;
             }
         });
     }
@@ -99,7 +101,9 @@ public final class PooledConnection implements Connection, PooledResource {
         return monitor(nativeConnection.prepareUpdate(sql), new OneArgFunction<PreparedUpdate, PreparedUpdate>() {
             @Override
             public PreparedUpdate apply(PreparedUpdate arg) {
-                return new PooledPreparedUpdate(arg, PooledConnection.this);
+                final PooledPreparedUpdate pooledPreparedUpdate = new PooledPreparedUpdate(arg, PooledConnection.this);
+                addStatement(pooledPreparedUpdate);
+                return pooledPreparedUpdate;
             }
         });
     }
@@ -111,10 +115,10 @@ public final class PooledConnection implements Connection, PooledResource {
 
     @Override
     public DbFuture<Void> close(CloseMode closeMode) throws DbException {
-        if (isClosed()) {
-            return closingFuture;
-        }
-        synchronized (runningOperations) {
+        synchronized (collectionsLock) {
+            if (isClosed()) {
+                return closingFuture;
+            }
             closingFuture = new DefaultDbFuture<Void>();
             if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
                 ArrayList<Map.Entry<DbFuture,DefaultDbFuture>> iterationCopy
@@ -124,9 +128,7 @@ public final class PooledConnection implements Connection, PooledResource {
                     runningOperation.getKey().cancel(true);
                 }
             }
-            if (runningOperations.isEmpty()) {
-                finallyClose();
-            }
+            mayFinallyCloseConnection();
         }
         return closingFuture;
     }
@@ -139,6 +141,25 @@ public final class PooledConnection implements Connection, PooledResource {
     @Override
     public boolean isOpen() throws DbException {
         return nativeConnection.isOpen();
+    }
+
+    private void addStatement(AbstractPooledPreparedStatement statement) {
+        synchronized (collectionsLock){
+            openStatements.add(statement);
+        }
+    }
+
+    private void mayFinallyCloseConnection() {
+        assert Thread.holdsLock(collectionsLock);
+        if(runningOperations.isEmpty() && !openStatements.isEmpty()){
+            ArrayList<AbstractPooledPreparedStatement> stmts = new ArrayList<AbstractPooledPreparedStatement>(openStatements);
+            for (AbstractPooledPreparedStatement openStatement : stmts) {
+                openStatements.remove(openStatement);
+                openStatement.close();
+            }
+        } else if(runningOperations.isEmpty() && openStatements.isEmpty()){
+            finallyClose();
+        }
     }
 
     <T> DbFuture<T> monitor(DbFuture<T> futureToMonitor) {
@@ -163,7 +184,7 @@ public final class PooledConnection implements Connection, PooledResource {
     }
 
     private <TArgument, TResult> void addMonitoring(DbFuture<TArgument> futureToMonitor, DefaultDbFuture<TResult> newFuture) {
-        synchronized (runningOperations){
+        synchronized (collectionsLock){
             runningOperations.put(futureToMonitor, newFuture);
             futureToMonitor.addListener(operationsListener);
         }
@@ -186,4 +207,9 @@ public final class PooledConnection implements Connection, PooledResource {
         }
     }
 
+    void removeResource(AbstractPooledPreparedStatement dbListener) {
+        synchronized (collectionsLock){
+            openStatements.remove(dbListener);
+        }
+    }
 }

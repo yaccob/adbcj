@@ -1,9 +1,14 @@
 package org.adbcj.connectionpool;
 
 import org.adbcj.*;
+import org.adbcj.support.DefaultDbFuture;
 
 class AbstractMockPreparedStatement {
+    private final MockConnection connection;
 
+    AbstractMockPreparedStatement(MockConnection connection) {
+        this.connection = connection;
+    }
 
     public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
@@ -14,11 +19,13 @@ class AbstractMockPreparedStatement {
     }
 
     public DbFuture<Void> close() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        connection.openStatements.decrementAndGet();
+        return DefaultDbFuture.completed(null);
     }
 }
 class MockPreparedQuery extends AbstractMockPreparedStatement implements PreparedQuery{
-    public MockPreparedQuery(String sql) {
+    public MockPreparedQuery(String sql, MockConnection connection) {
+        super(connection);
     }
 
     @Override
@@ -28,7 +35,8 @@ class MockPreparedQuery extends AbstractMockPreparedStatement implements Prepare
 }
 
 class MockPreparedUpdate extends AbstractMockPreparedStatement implements PreparedUpdate{
-    public MockPreparedUpdate(String sql) {
+    public MockPreparedUpdate(String sql, MockConnection connection) {
+        super(connection);
     }
 
     @Override

@@ -18,7 +18,6 @@ package org.adbcj.jdbc;
 
 import org.adbcj.*;
 import org.adbcj.support.AbstractDbSession;
-import org.adbcj.support.DefaultDbSessionFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +39,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     private final JdbcConnectionManager connectionManager;
     private final java.sql.Connection jdbcConnection;
     private final ExecutorService threadPool;
+    private volatile DbFuture<Void> closeFuture = null;
 
     public JdbcConnection(JdbcConnectionManager connectionManager,
                           java.sql.Connection jdbcConnection,
@@ -59,7 +59,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     }
 
     @Override
-    public DbFuture<Void> close(CloseMode closeMode) throws DbException {
+    public synchronized DbFuture<Void> close(CloseMode closeMode) throws DbException {
         if (!isClosed()) {
             Request<Void> closeRequest = new Request<Void>(this) {
                 @Override
@@ -81,18 +81,13 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
             if(closeMode!=CloseMode.CLOSE_GRACEFULLY){
                 errorPendingRequests(new DbException("Connection was closed"));
             }
-            return enqueueRequest(closeRequest).getFuture();
-        } else{
-            return DefaultDbSessionFuture.completed(null);
+            closeFuture = enqueueRequest(closeRequest).getFuture();
         }
+        return closeFuture;
     }
 
     public boolean isClosed() {
-        try {
-            return jdbcConnection.isClosed();
-        } catch (SQLException e) {
-            throw new DbException(e);
-        }
+        return closeFuture!=null;
     }
 
     @Override

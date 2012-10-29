@@ -13,9 +13,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 class MockConnectionManager implements ConnectionManager {
     private final AtomicInteger connectionCounter = new AtomicInteger(0);
     private volatile boolean closed = false;
+    private final ThreadLocal<MockConnection> lastConnection = new ThreadLocal<MockConnection>();
     @Override
     public DbFuture<Connection> connect() {
-        return DefaultDbFuture.<Connection>completed(new MockConnection(this));
+        final MockConnection connection = new MockConnection(this);
+        lastConnection.set(connection);
+        return DefaultDbFuture.<Connection>completed(connection);
     }
 
     @Override
@@ -51,11 +54,17 @@ class MockConnectionManager implements ConnectionManager {
 
         Assert.assertEquals("Expect the amount of open connections",expectedAmount,connectionCounter.get());
     }
+
+    public MockConnection lastInstanceRequestedOnThisThread() {
+        return lastConnection.get();
+    }
 }
 
 class MockConnection implements Connection{
 
-    private MockConnectionManager connection;
+    private final MockConnectionManager connection;
+    final AtomicInteger openStatements = new AtomicInteger();
+    private TransactionState currentTxState = TransactionState.NONE;
 
     public MockConnection(MockConnectionManager mockConnectionManager) {
         this.connection = mockConnectionManager;
@@ -69,7 +78,7 @@ class MockConnection implements Connection{
 
     @Override
     public void beginTransaction() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        this.currentTxState = TransactionState.ACTIVE;
     }
 
     @Override
@@ -79,12 +88,13 @@ class MockConnection implements Connection{
 
     @Override
     public DbSessionFuture<Void> rollback() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        currentTxState = TransactionState.ROLLED_BACK;
+        return DefaultDbSessionFuture.createCompletedFuture(this,null);
     }
 
     @Override
     public boolean isInTransaction() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return this.currentTxState == TransactionState.ACTIVE;
     }
 
     @Override
@@ -104,12 +114,14 @@ class MockConnection implements Connection{
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
-        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedQuery(sql));
+        openStatements.incrementAndGet();
+        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedQuery(sql,this));
     }
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
-        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedUpdate(sql));
+        openStatements.incrementAndGet();
+        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedUpdate(sql,this));
     }
 
     @Override
@@ -131,5 +143,13 @@ class MockConnection implements Connection{
     @Override
     public boolean isOpen() throws DbException {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
+    }
+
+    public void assertAmountOfPreparedStatements(int expectedAmount) {
+        Assert.assertEquals("Expect this amount of open statements",expectedAmount,openStatements.get());
+    }
+
+    public void assertTransactionState(TransactionState expectedState) {
+        Assert.assertEquals(expectedState,currentTxState);
     }
 }
