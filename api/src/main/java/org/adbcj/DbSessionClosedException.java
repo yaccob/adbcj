@@ -4,8 +4,8 @@ public class DbSessionClosedException extends DbException {
 
 	private static final long serialVersionUID = 1L;
 
-	public DbSessionClosedException(String message, Throwable cause) {
-		super( message, cause);
+	public DbSessionClosedException() {
+		super( "This database connection has been closed");
 	}
 
 	public DbSessionClosedException(String message) {

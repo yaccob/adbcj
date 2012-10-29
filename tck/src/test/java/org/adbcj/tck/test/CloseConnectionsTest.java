@@ -64,20 +64,6 @@ public class CloseConnectionsTest {
         }
     }
 
-    private void checkClosed(final Connection c1, DbSessionFuture<ResultSet> runningQuery, DbSessionFuture<ResultSet> runningQuery2, Connection c2) {
-        shouldThrowException(new NoArgAction() {
-            @Override
-            public void invoke() {
-                c1.executeQuery("SELECT 1");
-            }
-        });
-
-        Assert.assertTrue(c1.isClosed());
-        Assert.assertTrue(c2.isClosed());
-        Assert.assertTrue(runningQuery.isDone());
-        Assert.assertTrue(runningQuery2.isDone());
-    }
-
 
     @Test
     public void closingConnectionDoesNotAcceptNewRequests() throws InterruptedException {
@@ -85,7 +71,7 @@ public class CloseConnectionsTest {
         final PreparedQuery preparedSelect = connection.prepareQuery("SELECT 1").get();
         final PreparedUpdate preparedUpdate = connection.prepareUpdate("SELECT 1").get();
         final DbSessionFuture<ResultSet> runningQuery = connection.executeQuery("SELECT SLEEP(5)");
-        connection.close().get();
+        final DbFuture<Void> closeFuture = connection.close();
         Assert.assertTrue(connection.isClosed());
 
         shouldThrowException(new NoArgAction() {
@@ -118,20 +104,9 @@ public class CloseConnectionsTest {
                 preparedUpdate.execute();
             }
         });
+        closeFuture.get();
 
     }
-
-    private void shouldThrowException(NoArgAction toInvoke) {
-        try {
-            toInvoke.invoke();
-            Assert.fail("Expect exception telling us that the connection is closing");
-        } catch (DbSessionClosedException e) {
-            Assert.assertTrue(e.getMessage().contains("closed"));
-        } catch (IllegalStateException e) {
-            Assert.assertTrue(e.getMessage().contains("closed"));
-        }
-    }
-
 
     @Test
     public void forceCloseConnections() throws InterruptedException {
@@ -153,7 +128,31 @@ public class CloseConnectionsTest {
         } catch (Exception e) {
             Assert.assertTrue(e.getMessage().contains("closed"));
         }
-
-        connection.close();
     }
+
+    private void checkClosed(final Connection c1, DbSessionFuture<ResultSet> runningQuery, DbSessionFuture<ResultSet> runningQuery2, Connection c2) {
+        shouldThrowException(new NoArgAction() {
+            @Override
+            public void invoke() {
+                c1.executeQuery("SELECT 1");
+            }
+        });
+
+        Assert.assertTrue(c1.isClosed());
+        Assert.assertTrue(c2.isClosed());
+        Assert.assertTrue(runningQuery.isDone());
+        Assert.assertTrue(runningQuery2.isDone());
+    }
+
+    private void shouldThrowException(NoArgAction toInvoke) {
+        try {
+            toInvoke.invoke();
+            Assert.fail("Expect exception telling us that the connection is closing");
+        } catch (DbSessionClosedException e) {
+            Assert.assertTrue(e.getMessage().contains("closed"));
+        } catch (IllegalStateException e) {
+            Assert.assertTrue(e.getMessage().contains("closed"));
+        }
+    }
+
 }

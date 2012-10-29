@@ -88,14 +88,29 @@ public interface DbFuture<T> extends Future<T> {
 	public T get(long timeout, TimeUnit unit) throws DbException, InterruptedException, TimeoutException;
 
     /**
-     * Maps this future to a new future with the given function.
-     * When this future completes successfully, it will apply the given transformantion function and return
-     * that result in the returned future.
-     * If the future fails, the returned future will also fail.
-     * @param transformation transformation function
-     * @param <TResult> return type of the transformation
-     * @return a new future with includes the transformation
+     * A future starts usually in the {@link FutureState#NOT_COMPLETED} and the
+     * turns into {@link FutureState#SUCCESS}. Or {@link FutureState#FAILURE}.
+     *
+     * Once the state changed from {@link FutureState#NOT_COMPLETED} to another, the state cannot change anymore.
+     * The only valid state change is from {@link FutureState#NOT_COMPLETED} to the other states.
+     * @return the state of this future
      */
-    public <TResult> DbFuture<TResult> map(final OneArgFunction<T,TResult> transformation);
+    public FutureState getState();
+
+    /**
+     * Get the result. Only valid when the future has the state {@link FutureState#SUCCESS}.
+     * Otherwise a {@link IllegalStateException}, {@link CancellationException} or {@link DbException} is thrown
+     * @throws IllegalStateException when the future is not done yet
+     * @throws CancellationException when the future was cancelled
+     * @throws DbException when the future failed
+     * @return the result
+     */
+    public T getResult() throws IllegalStateException,CancellationException,DbException;
+    /**
+     * Get the exception in case of a failure. Only valid when the future has the state {@link FutureState#FAILURE}.
+     * Otherwise a {@link IllegalStateException} if it is not completed. Or returns null if it is cancelled or successfull
+     * @return the result
+     */
+    public Throwable getException();
 	
 }

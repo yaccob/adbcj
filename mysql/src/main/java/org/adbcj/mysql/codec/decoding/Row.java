@@ -83,6 +83,9 @@ class Row extends DecoderState {
                     case DOUBLE:
                         value =  Double.longBitsToDouble(IoUtils.readLong(in));
                         break;
+                    case BLOB:
+                        value =  IoUtils.readLengthCodedString(in, in.read(), CHARSET);
+                        break;
                     case NULL:
                         value =  null;
                         break;
@@ -151,6 +154,9 @@ class Row extends DecoderState {
                         break;
                     case DOUBLE:
                         value = Double.parseDouble(strVal);
+                        break;
+                    case BLOB:
+                        value = strVal;
                         break;
                     default:
                         throw new IllegalStateException("Don't know how to handle column type of "

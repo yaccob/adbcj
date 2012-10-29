@@ -54,18 +54,4 @@ public class DefaultDbSessionFuture<T> extends DefaultDbFuture<T> implements DbS
 	}
 
 
-    @Override
-    public <TResult> DbSessionFuture<TResult> map(final OneArgFunction<T,TResult> transformation){
-        final DefaultDbSessionFuture<TResult> completion = new DefaultDbSessionFuture<TResult>(session, delegateCancel());
-        this.addListener(createTransformationListener(transformation, completion));
-        return completion;
-
-    }
-
-    public <TResult> DbSessionFuture<TResult> mapWithOtherSession(final OneArgFunction<T,TResult> transformation,DbSession session){
-        final DefaultDbSessionFuture<TResult> completion = new DefaultDbSessionFuture<TResult>(session, delegateCancel());
-        this.addListener(createTransformationListener(transformation, completion));
-        return completion;
-
-    }
 }

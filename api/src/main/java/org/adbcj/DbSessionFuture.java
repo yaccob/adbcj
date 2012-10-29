@@ -17,14 +17,9 @@
 package org.adbcj;
 
 
-import org.adbcj.support.OneArgFunction;
-
 public interface DbSessionFuture<T> extends DbFuture<T> {
 
 	public DbSessionFuture<T> addListener(DbListener<T> listener);
 	
 	DbSession getSession();
-
-    public <TResult> DbSessionFuture<TResult> map(final OneArgFunction<T,TResult> transformation);
-    public <TResult> DbSessionFuture<TResult> mapWithOtherSession(final OneArgFunction<T,TResult> transformation,DbSession otherSession);
 }

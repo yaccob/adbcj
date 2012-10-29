@@ -51,13 +51,16 @@ public class SupportedDataTypesTest extends AbstractWithConnectionManagerTest {
                 "AND bigIntColumn = ? " +
                 "AND decimalColumn = ? " +
                 "AND dateColumn < ? " +
-                "AND doubleColumn < ? ").get();
+                "AND doubleColumn < ? " +
+                "AND textColumn LIKE ? ").get();
         final ResultSet resultSet = statement.execute(42,
                 "4242",
                 42L,
                 new BigDecimal("42.42"),
                 new Date(),
-                42.4200001).get();
+                42.4200001,
+                "42-4242-42424242-4242424242424242-42424242-4242-42").get();
+
         final Row row = resultSet.get(0);
         Assert.assertNotNull(row);
 
@@ -92,6 +95,7 @@ public class SupportedDataTypesTest extends AbstractWithConnectionManagerTest {
         assertTrue(row.get("timeStampColumn").getString().startsWith("2012-05-16 17:10:36"));
         assertTrue(row.get("timeStampColumn").getDate().getTime() < System.currentTimeMillis());
         assertEquals(row.get("doubleColumn").getDouble(), 42.42, 0.0001);
-        assertEquals(row.get(9).getString(), null);
+        assertEquals(row.get("textColumn").getString(), "42-4242-42424242-4242424242424242-42424242-4242-42");
+        assertEquals(row.get(10).getString(), null);
     }
 }

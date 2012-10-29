@@ -2,11 +2,13 @@ package org.adbcj.connectionpool;
 
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.FutureUtils;
 import org.adbcj.support.OneArgFunction;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -15,7 +17,7 @@ public final class PooledConnection implements Connection, PooledResource {
     private final Connection nativeConnection;
     private final PooledConnectionManager pooledConnectionManager;
     private volatile DefaultDbFuture<Void> closingFuture;
-    private final Set<DbFuture> runningOperations = new HashSet<DbFuture>();
+    private final Map<DbFuture,DefaultDbFuture> runningOperations = new HashMap<DbFuture, DefaultDbFuture>();
     private final DbListener operationsListener = new DbListener() {
         @Override
         public void onCompletion(DbFuture future) {
@@ -83,7 +85,7 @@ public final class PooledConnection implements Connection, PooledResource {
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
         checkClosed();
-        return monitor(nativeConnection.prepareQuery(sql)).map(new OneArgFunction<PreparedQuery, PreparedQuery>() {
+        return monitor(nativeConnection.prepareQuery(sql), new OneArgFunction<PreparedQuery, PreparedQuery>() {
             @Override
             public PreparedQuery apply(PreparedQuery arg) {
                 return new PooledPreparedQuery(arg, PooledConnection.this);
@@ -94,7 +96,7 @@ public final class PooledConnection implements Connection, PooledResource {
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
         checkClosed();
-        return monitor(nativeConnection.prepareUpdate(sql)).map(new OneArgFunction<PreparedUpdate, PreparedUpdate>() {
+        return monitor(nativeConnection.prepareUpdate(sql), new OneArgFunction<PreparedUpdate, PreparedUpdate>() {
             @Override
             public PreparedUpdate apply(PreparedUpdate arg) {
                 return new PooledPreparedUpdate(arg, PooledConnection.this);
@@ -114,12 +116,12 @@ public final class PooledConnection implements Connection, PooledResource {
         }
         synchronized (runningOperations) {
             closingFuture = new DefaultDbFuture<Void>();
-        }
-        synchronized (runningOperations) {
             if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
-                ArrayList<DbFuture> iterationCopy = new ArrayList<DbFuture>(runningOperations);
-                for (DbFuture runningOperation : iterationCopy) {
-                    runningOperation.cancel(false);
+                ArrayList<Map.Entry<DbFuture,DefaultDbFuture>> iterationCopy
+                        = new ArrayList<Map.Entry<DbFuture,DefaultDbFuture>>(runningOperations.entrySet());
+                for (Map.Entry<DbFuture,DefaultDbFuture> runningOperation : iterationCopy) {
+                    runningOperation.getValue().trySetException(new DbSessionClosedException());
+                    runningOperation.getKey().cancel(true);
                 }
             }
             if (runningOperations.isEmpty()) {
@@ -140,21 +142,33 @@ public final class PooledConnection implements Connection, PooledResource {
     }
 
     <T> DbFuture<T> monitor(DbFuture<T> futureToMonitor) {
-        addToRunningOperations(futureToMonitor);
-        return futureToMonitor;
+        return monitor(futureToMonitor,OneArgFunction.ID_FUNCTION);
+    }
+    <TArgument,TResult> DbFuture<TResult> monitor(DbFuture<TArgument> futureToMonitor,
+                                                  OneArgFunction<TArgument,TResult> transform) {
+        final DefaultDbFuture<TResult> newFuture = FutureUtils.map(futureToMonitor, transform);
+        addMonitoring(futureToMonitor, newFuture);
+        return newFuture;
     }
 
     <T> DbSessionFuture<T> monitor(DbSessionFuture<T> futureToMonitor) {
-        addToRunningOperations(futureToMonitor);
-        return futureToMonitor.mapWithOtherSession(OneArgFunction.ID_FUNCTION, this);
+        return monitor(futureToMonitor,OneArgFunction.ID_FUNCTION);
     }
 
-    private <T> void addToRunningOperations(DbFuture<T> futureToMonitor) {
-        synchronized (this.runningOperations){
-            this.runningOperations.add(futureToMonitor);
+    <TArgument,TResult>DbSessionFuture<TResult> monitor(DbSessionFuture<TArgument> futureToMonitor,
+                                   OneArgFunction<TArgument,TResult> transform) {
+        final DefaultDbSessionFuture<TResult> newFuture = FutureUtils.map(futureToMonitor, transform);
+        addMonitoring(futureToMonitor, newFuture);
+        return newFuture;
+    }
+
+    private <TArgument, TResult> void addMonitoring(DbFuture<TArgument> futureToMonitor, DefaultDbFuture<TResult> newFuture) {
+        synchronized (runningOperations){
+            runningOperations.put(futureToMonitor, newFuture);
             futureToMonitor.addListener(operationsListener);
         }
     }
+
 
     Connection getNativeConnection() {
         return nativeConnection;

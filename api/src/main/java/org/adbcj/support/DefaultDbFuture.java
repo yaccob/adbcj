@@ -19,6 +19,7 @@ package org.adbcj.support;
 import org.adbcj.DbException;
 import org.adbcj.DbFuture;
 import org.adbcj.DbListener;
+import org.adbcj.FutureState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,15 +43,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
      */
     private volatile Throwable exception;
 
-    /**
-     * Indicates if the future was cancelled.
-     */
-    private volatile boolean cancelled;
-
-    /**
-     * Indicates if the future has completed or not.
-     */
-    private volatile boolean done;
+    private volatile FutureState state = FutureState.NOT_COMPLETED;
 
     private final CancellationAction optionalCancellation;
 
@@ -76,7 +69,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             throw new IllegalArgumentException("listener can NOT be null");
         }
         synchronized (lock) {
-            if (done) {
+            if (isDone()) {
                 notifyListener(listener);
             } else{
                 otherListeners.add(listener);
@@ -97,33 +90,33 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public final boolean cancel(boolean mayInterruptIfRunning) {
-        if (done || optionalCancellation==null) {
+        if (isDone() || optionalCancellation==null) {
             return false;
         }
         synchronized (lock) {
-            if (done) {
+            if (isDone()) {
                 return false;
             }
-            cancelled = optionalCancellation.cancel();
+            boolean cancelled = optionalCancellation.cancel();
             if (cancelled) {
-                done = true;
+                state = FutureState.CANCELLED;
                 notifyChanges();
             }
+            return cancelled;
         }
-        return cancelled;
     }
 
 
 
     public final T get() throws InterruptedException, DbException {
-        if (done) {
+        if (isDone()) {
             return getResult();
         }
         synchronized (lock) {
-            if (done) {
+            if (isDone()) {
                 return getResult();
             }
-            while (!done) {
+            while (!isDone()) {
                 lock.wait();
             }
         }
@@ -134,32 +127,52 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         long timeoutMillis = unit.toMillis(timeout);
         long timeoutNanos = unit.toNanos(timeout);
 
-        if (done) {
+        if (isDone()) {
             return getResult();
         }
         synchronized (lock) {
             final long startTime = System.nanoTime();
-            while (!done &&(startTime+timeoutNanos) > System.nanoTime() ){
+            while (!isDone() &&(startTime+timeoutNanos) > System.nanoTime() ){
                 lock.wait(timeoutMillis);
             }
-            if (!done) {
+            if (!isDone()) {
                 throw new TimeoutException();
             }
         }
         return getResult();
     }
 
-    private final T getResult() throws DbException {
-        if (!done) {
+
+    public final T getResult() throws DbException {
+        if (state == FutureState.SUCCESS) {
+            return result;
+        }
+        else if (state == FutureState.NOT_COMPLETED) {
             throw new IllegalStateException("Should not be calling this method when future is not done");
         }
-        if (exception != null) {
-            throw new DbException(exception);
+        else if (state == FutureState.FAILURE) {
+            throw DbException.wrap(exception);
         }
-        if (cancelled) {
+        else if (state == FutureState.CANCELLED) {
             throw new CancellationException();
         }
         return result;
+    }
+
+    @Override
+    public FutureState getState() {
+        return state;
+    }
+
+    @Override
+    public Throwable getException() {
+        if(state==FutureState.FAILURE){
+            return exception;
+        } else if(state==FutureState.NOT_COMPLETED){
+            throw new IllegalStateException("Should not be calling this method when future is not done");
+        } else{
+            return null;
+        }
     }
 
     public final void setResult(T result) {
@@ -170,12 +183,12 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     public boolean trySetResult(T result) {
         synchronized (lock) {
-            if (done) {
+            if (isDone()) {
                 return false;
             }
 
             this.result = result;
-            done = true;
+            state = FutureState.SUCCESS;
             notifyChanges();
             return true;
         }
@@ -199,66 +212,49 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public boolean isCancelled() {
-        return cancelled;
+        return state==FutureState.CANCELLED;
     }
 
     public boolean isDone() {
-        return done;
+        return state!=FutureState.NOT_COMPLETED;
     }
 
     public void setException(Throwable exception) {
+        if(!trySetException(exception)){
+            throw new IllegalStateException("Can't set exception on completed future");
+        }
+    }
+
+    /**
+     * Try to complete this future with an exception. If wasn't completed yet, the future
+     * will fail with the given exception and the method return true. Otherwise this method
+     * doesn't change the state of the future and return false.
+     * @param exception
+     * @return true when state of future could be changed to a failure. False otherwise
+     */
+    public boolean trySetException(Throwable exception) {
         synchronized (lock) {
-            if (done) {
-                throw new IllegalStateException("Can't set exception on completed future");
+            if (isDone()) {
+                return false;
             }
             this.exception = exception;
-            done = true;
-        }
-        notifyChanges();
-    }
-
-    public <TResult> DbFuture<TResult> map(final OneArgFunction<T,TResult> transformation){
-        final DefaultDbFuture<TResult> completion = new DefaultDbFuture<TResult>(delegateCancel());
-        this.addListener(createTransformationListener(transformation, completion));
-        return completion;
-
-    }
-
-
-    protected CancellationAction delegateCancel() {
-        if(null==optionalCancellation){
-            return null;
-        }
-        return new CancellationAction() {
-            @Override
-            public boolean cancel() {
-                return DefaultDbFuture.this.cancel(true);
-            }
-        };
-    }
-
-    protected  <TResult> DbListener<T> createTransformationListener(final OneArgFunction<T, TResult> transformation,
-                                                                 final DefaultDbFuture<TResult> completion) {
-        return new DbListener<T>() {
-            @Override
-            public void onCompletion(DbFuture<T> future) {
-                if(DefaultDbFuture.this.exception !=null){
-                    completion.setException(DefaultDbFuture.this.exception);
-                } else if(DefaultDbFuture.this.cancelled){
-                    completion.forceToCanceledState();
-                } else{
-                    completion.setResult(transformation.apply(DefaultDbFuture.this.result));
-                }
-            }
-        };
-    }
-
-    private void forceToCanceledState() {
-        synchronized (this.lock){
-            done=true;
-            cancelled=true;
+            state = FutureState.FAILURE;
             notifyChanges();
+            return true;
         }
     }
+
+
+    boolean trySetCancelled() {
+        if(state!=FutureState.NOT_COMPLETED){
+            return false;
+        }
+        synchronized (this.lock){
+            state = FutureState.CANCELLED;
+            notifyChanges();
+            return true;
+        }
+    }
+
 
 }

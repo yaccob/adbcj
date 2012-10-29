@@ -3,6 +3,7 @@ package org.adbcj.connectionpool;
 import org.adbcj.*;
 import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.FutureUtils;
 import org.adbcj.support.OneArgFunction;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +26,7 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
         if(closed){
             throw new DbException("Connection manager is closed. Cannot open a new connection");
         }
-        return (DbFuture) findOrGetNewConnection().map(new OneArgFunction<Connection, PooledConnection>() {
+        return (DbFuture) FutureUtils.map(findOrGetNewConnection(), new OneArgFunction<Connection, PooledConnection>() {
             @Override
             public PooledConnection apply(Connection arg) {
                 final PooledConnection pooledConnection = new PooledConnection(arg, PooledConnectionManager.this);

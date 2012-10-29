@@ -83,6 +83,9 @@ public class ResultSetCopier {
                     case DOUBLE:
                         value = jdbcResultSet.getDouble(i);
                         break;
+                    case LONGVARCHAR:
+                        value = jdbcResultSet.getString(i);
+                        break;
                     case NULL:
                         value = null;
                         break;
