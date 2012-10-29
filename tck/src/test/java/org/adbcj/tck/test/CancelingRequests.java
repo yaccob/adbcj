@@ -39,7 +39,7 @@ public class CancelingRequests extends AbstractWithConnectionManagerTest{
 
         try{
             toCancel.get();
-            Assert.fail("Schould throw CancellationException");
+            Assert.fail("Should throw CancellationException");
         } catch (CancellationException expected){
             //expected
         }

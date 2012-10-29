@@ -124,12 +124,29 @@ public class MinaConnectionManager extends AbstractConnectionManager {
 		return future;
 	}
 
-	class PgConnectFuture extends DefaultDbFuture<Connection> implements IoSessionInitializer<ConnectFuture> {
+    class PgConnectFuture extends DefaultDbFuture<Connection> implements IoSessionInitializer<ConnectFuture> {
 
 		private boolean cancelled = false;
 		private boolean started = false;
 
-		@Override
+        PgConnectFuture() {
+            throw new Error("Needs more refactoring");
+//            super(new CancellationAction() {
+//                @Override
+//                public boolean cancel() {
+//                    if (started) {
+//                        logger.debug("Can't cancel, connection already started");
+//                        return false;
+//                    }
+//                    logger.debug("Cancelled connect");
+//                    cancelled = true;
+//                    return true;
+//                }
+//            });
+        }
+
+
+        @Override
 		public synchronized void initializeSession(IoSession session, ConnectFuture future) {
 			if (cancelled) {
 				session.close(true);
@@ -140,18 +157,6 @@ public class MinaConnectionManager extends AbstractConnectionManager {
 			MinaConnection connection = new MinaConnection(MinaConnectionManager.this, this, session);
 			IoSessionUtil.setConnection(session, connection);
 		}
-
-		@Override
-		protected synchronized boolean doCancel(boolean mayInterruptIfRunning) {
-			if (started) {
-				logger.debug("Can't cancel, connection already started");
-				return false;
-			}
-			logger.debug("Cancelled connect");
-			cancelled = true;
-			return true;
-		}
-
 	}
 
 	public synchronized DbFuture<Void> close() throws DbException {

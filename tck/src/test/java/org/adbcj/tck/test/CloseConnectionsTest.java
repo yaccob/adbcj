@@ -48,7 +48,7 @@ public class CloseConnectionsTest {
         final ConnectionManager manager = ConnectionManagerProvider.createConnectionManager(url, user, password);
         final Connection c1 = manager.connect().get();
         final DbSessionFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(3)");
-        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(3)");
+        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(4)");
         final Connection c2 = manager.connect().get();
         c2.beginTransaction();
         manager.close(CloseMode.CANCEL_PENDING_OPERATIONS).get();

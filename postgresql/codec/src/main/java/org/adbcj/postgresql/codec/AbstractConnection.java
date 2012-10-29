@@ -74,7 +74,7 @@ public abstract class AbstractConnection extends AbstractDbSession implements Co
 					// If the finalizeClose is NOT immediate, schedule the finalizeClose
                 this.closeRequest =  new Request<Void>(this) {
 						@Override
-						public boolean cancelRequest(boolean mayInterruptIfRunning) {
+						public boolean cancelRequest() {
 							return false;
 						}
 						@Override

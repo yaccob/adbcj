@@ -3,6 +3,7 @@ package org.adbcj.connectionpool;
 import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.DefaultDbSessionFuture;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -103,12 +104,12 @@ class MockConnection implements Connection{
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedQuery(sql));
     }
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedUpdate(sql));
     }
 
     @Override

@@ -247,7 +247,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         }
 
         @Override
-        public boolean cancelRequest(boolean mayInterruptIfRunning) {
+        public boolean cancelRequest() {
             return false;
         }
         public synchronized void execute() {

@@ -8,6 +8,7 @@ import org.adbcj.postgresql.codec.backend.AbstractBackendMessage;
 import org.adbcj.postgresql.codec.backend.BackendMessageDecoder;
 import org.adbcj.postgresql.codec.frontend.AbstractFrontendMessage;
 import org.adbcj.postgresql.codec.frontend.FrontendMessageEncoder;
+import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -103,7 +104,13 @@ public class NettyConnectionManager extends AbstractConnectionManager {
 
         private final ChannelFuture channelFuture;
 
-        public PostgresqlConnectFuture(ChannelFuture channelFuture) {
+        public PostgresqlConnectFuture(final ChannelFuture channelFuture) {
+            super(new CancellationAction() {
+                @Override
+                public boolean cancel() {
+                    return channelFuture.cancel();
+                }
+            });
             this.channelFuture = channelFuture;
             channelFuture.addListener(new ChannelFutureListener() {
                 @Override
@@ -121,11 +128,6 @@ public class NettyConnectionManager extends AbstractConnectionManager {
                     protocolHandler.connectionOpened(connection);
                 }
             });
-        }
-
-        @Override
-        protected boolean doCancel(boolean mayInterruptIfRunning) {
-            return channelFuture.cancel();
         }
 
     }

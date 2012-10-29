@@ -353,7 +353,7 @@ public abstract class AbstractDbSession implements DbSession {
         }
 
         @Override
-        public boolean cancelRequest(boolean mayInterruptIfRunning) {
+        public boolean cancelRequest() {
             transaction.cancelPendingRequests();
             return true;
         }
@@ -392,7 +392,7 @@ public abstract class AbstractDbSession implements DbSession {
 
         @Override
         // Return false because a rollback cannot be cancelled
-        public boolean cancelRequest(boolean mayInterruptIfRunning) {
+        public boolean cancelRequest() {
             return false;
         }
     }
@@ -407,12 +407,12 @@ public abstract class AbstractDbSession implements DbSession {
 
 
         public Request(AbstractDbSession session) {
-            this.futureToComplete = new DefaultDbSessionFuture<T>(session){
+            this.futureToComplete = new DefaultDbSessionFuture<T>(session,new CancellationAction() {
                 @Override
-                protected boolean doCancel(boolean mayInterruptIfRunning) {
-                    return Request.this.doCancel(mayInterruptIfRunning);
+                public boolean cancel() {
+                    return Request.this.doCancel();
                 }
-            };
+            });
             this.session = session;
         }
 
@@ -435,11 +435,11 @@ public abstract class AbstractDbSession implements DbSession {
             }
         }
 
-        public final synchronized boolean doCancel(boolean mayInterruptIfRunning) {
+        public final synchronized boolean doCancel() {
             if (executed) {
                 return false;
             }
-            cancelled = cancelRequest(mayInterruptIfRunning);
+            cancelled = cancelRequest();
 
             // The the request was cancelled and it can be removed
             if (cancelled && canRemove()) {
@@ -459,7 +459,7 @@ public abstract class AbstractDbSession implements DbSession {
 
         protected abstract void execute() throws Exception;
 
-        protected boolean cancelRequest(boolean mayInterruptIfRunning) {
+        protected boolean cancelRequest() {
             return true;
         }
 

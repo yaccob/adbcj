@@ -16,10 +16,7 @@
  */
 package org.adbcj.support;
 
-import org.adbcj.DbException;
-import org.adbcj.DbListener;
-import org.adbcj.DbSession;
-import org.adbcj.DbSessionFuture;
+import org.adbcj.*;
 
 public class DefaultDbSessionFuture<T> extends DefaultDbFuture<T> implements DbSessionFuture<T> {
 
@@ -43,12 +40,32 @@ public class DefaultDbSessionFuture<T> extends DefaultDbFuture<T> implements DbS
 		return this;
 	}
 	
-	public DefaultDbSessionFuture(DbSession session) {
+	public DefaultDbSessionFuture(DbSession session){
 		this.session = session;
 	}
-	
+
+	public DefaultDbSessionFuture(DbSession session, CancellationAction cancelAction) {
+        super(cancelAction);
+		this.session = session;
+	}
+
 	public DbSession getSession() {
 		return session;
 	}
 
+
+    @Override
+    public <TResult> DbSessionFuture<TResult> map(final OneArgFunction<T,TResult> transformation){
+        final DefaultDbSessionFuture<TResult> completion = new DefaultDbSessionFuture<TResult>(session, delegateCancel());
+        this.addListener(createTransformationListener(transformation, completion));
+        return completion;
+
+    }
+
+    public <TResult> DbSessionFuture<TResult> mapWithOtherSession(final OneArgFunction<T,TResult> transformation,DbSession session){
+        final DefaultDbSessionFuture<TResult> completion = new DefaultDbSessionFuture<TResult>(session, delegateCancel());
+        this.addListener(createTransformationListener(transformation, completion));
+        return completion;
+
+    }
 }

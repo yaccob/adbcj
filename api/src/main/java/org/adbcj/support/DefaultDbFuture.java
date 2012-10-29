@@ -28,7 +28,7 @@ import java.util.concurrent.TimeoutException;
 
 public class DefaultDbFuture<T> implements DbFuture<T> {
 
-    private final Object lock;
+    private final Object lock = new Object();
 
     private final List<DbListener<T>> otherListeners = new ArrayList<DbListener<T>>(1);
 
@@ -52,15 +52,23 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
      */
     private volatile boolean done;
 
+    private final CancellationAction optionalCancellation;
+
+
+
+    public DefaultDbFuture(CancellationAction cancelAction) {
+        this.optionalCancellation = cancelAction;
+    }
+
+    public DefaultDbFuture() {
+        this.optionalCancellation = null;
+    }
+
 
     public static <T> DbFuture<T> completed(T result) {
         DefaultDbFuture f = new DefaultDbFuture();
         f.setResult(result);
         return f;
-    }
-
-    public DefaultDbFuture() {
-        this.lock = this;
     }
 
     public DbFuture<T> addListener(DbListener<T> listener) {
@@ -89,14 +97,14 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public final boolean cancel(boolean mayInterruptIfRunning) {
-        if (done) {
+        if (done || optionalCancellation==null) {
             return false;
         }
         synchronized (lock) {
             if (done) {
                 return false;
             }
-            cancelled = doCancel(mayInterruptIfRunning);
+            cancelled = optionalCancellation.cancel();
             if (cancelled) {
                 done = true;
                 notifyChanges();
@@ -105,9 +113,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         return cancelled;
     }
 
-    protected boolean doCancel(boolean mayInterruptIfRunning) {
-        return false;
-    }
+
 
     public final T get() throws InterruptedException, DbException {
         if (done) {
@@ -212,19 +218,47 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public <TResult> DbFuture<TResult> map(final OneArgFunction<T,TResult> transformation){
-        final DefaultDbFuture<TResult> completion = new DefaultDbFuture<TResult>();
-        this.addListener(new DbListener<T>() {
+        final DefaultDbFuture<TResult> completion = new DefaultDbFuture<TResult>(delegateCancel());
+        this.addListener(createTransformationListener(transformation, completion));
+        return completion;
+
+    }
+
+
+    protected CancellationAction delegateCancel() {
+        if(null==optionalCancellation){
+            return null;
+        }
+        return new CancellationAction() {
+            @Override
+            public boolean cancel() {
+                return DefaultDbFuture.this.cancel(true);
+            }
+        };
+    }
+
+    protected  <TResult> DbListener<T> createTransformationListener(final OneArgFunction<T, TResult> transformation,
+                                                                 final DefaultDbFuture<TResult> completion) {
+        return new DbListener<T>() {
             @Override
             public void onCompletion(DbFuture<T> future) {
                 if(DefaultDbFuture.this.exception !=null){
                     completion.setException(DefaultDbFuture.this.exception);
+                } else if(DefaultDbFuture.this.cancelled){
+                    completion.forceToCanceledState();
                 } else{
                     completion.setResult(transformation.apply(DefaultDbFuture.this.result));
                 }
             }
-        });
-        return completion;
+        };
+    }
 
+    private void forceToCanceledState() {
+        synchronized (this.lock){
+            done=true;
+            cancelled=true;
+            notifyChanges();
+        }
     }
 
 }

@@ -69,7 +69,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                 }
 
                 @Override
-                public synchronized boolean cancelRequest(boolean mayInterruptIfRunning) {
+                public synchronized boolean cancelRequest() {
                     return false;
                 }
 
@@ -250,11 +250,11 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
 
         @Override
-        public boolean cancelRequest(boolean mayInterruptIfRunning) {
+        public boolean cancelRequest() {
             if (future == null) {
                 return true;
             }
-            return future.cancel(mayInterruptIfRunning);
+            return future.cancel(true);
         }
 
         @Override
@@ -298,9 +298,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
 
         @Override
-        public synchronized boolean cancelRequest(boolean mayInterruptIfRunning) {
-            if (super.cancel(mayInterruptIfRunning)) {
-                return request.cancel(mayInterruptIfRunning);
+        public synchronized boolean cancelRequest() {
+            if (super.cancel(true)) {
+                return request.cancel(true);
             }
             return false;
         }

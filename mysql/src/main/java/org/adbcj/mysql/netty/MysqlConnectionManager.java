@@ -6,6 +6,7 @@ import org.adbcj.DbException;
 import org.adbcj.DbFuture;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.support.AbstractConnectionManager;
+import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.LoginCredentials;
 import org.jboss.netty.bootstrap.ClientBootstrap;
@@ -107,7 +108,41 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         logger.debug("Starting connection");
 
         final ChannelFuture channelFuture = bootstrap.connect();
-        return new MysqlConnectFuture(channelFuture);
+
+        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>(new CancellationAction() {
+            @Override
+            public boolean cancel() {
+                return channelFuture.cancel();
+            }
+        });
+
+        channelFuture.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                logger.debug("Connect completed");
+
+                Channel channel = future.getChannel();
+                MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, credentials, channel, connectFuture);
+                channel.getPipeline().addLast("handler", new Handler(connection));
+
+                final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
+                synchronized (queuingHandler) {
+                    queuingHandler.flush();
+                    channel.getPipeline().remove(queuingHandler);
+                }
+
+                Decoder decoder = channel.getPipeline().get(Decoder.class);
+                decoder.initializeWithSession(connection);
+
+
+                if(future.getCause()!=null){
+                    connectFuture.setException(future.getCause());
+                }
+
+            }
+        });
+
+        return connectFuture;
     }
 
 
@@ -131,43 +166,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         }
     }
 
-	class MysqlConnectFuture extends DefaultDbFuture<Connection> {
-		private final ChannelFuture channelFuture;
-
-		public MysqlConnectFuture(ChannelFuture channelFuture) {
-			this.channelFuture = channelFuture;
-			channelFuture.addListener(new ChannelFutureListener() {
-				@Override
-				public void operationComplete(ChannelFuture future) throws Exception {
-					logger.debug("Connect completed");
-					
-					Channel channel = future.getChannel();
-					MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, credentials, channel, MysqlConnectFuture.this);
-					channel.getPipeline().addLast("handler", new Handler(connection));
-
-                    final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
-                    synchronized (queuingHandler) {
-                        queuingHandler.flush();
-                        channel.getPipeline().remove(queuingHandler);
-                    }
-
-                    Decoder decoder = channel.getPipeline().get(Decoder.class);
-                    decoder.initializeWithSession(connection);
-
-
-                    if(future.getCause()!=null){
-                        setException(future.getCause());
-                    }
-
-				}
-			});
-		}
-
-		@Override
-		protected boolean doCancel(boolean mayInterruptIfRunning) {
-			return channelFuture.cancel();
-		}
-	}
 }
 
 class Decoder extends FrameDecoder {
