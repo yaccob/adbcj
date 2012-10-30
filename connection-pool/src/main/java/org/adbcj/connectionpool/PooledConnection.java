@@ -18,6 +18,7 @@ public final class PooledConnection implements Connection, PooledResource {
     private final Map<DbFuture,DefaultDbFuture> runningOperations = new HashMap<DbFuture, DefaultDbFuture>();
     private final Set<AbstractPooledPreparedStatement> openStatements = new HashSet<AbstractPooledPreparedStatement>();
     private final Object collectionsLock = new Object();
+    private volatile boolean mayBeCorrupted = false;
     private final DbListener operationsListener = new DbListener() {
         @Override
         public void onCompletion(DbFuture future) {
@@ -25,6 +26,9 @@ public final class PooledConnection implements Connection, PooledResource {
                 runningOperations.remove(future);
                 if (isClosed()) {
                     mayFinallyCloseConnection();
+                }
+                if(future.getState()==FutureState.FAILURE){
+                    PooledConnection.this.mayBeCorrupted = true;
                 }
             }
         }
@@ -193,6 +197,10 @@ public final class PooledConnection implements Connection, PooledResource {
 
     Connection getNativeConnection() {
         return nativeConnection;
+    }
+
+    public boolean isMayBeCorrupted() {
+        return mayBeCorrupted;
     }
 
     void checkClosed() {

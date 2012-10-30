@@ -14,16 +14,14 @@ public final class ConfigInfo {
     private final long maxWaitForConnectionsInMillisec;
 
     ConfigInfo(Map<String, String> properties) {
-        this.maxConnections = mustBePositive(longProperty(properties,POOL_MAX_CONNECTIONS,MAX_DEFAULT_CONNECTIONS),POOL_MAX_CONNECTIONS);
-        this.maxWaitForConnectionsInMillisec = mustBePositive(longProperty(properties,POOL_MAX_CONNECTIONS,MAX_DEFAULT_WAIT_FOR_CONNECTIONS),MAX_WAIT_FOR_CONNECTIONS);
+        this.maxConnections = longPositiveProperty(properties,
+                POOL_MAX_CONNECTIONS,
+                MAX_DEFAULT_CONNECTIONS);
+        this.maxWaitForConnectionsInMillisec = longPositiveProperty(properties,
+                MAX_WAIT_FOR_CONNECTIONS,
+                MAX_DEFAULT_WAIT_FOR_CONNECTIONS);
     }
 
-    private long mustBePositive(long value, String message) {
-        if(value<=0){
-            throw new IllegalArgumentException("The "+message+" has to be positive");
-        }
-        return value;
-    }
 
     public long getMaxConnections() {
         return maxConnections;
@@ -31,6 +29,16 @@ public final class ConfigInfo {
 
     public long getMaxWaitForConnectionsInMillisec() {
         return maxWaitForConnectionsInMillisec;
+    }
+    private long longPositiveProperty(Map<String, String> properties, String property, long defaultValue) {
+        return mustBePositive(longProperty(properties, property, defaultValue),property);
+    }
+
+    private long mustBePositive(long value, String message) {
+        if(value<=0){
+            throw new IllegalArgumentException("The "+message+" has to be positive");
+        }
+        return value;
     }
 
     static long longProperty(Map<String, String> properties, String property, long defaultValue) {

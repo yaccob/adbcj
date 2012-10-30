@@ -12,7 +12,7 @@ class PooledPreparedQuery extends AbstractPooledPreparedStatement implements Pre
     }
 
     @Override
-    public DbFuture<ResultSet> execute(Object... params) {
+    public DbSessionFuture<ResultSet> execute(Object... params) {
         pooledConnection.checkClosed();
         return pooledConnection.monitor(nativeQuery().execute(params));
     }

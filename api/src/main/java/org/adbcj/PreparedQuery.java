@@ -2,7 +2,7 @@ package org.adbcj;
 
 public interface PreparedQuery extends PreparedStatement {
 
-	DbFuture<ResultSet> execute(Object... params);
+    DbSessionFuture<ResultSet> execute(Object... params);
 
     <T> DbSessionFuture<T> executeWithCallback(
             ResultHandler<T> eventHandler,

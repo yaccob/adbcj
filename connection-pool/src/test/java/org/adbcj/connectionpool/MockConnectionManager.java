@@ -4,6 +4,8 @@ import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultResultEventsHandler;
+import org.adbcj.support.DefaultResultSet;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -71,10 +73,13 @@ class MockConnectionManager implements ConnectionManager {
 
 class MockConnection implements Connection{
 
+    public static final String FAIL_QUERY = "fail-query";
     private final MockConnectionManager connection;
     final AtomicInteger openStatements = new AtomicInteger();
     private volatile TransactionState currentTxState = TransactionState.NONE;
     private volatile boolean closed = false;
+    private volatile boolean failTxOperation = false;
+    private volatile boolean failCloseOperation = false;
 
     public MockConnection(MockConnectionManager mockConnectionManager) {
         this.connection = mockConnectionManager;
@@ -93,13 +98,21 @@ class MockConnection implements Connection{
 
     @Override
     public DbSessionFuture<Void> commit() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        if(failTxOperation){
+            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed"));
+        } else{
+            return DefaultDbSessionFuture.createCompletedFuture(this, null);
+        }
     }
 
     @Override
     public DbSessionFuture<Void> rollback() {
         currentTxState = TransactionState.ROLLED_BACK;
-        return DefaultDbSessionFuture.createCompletedFuture(this,null);
+        if(failTxOperation){
+            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed"));
+        } else{
+            return DefaultDbSessionFuture.createCompletedFuture(this, null);
+        }
     }
 
     @Override
@@ -109,27 +122,32 @@ class MockConnection implements Connection{
 
     @Override
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return (DbSessionFuture) executeQuery(sql,new DefaultResultEventsHandler(),new DefaultResultSet());
     }
 
     @Override
     public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return maySuccedingOperation(sql);
     }
-
     @Override
     public DbSessionFuture<Result> executeUpdate(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+         return maySuccedingOperation(sql);
     }
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+        if(sql.equals(FAIL_QUERY)){
+            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed: " + sql));
+        }
         openStatements.incrementAndGet();
         return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedQuery(sql,this));
     }
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+        if(sql.equals(FAIL_QUERY)){
+            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed: " + sql));
+        }
         openStatements.incrementAndGet();
         return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedUpdate(sql,this));
     }
@@ -143,7 +161,12 @@ class MockConnection implements Connection{
     public DbFuture<Void> close(CloseMode closeMode) throws DbException {
         closed = true;
         connection.decementConnectionCounter();
-        return DefaultDbFuture.completed(null);
+
+        if(failCloseOperation){
+            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed"));
+        } else{
+            return DefaultDbSessionFuture.createCompletedFuture(this, null);
+        }
     }
 
     @Override
@@ -156,11 +179,28 @@ class MockConnection implements Connection{
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
     }
 
+    private <T> DbSessionFuture<T> maySuccedingOperation(String sql) {
+        if(sql.equals(FAIL_QUERY)){
+            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed: " + sql));
+        } else{
+            return DefaultDbSessionFuture.createCompletedFuture(this,null);
+        }
+    }
+
+
     public void assertAmountOfPreparedStatements(int expectedAmount) {
         Assert.assertEquals("Expect this amount of open statements",expectedAmount,openStatements.get());
     }
 
     public void assertTransactionState(TransactionState expectedState) {
         Assert.assertEquals(expectedState,currentTxState);
+    }
+
+    public void failTxOperation() {
+        this.failTxOperation = true;
+    }
+
+    public void failCloseOperation() {
+        this.failCloseOperation = true;
     }
 }

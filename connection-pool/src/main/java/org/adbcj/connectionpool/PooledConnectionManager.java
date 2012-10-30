@@ -97,6 +97,14 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     public DbFuture<Void> returnConnection(PooledConnection pooledConnection) {
         final DefaultDbFuture<Void> transactionReturned = new DefaultDbFuture<Void>();
         aliveConnections.remove(pooledConnection);
+        if(pooledConnection.isMayBeCorrupted()){
+            return pooledConnection.getNativeConnection().close();
+        } else {
+            return returnConnectionToPool(pooledConnection, transactionReturned);
+        }
+    }
+
+    private DbFuture<Void> returnConnectionToPool(PooledConnection pooledConnection, final DefaultDbFuture<Void> transactionReturned) {
         final Connection nativeTx = pooledConnection.getNativeConnection();
         if(!nativeTx.isClosed() && nativeTx.isInTransaction()){
             nativeTx.rollback().addListener(new DbListener<Void>() {
@@ -121,7 +129,7 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     private boolean tryCompleteWaitingConnectionRequests(Connection nativeTx){
         DefaultDbFuture<Connection> waitForConnection = waitingForConnection.poll();
         while(null!=waitForConnection ){
-            if(tryCompleteWaitingConnectionRequests(nativeTx)){
+            if(waitForConnection.trySetResult(nativeTx)){
                 return true;
             }
             waitForConnection = waitingForConnection.poll();

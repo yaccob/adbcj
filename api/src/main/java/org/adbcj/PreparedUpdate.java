@@ -18,5 +18,5 @@ package org.adbcj;
 
 public interface PreparedUpdate extends PreparedStatement {
 
-	DbFuture<Result> execute(Object... params);
+    DbSessionFuture<Result> execute(Object... params);
 }

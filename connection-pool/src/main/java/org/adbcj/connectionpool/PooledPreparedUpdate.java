@@ -1,6 +1,6 @@
 package org.adbcj.connectionpool;
 
-import org.adbcj.DbFuture;
+import org.adbcj.DbSessionFuture;
 import org.adbcj.PreparedUpdate;
 import org.adbcj.Result;
 
@@ -13,7 +13,7 @@ class PooledPreparedUpdate extends AbstractPooledPreparedStatement implements Pr
     }
 
     @Override
-    public DbFuture<Result> execute(Object... params) {
+    public DbSessionFuture<Result> execute(Object... params) {
         pooledConnection.checkClosed();
         return pooledConnection.monitor(nativeQuery().execute(params));
     }

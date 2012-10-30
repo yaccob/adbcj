@@ -30,7 +30,7 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
     }
 
     @Override
-    public DbFuture execute(final Object... params) {
+    public DbSessionFuture execute(final Object... params) {
         validateParameters(params);
         ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();

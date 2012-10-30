@@ -78,7 +78,7 @@ public class LimitsOfConnectionsTest {
     public void timeoutIfNowConnectionAvailable() throws Exception{
         Map<String, String> config = new HashMap<String, String>();
         config.put("pool.maxConnections","1");
-        config.put("pool.maxWaitForConnection","1000");
+        config.put("pool.maxWaitForConnection","100");
         final ConnectionManager connectionManager
                 = ConnectionManagerProvider.createConnectionManager("adbcj:pooled:mock:database",
                 "sa", "pwd", config);

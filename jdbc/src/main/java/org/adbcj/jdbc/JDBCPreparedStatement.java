@@ -31,7 +31,7 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
 
     // Implements the execute interface method of the sub types
     @SuppressWarnings("UnusedDeclaration")
-    public DbFuture execute(final Object... params) {
+    public DbSessionFuture execute(final Object... params) {
         connection.checkClosed();
         return executeWithCompletion(new CompletionProducerFunction() {
             public T complete() throws Exception{
