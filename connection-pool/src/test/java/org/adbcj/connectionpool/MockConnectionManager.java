@@ -64,7 +64,8 @@ class MockConnection implements Connection{
 
     private final MockConnectionManager connection;
     final AtomicInteger openStatements = new AtomicInteger();
-    private TransactionState currentTxState = TransactionState.NONE;
+    private volatile TransactionState currentTxState = TransactionState.NONE;
+    private volatile boolean closed = false;
 
     public MockConnection(MockConnectionManager mockConnectionManager) {
         this.connection = mockConnectionManager;
@@ -131,13 +132,14 @@ class MockConnection implements Connection{
 
     @Override
     public DbFuture<Void> close(CloseMode closeMode) throws DbException {
+        closed = true;
         connection.decementConnectionCounter();
         return DefaultDbFuture.completed(null);
     }
 
     @Override
     public boolean isClosed() throws DbException {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return closed;
     }
 
     @Override
