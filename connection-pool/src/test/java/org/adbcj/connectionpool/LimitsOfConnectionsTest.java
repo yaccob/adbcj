@@ -1,10 +1,7 @@
 package org.adbcj.connectionpool;
 
 import junit.framework.Assert;
-import org.adbcj.Connection;
-import org.adbcj.ConnectionManager;
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbFuture;
+import org.adbcj.*;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -74,5 +71,46 @@ public class LimitsOfConnectionsTest {
         mockManager.assertMaxConnectonsUsed(50);
 
         connectionManager.close().get();
+    }
+
+
+    @Test
+    public void timeoutIfNowConnectionAvailable() throws Exception{
+        Map<String, String> config = new HashMap<String, String>();
+        config.put("pool.maxConnections","1");
+        config.put("pool.maxWaitForConnection","1000");
+        final ConnectionManager connectionManager
+                = ConnectionManagerProvider.createConnectionManager("adbcj:pooled:mock:database",
+                "sa", "pwd", config);
+
+        final Connection openConnection = connectionManager.connect().get();
+        final DbFuture<Connection> connectFuture = connectionManager.connect();
+        try{
+            connectFuture.get();
+            Assert.fail("");
+        }catch (DbException e){
+            Assert.assertTrue(e.getMessage().contains("No connection available"));
+            Assert.assertTrue(e.getMessage().contains("Time out"));
+        }
+
+        openConnection.close();
+        connectionManager.close().get();
+
+    }
+
+    @Test
+    public void maxSizeHasToBePositive() throws Exception{
+        Map<String, String> config = new HashMap<String, String>();
+        config.put("pool.maxConnections","0");
+
+        try{
+            final ConnectionManager connectionManager
+                    = ConnectionManagerProvider.createConnectionManager("adbcj:pooled:mock:database",
+                    "sa", "pwd", config);
+
+            Assert.fail("Expect an exception, since maxConnections have to be a positive numbers");
+        } catch (IllegalArgumentException e){
+            Assert.assertTrue(e.getMessage().contains("has to be positive"));
+        }
     }
 }

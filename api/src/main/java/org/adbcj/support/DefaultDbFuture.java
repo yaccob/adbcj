@@ -232,6 +232,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
      * @return true when state of future could be changed to a failure. False otherwise
      */
     public boolean trySetException(Throwable exception) {
+        if (isDone()) {
+            return false;
+        }
         synchronized (lock) {
             if (isDone()) {
                 return false;

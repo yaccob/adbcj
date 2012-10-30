@@ -5,7 +5,11 @@ import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.FutureUtils;
 import org.adbcj.support.OneArgFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,6 +18,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author roman.stoffel@gamlor.info
  */
 public class PooledConnectionManager extends AbstractConnectionManager implements PooledResource {
+    private final Logger logger = LoggerFactory.getLogger(PooledConnectionManager.class);
+
     private final ConnectionManager connectionManager;
     private final ConcurrentLinkedQueue<Connection> poolOfConnections = new ConcurrentLinkedQueue<Connection>();
     private final ConcurrentLinkedQueue<DefaultDbFuture<Connection>> waitingForConnection
@@ -21,6 +27,8 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     private final ConcurrentHashMap<PooledConnection,Boolean> aliveConnections = new ConcurrentHashMap<PooledConnection,Boolean>();
     private volatile boolean closed;
     private final ConfigInfo config;
+
+    private final Timer timeOutTimer = new Timer("PooledConnectionManager timeout timer",true);
 
     private final AtomicInteger allocatedConnectionsCount = new AtomicInteger();
     public PooledConnectionManager(ConnectionManager connectionManager, ConfigInfo config) {
@@ -57,13 +65,23 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     }
 
     private DbFuture<Connection> waitForConnection() {
-        DefaultDbFuture<Connection> connection = new DefaultDbFuture<Connection>();
-        waitingForConnection.offer(connection);
-        return connection;
+        final DefaultDbFuture<Connection> connectionWaiter =new DefaultDbFuture<Connection>();
+        waitingForConnection.offer(connectionWaiter);
+        logger.info("Couldn't serve a connection, because the pool.maxPool limit of {} has been reached",config.getMaxConnections());
+        timeOutTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                connectionWaiter.trySetException(new DbException("No connection available. Time out waiting for a connection. " +
+                        "The "+ConfigInfo.MAX_WAIT_FOR_CONNECTIONS+" is set to "+config.getMaxWaitForConnectionsInMillisec() + ". " +
+                        "The "+ConfigInfo.POOL_MAX_CONNECTIONS+" is set to "+config.getMaxConnections() + ". " ));
+            }
+        }, config.getMaxWaitForConnectionsInMillisec());
+        return connectionWaiter;
     }
 
     @Override
     public DbFuture<Void> close(CloseMode mode) throws DbException {
+        timeOutTimer.cancel();
         closed = true;
         for (Connection pooledConnection : aliveConnections.keySet()) {
             pooledConnection.close(mode);
@@ -94,12 +112,23 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     }
 
     private void returnConnection(Connection nativeTx, DefaultDbFuture<Void> transactionReturned) {
-        final DefaultDbFuture<Connection> waitForConnection = waitingForConnection.poll();
-        if(null!=waitForConnection){
-            waitForConnection.setResult(nativeTx);
-        } else{
+        if(!tryCompleteWaitingConnectionRequests(nativeTx)){
             poolOfConnections.offer(nativeTx);
         }
         transactionReturned.setResult(null);
     }
+
+    private boolean tryCompleteWaitingConnectionRequests(Connection nativeTx){
+        DefaultDbFuture<Connection> waitForConnection = waitingForConnection.poll();
+        while(null!=waitForConnection ){
+            if(tryCompleteWaitingConnectionRequests(nativeTx)){
+                return true;
+            }
+            waitForConnection = waitingForConnection.poll();
+        }
+        return false;
+
+    }
+
+
 }
