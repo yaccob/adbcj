@@ -186,8 +186,8 @@ public final class PooledConnection implements Connection, PooledResource {
     private <TArgument, TResult> void addMonitoring(DbFuture<TArgument> futureToMonitor, DefaultDbFuture<TResult> newFuture) {
         synchronized (collectionsLock){
             runningOperations.put(futureToMonitor, newFuture);
-            futureToMonitor.addListener(operationsListener);
         }
+        futureToMonitor.addListener(operationsListener);
     }
 
 

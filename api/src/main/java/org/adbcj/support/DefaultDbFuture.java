@@ -68,13 +68,12 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         if (listener == null) {
             throw new IllegalArgumentException("listener can NOT be null");
         }
-        synchronized (lock) {
-            if (isDone()) {
-                notifyListener(listener);
-            } else{
+        if (isDone()) {
+            notifyListener(listener);
+        } else{
+            synchronized (lock){
                 otherListeners.add(listener);
             }
-
         }
         return this;
     }
@@ -200,14 +199,14 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     private void notifyChanges() {
+        List<DbListener<T>> listenersToCall;
         synchronized (lock) {
             lock.notifyAll();
-            if (otherListeners != null) {
-                for (DbListener<T> l : otherListeners) {
-                    notifyListener(l);
-                }
-                otherListeners.clear();
-            }
+            listenersToCall = new ArrayList<DbListener<T>>(otherListeners);
+            otherListeners.clear();
+        }
+        for (DbListener<T> l : listenersToCall) {
+            notifyListener(l);
         }
     }
 

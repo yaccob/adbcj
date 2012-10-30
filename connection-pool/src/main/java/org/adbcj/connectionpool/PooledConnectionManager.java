@@ -8,6 +8,7 @@ import org.adbcj.support.OneArgFunction;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -15,10 +16,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class PooledConnectionManager extends AbstractConnectionManager implements PooledResource {
     private final ConnectionManager connectionManager;
     private final ConcurrentLinkedQueue<Connection> poolOfConnections = new ConcurrentLinkedQueue<Connection>();
+    private final ConcurrentLinkedQueue<DefaultDbFuture<Connection>> waitingForConnection
+            = new ConcurrentLinkedQueue<DefaultDbFuture<Connection>>();
     private final ConcurrentHashMap<PooledConnection,Boolean> aliveConnections = new ConcurrentHashMap<PooledConnection,Boolean>();
     private volatile boolean closed;
-    public PooledConnectionManager(ConnectionManager connectionManager) {
+    private final ConfigInfo config;
+
+    private final AtomicInteger allocatedConnectionsCount = new AtomicInteger();
+    public PooledConnectionManager(ConnectionManager connectionManager, ConfigInfo config) {
         this.connectionManager = connectionManager;
+        this.config = config;
     }
 
     @Override
@@ -41,7 +48,18 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
         if(null!=connection){
             return DefaultDbFuture.completed(connection);
         }
-        return connectionManager.connect();
+        if(allocatedConnectionsCount.get()>=config.getMaxConnections()){
+            return waitForConnection();
+        }  else{
+            allocatedConnectionsCount.incrementAndGet();
+            return connectionManager.connect();
+        }
+    }
+
+    private DbFuture<Connection> waitForConnection() {
+        DefaultDbFuture<Connection> connection = new DefaultDbFuture<Connection>();
+        waitingForConnection.offer(connection);
+        return connection;
     }
 
     @Override
@@ -66,14 +84,22 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
             nativeTx.rollback().addListener(new DbListener<Void>() {
                 @Override
                 public void onCompletion(DbFuture<Void> future) {
-                    poolOfConnections.offer(nativeTx);
-                    transactionReturned.setResult(null);
+                    PooledConnectionManager.this.returnConnection(nativeTx, transactionReturned);
                 }
             });
         } else {
-            poolOfConnections.offer(nativeTx);
-            transactionReturned.setResult(null);
+            PooledConnectionManager.this.returnConnection(nativeTx, transactionReturned);
         }
         return transactionReturned;
+    }
+
+    private void returnConnection(Connection nativeTx, DefaultDbFuture<Void> transactionReturned) {
+        final DefaultDbFuture<Connection> waitForConnection = waitingForConnection.poll();
+        if(null!=waitForConnection){
+            waitForConnection.setResult(nativeTx);
+        } else{
+            poolOfConnections.offer(nativeTx);
+        }
+        transactionReturned.setResult(null);
     }
 }

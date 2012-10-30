@@ -12,6 +12,8 @@ import java.util.Map;
  */
 public class PooledConnectionManagerFactory implements ConnectionManagerFactory {
     private static final String PROTOCOL = "pooled";
+    public static final String POOL_MAX_CONNECTIONS = "pool.maxConnections";
+
     @Override
     public ConnectionManager createConnectionManager(String url, String username,
                                                      String password,
@@ -23,7 +25,17 @@ public class PooledConnectionManagerFactory implements ConnectionManagerFactory 
         String nativeUrl = firstAndSecondPart[0] + firstAndSecondPart[1];
 
         return new PooledConnectionManager(
-                ConnectionManagerProvider.createConnectionManager(nativeUrl, username, password,properties));
+                ConnectionManagerProvider.createConnectionManager(nativeUrl, username, password,properties),
+                new ConfigInfo(maxConnections(properties)));
+    }
+
+    private int maxConnections(Map<String, String> properties) {
+        final String maxConnections = properties.get(POOL_MAX_CONNECTIONS);
+        try{
+            return Integer.parseInt(maxConnections);
+        }catch (NumberFormatException e){
+            return ConfigInfo.MAX_DEFAULT_CONNECTIONS;
+        }
     }
 
     @Override

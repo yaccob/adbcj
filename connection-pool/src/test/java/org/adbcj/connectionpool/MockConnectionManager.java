@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 */
 class MockConnectionManager implements ConnectionManager {
     private final AtomicInteger connectionCounter = new AtomicInteger(0);
+    private final AtomicInteger maxUsedConnections = new AtomicInteger(0);
     private volatile boolean closed = false;
     private final ThreadLocal<MockConnection> lastConnection = new ThreadLocal<MockConnection>();
     @Override
@@ -39,7 +40,11 @@ class MockConnectionManager implements ConnectionManager {
 
 
     void incrementConnectionCounter() {
-        connectionCounter.incrementAndGet();
+        final int size = connectionCounter.incrementAndGet();
+        int maxSize = maxUsedConnections.get();
+        while(maxSize <size && maxUsedConnections.compareAndSet(maxSize,size)){
+            maxSize = maxUsedConnections.get();
+        }
     }
 
     void decementConnectionCounter() {
@@ -57,6 +62,10 @@ class MockConnectionManager implements ConnectionManager {
 
     public MockConnection lastInstanceRequestedOnThisThread() {
         return lastConnection.get();
+    }
+
+    public void assertMaxConnectonsUsed(int expectedMaxSize) {
+        Assert.assertEquals("Expect the amount of max open connections",expectedMaxSize,maxUsedConnections.get());
     }
 }
 
