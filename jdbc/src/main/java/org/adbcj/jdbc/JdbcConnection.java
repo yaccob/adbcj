@@ -64,7 +64,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
             Request<Void> closeRequest = new Request<Void>(this) {
                 @Override
                 protected void execute() throws Exception {
-                    jdbcConnection.close();
+                    synchronized (jdbcConnection){
+                        jdbcConnection.close();
+                    }
                     complete(null);
                 }
 
@@ -102,25 +104,28 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
             @Override
             protected T doCall() throws Exception {
                 logger.debug("Executing query '{}'", sql);
-                Statement jdbcStatement = jdbcConnection.createStatement();
-                java.sql.ResultSet jdbcResultSet = null;
-                try {
-                    // Execute query
-                    jdbcResultSet = jdbcStatement.executeQuery(sql);
-                    fillResultSet(jdbcResultSet, eventHandler, accumulator);
+                synchronized (jdbcConnection){
+                    Statement jdbcStatement = jdbcConnection.createStatement();
+                    java.sql.ResultSet jdbcResultSet = null;
+                    try {
+                        // Execute query
+                        jdbcResultSet = jdbcStatement.executeQuery(sql);
+                        fillResultSet(jdbcResultSet, eventHandler, accumulator);
 
 
-                    return accumulator;
-                }catch (Exception e){
-                    eventHandler.exception(e,accumulator);
-                    throw e;
-                }finally {
-                    if (jdbcResultSet != null) {
-                        jdbcResultSet.close();
+                        return accumulator;
+                    }catch (Exception e){
+                        eventHandler.exception(e,accumulator);
+                        throw e;
+                    }finally {
+                        if (jdbcResultSet != null) {
+                            jdbcResultSet.close();
+                        }
+                        if (jdbcStatement != null) {
+                            jdbcStatement.close();
+                        }
                     }
-                    if (jdbcStatement != null) {
-                        jdbcStatement.close();
-                    }
+
                 }
             }
         });
@@ -130,19 +135,21 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         checkClosed();
         return enqueueTransactionalRequest(new CallableRequest<Result>() {
             public Result doCall() throws Exception {
-                Statement statement = jdbcConnection.createStatement();
-                try {
-                    statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-                    List<String> warnings = new LinkedList<String>();
-                    SQLWarning sqlWarnings = statement.getWarnings();
-                    while (sqlWarnings != null) {
-                        warnings.add(sqlWarnings.getLocalizedMessage());
-                        sqlWarnings = sqlWarnings.getNextWarning();
+                synchronized (jdbcConnection){
+                    Statement statement = jdbcConnection.createStatement();
+                    try {
+                        statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+                        List<String> warnings = new LinkedList<String>();
+                        SQLWarning sqlWarnings = statement.getWarnings();
+                        while (sqlWarnings != null) {
+                            warnings.add(sqlWarnings.getLocalizedMessage());
+                            sqlWarnings = sqlWarnings.getNextWarning();
+                        }
+                        return new JDBCResult((long) statement.getUpdateCount(),
+                                warnings,statement.getGeneratedKeys());
+                    } finally {
+                        statement.close();
                     }
-                    return new JDBCResult((long) statement.getUpdateCount(),
-                            warnings,statement.getGeneratedKeys());
-                } finally {
-                    statement.close();
                 }
             }
         });
@@ -153,7 +160,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         return enqueueTransactionalRequest(new CallableRequest<PreparedQuery>() {
             @Override
             protected PreparedQuery doCall() throws Exception {
-                return new JDBCPreparedQuery(JdbcConnection.this, jdbcConnection.prepareStatement(sql));
+                synchronized (jdbcConnection){
+                    return new JDBCPreparedQuery(JdbcConnection.this, jdbcConnection.prepareStatement(sql));
+                }
             }
         });
     }
@@ -165,8 +174,10 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         return enqueueTransactionalRequest(new CallableRequest<PreparedUpdate>() {
             @Override
             protected PreparedUpdate doCall() throws Exception {
-                return new JDBCPreparedUpdate(JdbcConnection.this,
-                        jdbcConnection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS));
+                synchronized (jdbcConnection){
+                    return new JDBCPreparedUpdate(JdbcConnection.this,
+                            jdbcConnection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS));
+                }
             }
         });
     }
@@ -193,7 +204,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     @Override
     protected void sendBegin() throws SQLException {
         logger.trace("Sending begin");
-        jdbcConnection.setAutoCommit(false);
+        synchronized (jdbcConnection){
+            jdbcConnection.setAutoCommit(false);
+        }
     }
 
     @Override
@@ -205,7 +218,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     @Override
     protected void sendCommit() throws SQLException {
         logger.trace("Sending commit");
-        jdbcConnection.commit();
+        synchronized (jdbcConnection){
+            jdbcConnection.commit();
+        }
     }
 
     @Override
@@ -217,7 +232,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     @Override
     protected void sendRollback() throws SQLException {
         logger.trace("Sending rollback");
-        jdbcConnection.rollback();
+        synchronized (jdbcConnection){
+            jdbcConnection.rollback();
+        }
     }
 
     @Override
@@ -235,6 +252,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         }
     }
 
+    Object lock(){
+        return jdbcConnection;
+    }
 
 
     private abstract class CallableRequest<E> extends Request<E> implements Callable<E> {
@@ -268,8 +288,10 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                 return value;
             } catch (Exception e) {
                 error(DbException.wrap(e));
-                if (jdbcConnection.isClosed()) {
-                    connectionManager.removeConnection(JdbcConnection.this);
+                synchronized (jdbcConnection){
+                    if (jdbcConnection.isClosed()) {
+                        connectionManager.removeConnection(JdbcConnection.this);
+                    }
                 }
                 throw e;
             }

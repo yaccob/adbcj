@@ -16,16 +16,18 @@ import static org.adbcj.jdbc.ResultSetCopier.fillResultSet;
  */
 abstract class JDBCPreparedStatement<T> implements PreparedStatement {
     protected final java.sql.PreparedStatement sqlStatement;
-    private JdbcConnection connection;
+    protected final JdbcConnection connection;
     private final int paramenterCount;
 
     public JDBCPreparedStatement(JdbcConnection connection, java.sql.PreparedStatement sqlStatement) {
         this.connection = connection;
         this.sqlStatement = sqlStatement;
-        try {
-            paramenterCount = sqlStatement.getParameterMetaData().getParameterCount();
-        } catch (SQLException e) {
-            throw new DbException("Expect that PreparedStatement.getParameterMetaData() works",e);
+        synchronized (this.connection.lock()) {
+            try {
+                paramenterCount = sqlStatement.getParameterMetaData().getParameterCount();
+            } catch (SQLException e) {
+                throw new DbException("Expect that PreparedStatement.getParameterMetaData() works", e);
+            }
         }
     }
 
@@ -34,31 +36,33 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
     public DbSessionFuture execute(final Object... params) {
         connection.checkClosed();
         return executeWithCompletion(new CompletionProducerFunction() {
-            public T complete() throws Exception{
+            public T complete() throws Exception {
                 return executeStatement();
             }
         }, params);
     }
 
-    protected <TResult> DbSessionFuture executeWithCompletion(final CompletionProducerFunction<TResult> createCompletionAction,final Object[] params) {
+    protected <TResult> DbSessionFuture executeWithCompletion(final CompletionProducerFunction<TResult> createCompletionAction, final Object[] params) {
         validateParameters(params);
         return connection.enqueueTransactionalRequest(new AbstractDbSession.Request<TResult>(connection) {
             @Override
             protected void execute() throws Exception {
                 int index = 1;
-                for (Object param : params) {
-                    sqlStatement.setObject(index, param);
-                    index++;
+                synchronized (connection.lock()) {
+                    for (Object param : params) {
+                        sqlStatement.setObject(index, param);
+                        index++;
+                    }
+                    complete(createCompletionAction.complete());
                 }
-                complete(createCompletionAction.complete());
             }
         });
     }
 
     protected void validateParameters(Object[] params) {
-        if(params.length!=paramenterCount){
+        if (params.length != paramenterCount) {
             throw new IllegalArgumentException("Wrong amount of arguments." +
-                    "This statement expects "+paramenterCount+" but received "+params.length+" arguments");
+                    "This statement expects " + paramenterCount + " but received " + params.length + " arguments");
         }
     }
 
@@ -66,10 +70,12 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
 
     @Override
     public boolean isClosed() {
-        try {
-            return sqlStatement.isClosed();
-        } catch (SQLException e) {
-            throw new DbException(e);
+        synchronized (connection.lock()) {
+            try {
+                return sqlStatement.isClosed();
+            } catch (SQLException e) {
+                throw new DbException(e);
+            }
         }
     }
 
@@ -78,13 +84,15 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
         return connection.enqueueTransactionalRequest(new AbstractDbSession.Request<Void>(connection) {
             @Override
             protected void execute() throws Exception {
-                sqlStatement.close();
+                synchronized (connection.lock()) {
+                    sqlStatement.close();
+                }
                 complete(null);
             }
         });
     }
 
-    static abstract class CompletionProducerFunction<T>{
+    static abstract class CompletionProducerFunction<T> {
         public abstract T complete() throws Exception;
     }
 }
@@ -96,32 +104,35 @@ class JDBCPreparedQuery extends JDBCPreparedStatement<ResultSet> implements Prep
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeWithCallback(final ResultHandler<T> eventHandler,final T accumulator, Object... params) {
+    public <T> DbSessionFuture<T> executeWithCallback(final ResultHandler<T> eventHandler, final T accumulator, Object... params) {
         return executeWithCompletion(new CompletionProducerFunction<T>() {
             @Override
             public T complete() throws Exception {
-                return executeStatement(eventHandler,accumulator);
+                return executeStatement(eventHandler, accumulator);
             }
         }, params);
     }
 
     @Override
     protected ResultSet executeStatement() throws Exception {
-        return executeStatement(new DefaultResultEventsHandler(),new DefaultResultSet());
+        return executeStatement(new DefaultResultEventsHandler(), new DefaultResultSet());
     }
 
-    private <T> T executeStatement(ResultHandler<T> eventHandler,T accumulator) throws Exception {
+    private <T> T executeStatement(ResultHandler<T> eventHandler, T accumulator) throws Exception {
         java.sql.ResultSet nativeResult = null;
         try {
-            nativeResult = sqlStatement.executeQuery();
+            synchronized (connection.lock()){
+                nativeResult = sqlStatement.executeQuery();
 
-            fillResultSet(nativeResult, eventHandler, accumulator);
+                fillResultSet(nativeResult, eventHandler, accumulator);
+
+            }
 
             return accumulator;
-        } catch (Exception e){
-            eventHandler.exception(e,accumulator);
+        } catch (Exception e) {
+            eventHandler.exception(e, accumulator);
             throw e;
-        } finally{
+        } finally {
             if (nativeResult != null) {
                 nativeResult.close();
             }
@@ -137,8 +148,10 @@ class JDBCPreparedUpdate extends JDBCPreparedStatement<Result> implements Prepar
 
     @Override
     protected Result executeStatement() throws Exception {
-        int affectedRows = sqlStatement.executeUpdate();
+        synchronized (this.connection.lock()) {
+            int affectedRows = sqlStatement.executeUpdate();
 
-        return new JDBCResult(affectedRows, Collections.<String>emptyList(), sqlStatement.getGeneratedKeys());
+            return new JDBCResult(affectedRows, Collections.<String>emptyList(), sqlStatement.getGeneratedKeys());
+        }
     }
 }
