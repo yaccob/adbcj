@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class AbstractDbSession implements DbSession {
 
-    protected final Object lock = this;
+    private final Object lock = this;
 
-    protected final Queue<Request<?>> requestQueue = new ConcurrentLinkedQueue<Request<?>>();
+    private final Queue<Request<?>> requestQueue = new ConcurrentLinkedQueue<Request<?>>();
 
     private Request<?> activeRequest; // Access must by synchronized on lock
 
