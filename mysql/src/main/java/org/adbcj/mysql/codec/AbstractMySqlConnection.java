@@ -183,13 +183,6 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	// Queuing methods
 	////
 
-	/*
-	 * Make this method public.
-	 */
-	@Override
-	public <E> Request<E> enqueueRequest(Request<E> request) {
-		return super.enqueueRequest(request);
-	}
 
 	/*
 	 * Make this method public

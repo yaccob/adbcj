@@ -18,10 +18,7 @@ package org.adbcj.support;
 
 import org.adbcj.*;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class AbstractDbSession implements DbSession {
@@ -521,7 +518,7 @@ public abstract class AbstractDbSession implements DbSession {
         private volatile boolean started = false;
         private volatile boolean beginScheduled = false;
         private volatile boolean canceled = false;
-        private final List<Request<?>> requests = new LinkedList<Request<?>>();
+        private final List<Request<?>> requests = new ArrayList<Request<?>>();
 
         /**
          * Indicates if the transaction has been started on the server (i.e. if 'begin' has been sent to server)
