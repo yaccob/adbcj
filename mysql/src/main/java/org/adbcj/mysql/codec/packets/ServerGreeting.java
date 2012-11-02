@@ -25,7 +25,7 @@ import org.adbcj.mysql.codec.ServerStatus;
 import java.util.Collections;
 import java.util.Set;
 
-public class ServerGreeting extends ServerPacket implements ResponseStart{
+public class ServerGreeting extends ServerPacket{
 	private final int protocol;
 	private final String version;
 	private final int threadId;

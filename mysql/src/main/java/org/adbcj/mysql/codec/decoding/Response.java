@@ -35,6 +35,10 @@ class Response extends DecoderState {
         }
         return parseAsResult(length, packetNumber, in, fieldCount);
     }
+    @Override
+    public String toString() {
+        return "RESPONSE";
+    }
 
     private ResultAndState processOKMessage(int length, int packetNumber, BoundedInputStream in) throws IOException {
         final OkResponse.PreparedStatementOK statementOK = OkResponse.interpretAsPreparedStatement(length, packetNumber, in);

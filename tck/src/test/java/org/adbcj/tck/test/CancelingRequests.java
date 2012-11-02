@@ -18,8 +18,8 @@ public class CancelingRequests extends AbstractWithConnectionManagerTest{
     public void canCancelSelect() throws InterruptedException {
         final Connection connection = connectionManager.connect().get();
 
-        final DbSessionFuture<ResultSet> result = connection.executeQuery("SELECT SLEEP(10)");
-        Thread.sleep(1000);
+        final DbSessionFuture<ResultSet> result = connection.executeQuery("SELECT SLEEP(2)");
+        Thread.sleep(500);
         boolean cannotBeCanceled = result.cancel(true);
 
         Assert.assertFalse(cannotBeCanceled);

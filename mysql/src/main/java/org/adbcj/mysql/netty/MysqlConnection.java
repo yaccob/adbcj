@@ -33,4 +33,8 @@ public class MysqlConnection extends AbstractMySqlConnection {
 		channel.write(request);
 	}
 
+    @Override
+    public String toString() {
+        return "MySQLConnection #"+id;
+    }
 }

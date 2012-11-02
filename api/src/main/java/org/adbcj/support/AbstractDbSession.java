@@ -19,13 +19,12 @@ package org.adbcj.support;
 import org.adbcj.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public abstract class AbstractDbSession implements DbSession {
 
     private final Object lock = this;
 
-    private final Queue<Request<?>> requestQueue = new ConcurrentLinkedQueue<Request<?>>();
+    private final Queue<Request<?>> requestQueue; // Access must by synchronized on lock
 
     private Request<?> activeRequest; // Access must by synchronized on lock
 
@@ -33,12 +32,23 @@ public abstract class AbstractDbSession implements DbSession {
 
     private boolean pipelining = false; // Access must be synchronized on lock
 
-    protected AbstractDbSession() {
+    private final int maxQueueSize;
+
+    protected AbstractDbSession(int maxQueueSize) {
+        this.maxQueueSize = maxQueueSize;
+        synchronized (lock){
+            requestQueue = new ArrayDeque<Request<?>>(maxQueueSize+1);
+        }
     }
 
     protected <E> Request<E> enqueueRequest(final Request<E> request) {
         // Check to see if the request can be pipelined
         synchronized (lock) {
+            if(requestQueue.size()>=maxQueueSize){
+                throw new DbException("To many pending requests. The current maximum is "+maxQueueSize+"."+
+                    "Ensure that your not overloading the database with requests. " +
+                        "Also check the "+StandardProperties.MAX_QUEUE_LENGTH+" property");
+            }
             if (request.isPipelinable()) {
                 // Check to see if we're in a piplinging state
                 if (pipelining) {
@@ -52,7 +62,7 @@ public abstract class AbstractDbSession implements DbSession {
             } else {
                 pipelining = false;
             }
-            requestQueue.add(request);
+            requestQueue.offer(request);
             if (activeRequest == null) {
                 makeNextRequestActive();
             }
@@ -115,6 +125,7 @@ public abstract class AbstractDbSession implements DbSession {
             request.invokeExecute();
         } catch (Throwable e) {
             request.error(DbException.wrap(e));
+            request.complete(null);
         }
     }
 
@@ -342,14 +353,6 @@ public abstract class AbstractDbSession implements DbSession {
         }
 
         @Override
-        public void tryComplete(Void result) {
-            // Avoid casting exception in case
-            // the underlying implementation
-            // actually returns a result
-            super.tryComplete(null);
-        }
-
-        @Override
         public boolean cancelRequest() {
             transaction.cancelPendingRequests();
             return true;
@@ -377,14 +380,6 @@ public abstract class AbstractDbSession implements DbSession {
         @Override
         public void execute() throws Exception {
             sendRollback();
-        }
-
-        @Override
-        public void tryComplete(Void result) {
-            // Avoid casting exception in case
-            // the underlying implementation
-            // actually returns a result
-            super.tryComplete(null);
         }
 
         @Override
@@ -419,38 +414,42 @@ public abstract class AbstractDbSession implements DbSession {
          *
          * @throws Exception
          */
-        public final synchronized void invokeExecute() throws Exception {
-            if (cancelled || executed) {
-                synchronized (session.lock) {
-                    if (futureToComplete.isDone() && session.getActiveRequest() == this) {
-                        session.makeNextRequestActive();
-                    }
-                }
-            } else {
-                executed = true;
-                execute();
-            }
-        }
-
-        public final synchronized boolean doCancel() {
-            if (executed) {
-                return false;
-            }
-            cancelled = cancelRequest();
-
-            // The the request was cancelled and it can be removed
-            if (cancelled && canRemove()) {
-                    // Remove the quest and if the removal was successful and this request is active, go to the next request
+        public final void invokeExecute() throws Exception {
+            synchronized (session.lock){
+                if (cancelled || executed) {
                     synchronized (session.lock) {
-                    if (session.requestQueue.remove(this)) {
-                        if (this == session.getActiveRequest()) {
+                        if (futureToComplete.isDone() && session.getActiveRequest() == this) {
                             session.makeNextRequestActive();
                         }
                     }
+                } else {
+                    executed = true;
+                    execute();
                 }
-                return cancelled;
-            } else{
-                throw new Error("Not expected branch");
+            }
+        }
+
+        public final boolean doCancel() {
+            synchronized (session.lock){
+                if (executed) {
+                    return false;
+                }
+                cancelled = cancelRequest();
+
+                // The the request was cancelled and it can be removed
+                if (cancelled && canRemove()) {
+                        // Remove the quest and if the removal was successful and this request is active, go to the next request
+                        synchronized (session.lock) {
+                            if (session.requestQueue.remove(this)) {
+                                if (this == session.getActiveRequest()) {
+                                    session.makeNextRequestActive();
+                                }
+                            }
+                    }
+                    return cancelled;
+                } else{
+                    throw new Error("Not expected branch");
+                }
             }
         }
 
@@ -474,11 +473,6 @@ public abstract class AbstractDbSession implements DbSession {
 
 
         public void complete(T result) {
-            futureToComplete.setResult(result);
-            makeNextRequestActive();
-        }
-
-        public void tryComplete(T result) {
             futureToComplete.trySetResult(result);
             makeNextRequestActive();
         }
@@ -492,7 +486,6 @@ public abstract class AbstractDbSession implements DbSession {
             if (transaction != null) {
                 transaction.cancelPendingRequests();
             }
-            makeNextRequestActive();
         }
 
         private void makeNextRequestActive() {

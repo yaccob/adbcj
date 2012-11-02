@@ -8,6 +8,7 @@ import org.adbcj.support.ExpectResultRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,11 +28,14 @@ public class ProtocolHandler {
     final State NORMAL = new State() {
         @Override
         void handleMessage(Object message) {
+            logger.trace(this+" received:"+message);
             if(connection.isClosed() && connection.getActiveRequest()==null){
                 logger.warn("Received data for closed connection: "+connection + " data: "+message);
                 return;
             }
-            if (message instanceof ServerGreeting) {
+            if (message instanceof ResponseExpected) {
+                handleMessage(((ResponseExpected) message).realMessage());
+            }else if (message instanceof ServerGreeting) {
                 handleServerGreeting(connection, (ServerGreeting) message);
             } else if (message instanceof OkResponse.RegularOK) {
                 handleOkResponse(((OkResponse.RegularOK) message));
@@ -51,20 +55,35 @@ public class ProtocolHandler {
                 handleResultSetRowResponse((ResultSetRowResponse) message);
             } else if (message instanceof EofResponse) {
                 handleEofResponse(connection, (EofResponse) message);
+            }  else if (message instanceof FailedToParseInput) {
+                throw new IllegalStateException("This message is only acceptable on failed requests",
+                        ((FailedToParseInput) message).getException());
             } else {
                 throw new IllegalStateException("Unable to handle message of type: " + message.getClass().getName());
             }
         }
+
+        @Override
+        public String toString() {
+            return "NORMAL";
+        }
     };
+
     final State SKIP_PROCESSING_AFTER_ERROR = new State() {
         @Override
         void handleMessage(Object message) {
+            logger.trace(this+" received:"+message);
             if(message instanceof ResponseStart){
                 state = NORMAL;
-                state.handleMessage(message);
+                state.handleMessage(((ResponseExpected) message).realMessage());
             }else {
                 // skip this result
             }
+        }
+
+        @Override
+        public String toString() {
+            return "SKIP_PROCESSING_AFTER_ERROR";
         }
     };
     private State state = NORMAL;
@@ -96,14 +115,13 @@ public class ProtocolHandler {
                 Request<?> activeRequest = connection.getActiveRequest();
                 if (activeRequest != null) {
                     if (!activeRequest.isDone()) {
-                        try {
-                            activeRequest.error(dbException);
-
-                            return null;
-                        } catch (Throwable e) {
-                            return e;
-                        }
+                        activeRequest.error(dbException);
+                        activeRequest.complete(null);
+                        return null;
                     }
+                } else if(connection.isClosed() && cause instanceof ClosedChannelException){
+                    logger.info("Connection closed",cause);
+                    return null;
                 }
 
             }
@@ -226,8 +244,11 @@ public class ProtocolHandler {
                     activeRequest.getEventHandler().startResults(activeRequest.getAccumulator());
                     break;
                 case ROW:
-                    activeRequest.getEventHandler().endResults(activeRequest.getAccumulator());
-                    activeRequest.complete(activeRequest.getAccumulator());
+                    try{
+                        activeRequest.getEventHandler().endResults(activeRequest.getAccumulator());
+                    }finally {
+                        activeRequest.complete(activeRequest.getAccumulator());
+                    }
                     break;
                 default:
                     throw new MysqlException("Unkown eof response type");

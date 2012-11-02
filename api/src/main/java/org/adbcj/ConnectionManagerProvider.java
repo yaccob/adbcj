@@ -19,6 +19,7 @@ package org.adbcj;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -35,10 +36,12 @@ public class ConnectionManagerProvider {
 	public static ConnectionManager createConnectionManager(String url,
                                                             String username,
                                                             String password,
-                                                            Map<String,String> properties) throws DbException {
+                                                            final Map<String,String> properties) throws DbException {
 		if (url == null) {
 			throw new IllegalArgumentException("Connection url can not be null");
 		}
+
+        Map<String,String> propertiesWithStandard = addStandardSettings(properties);
 		
 		try {
 			URI uri = new URI(url);
@@ -52,7 +55,7 @@ public class ConnectionManagerProvider {
 			ServiceLoader<ConnectionManagerFactory> serviceLoader = ServiceLoader.load(ConnectionManagerFactory.class);
 			for (ConnectionManagerFactory factory : serviceLoader) {
 				if (factory.canHandle(protocol)) {
-					return factory.createConnectionManager(url, username, password, properties);
+					return factory.createConnectionManager(url, username, password, propertiesWithStandard);
 				}
 			}
 			throw new DbException("Could not find ConnectionManagerFactory for protocol '" + protocol + "'");
@@ -60,5 +63,14 @@ public class ConnectionManagerProvider {
 			throw new DbException("Invalid connection URL: " + url);
 		}
 	}
-	
+
+    private static Map<String, String> addStandardSettings(Map<String, String> userProperties) {
+        HashMap<String,String> newMap = new HashMap<String, String>();
+        newMap.put(StandardProperties.MAX_QUEUE_LENGTH,"64");
+        for (Map.Entry<String, String> entry : userProperties.entrySet()) {
+            newMap.put(entry.getKey(), entry.getValue());
+        }
+        return newMap;
+    }
+
 }

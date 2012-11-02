@@ -47,6 +47,10 @@ class Row extends DecoderState {
         return result(ROW(fields),new ResultSetRowResponse(length, packetNumber, values));
 
     }
+    @Override
+    public String toString() {
+        return "ROW";
+    }
 
     private void binaryDecode(BoundedInputStream in, Value[] values) throws IOException {
         // 0 (packet header)   should have been read by the calling method

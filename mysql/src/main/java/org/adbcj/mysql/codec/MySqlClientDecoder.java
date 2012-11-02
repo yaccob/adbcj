@@ -20,6 +20,8 @@ package org.adbcj.mysql.codec;
 
 import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.decoding.ResultAndState;
+import org.adbcj.mysql.codec.packets.FailedToParseInput;
+import org.adbcj.mysql.codec.packets.ResponseExpected;
 import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +59,12 @@ public class MySqlClientDecoder {
         input.mark(Integer.MAX_VALUE);
         ServerPacket message = null;
         try {
-            message = doDecode(connection, input, block);
+            ServerPacket msg = doDecode(connection, input, block);
+            if(state==DecoderState.RESPONSE){
+                message =  new ResponseExpected(msg);
+            } else{
+                message = msg;
+            }
         } finally {
             if (message == null) {
                 input.reset();
@@ -89,7 +96,9 @@ public class MySqlClientDecoder {
         ResultAndState stateAndResult = state.parse(length, packetNumber, in, connection);
         state = stateAndResult.getNewState();
         if (in.getRemaining() > 0) {
-            throw new IllegalStateException("Buffer underrun occured; remaining bytes: " + in.getRemaining());
+            final String message = "Didn't read all input. Maybe this input belongs to a failed request. " +
+                    "Remaining bytes: " + in.getRemaining();
+            return new FailedToParseInput(length, packetNumber, new IllegalStateException(message));
         }
         return stateAndResult.getResult();
 

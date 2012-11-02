@@ -52,6 +52,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                                   String password,
                                   String schema,
                                   Map<String,String> properties) {
+        super(properties);
         credentials = new LoginCredentials(username, password, schema);
 		executorService = Executors.newCachedThreadPool();
 
@@ -126,6 +127,10 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                 channel.getPipeline().addLast("handler", new Handler(connection));
 
                 final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
+                //This is a terrible sinchronization hack
+                // Currently needed because: We need the MessageQueuingHandler only as long as
+                // The connection is not established. When it is, we need to remove it.
+                //noinspection SynchronizationOnLocalVariableOrMethodParameter
                 synchronized (queuingHandler) {
                     queuingHandler.flush();
                     channel.getPipeline().remove(queuingHandler);

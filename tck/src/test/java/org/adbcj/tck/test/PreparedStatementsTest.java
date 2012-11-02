@@ -172,7 +172,9 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
                 throw new RuntimeException("Failure here");
             }
         }, new StringBuilder(),"Zero");
-        ResultSet resultSet = query.execute("Two").get();
+        final DbSessionFuture<ResultSet> future = query.execute("Two");
+        ResultSet resultSet = future.get();
+        Assert.assertEquals(future.getSession(),connection);
         String result = resultSet.get(0).get(0).getString();
         Assert.assertEquals(result,"Two");
     }

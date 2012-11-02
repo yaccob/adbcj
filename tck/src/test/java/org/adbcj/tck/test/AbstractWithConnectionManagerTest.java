@@ -1,5 +1,6 @@
 package org.adbcj.tck.test;
 
+import org.adbcj.CloseMode;
 import org.adbcj.ConnectionManager;
 import org.adbcj.ConnectionManagerProvider;
 import org.adbcj.DbFuture;
@@ -21,7 +22,7 @@ public abstract class AbstractWithConnectionManagerTest {
 
     @AfterClass
     public void closeConnectionManager() throws InterruptedException {
-        DbFuture<Void> closeFuture = connectionManager.close();
+        DbFuture<Void> closeFuture = connectionManager.close(CloseMode.CANCEL_PENDING_OPERATIONS);
         closeFuture.get();
     }
 }

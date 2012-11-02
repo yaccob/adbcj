@@ -21,7 +21,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	private final MysqlConnectionManager connectionManager;
 
-	private final int id;
+	protected final int id;
 
 	private final LoginCredentials credentials;
 
@@ -30,7 +30,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	private final MysqlCharacterSet charset = MysqlCharacterSet.UTF8_UNICODE_CI;
 
 	protected AbstractMySqlConnection(MysqlConnectionManager connectionManager, LoginCredentials credentials) {
-		super();
+		super(connectionManager.maxConnections());
 		this.connectionManager = connectionManager;
 		this.credentials = credentials;
 		this.id = connectionManager.nextId();
@@ -214,8 +214,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	public void doClose() {
 		connectionManager.removeConnection(this);
 
-		// TODO Make a DbSessionClosedException and use here
-		DbException closedException = new DbException("Connection closed");
+		DbException closedException = new DbSessionClosedException("Connection closed");
 		if (!getConnectFuture().isDone() ) {
 			getConnectFuture().setException(closedException);
 		}
@@ -225,7 +224,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
         }
 		synchronized (this) {
 			if (closeRequest != null) {
-				closeRequest.tryComplete(null);
+				closeRequest.complete(null);
 			}
 		}
 	}

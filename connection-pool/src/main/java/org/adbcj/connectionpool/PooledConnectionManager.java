@@ -8,6 +8,7 @@ import org.adbcj.support.OneArgFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +32,8 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     private final Timer timeOutTimer = new Timer("PooledConnectionManager timeout timer",true);
 
     private final AtomicInteger allocatedConnectionsCount = new AtomicInteger();
-    public PooledConnectionManager(ConnectionManager connectionManager, ConfigInfo config) {
+    public PooledConnectionManager(ConnectionManager connectionManager,Map<String,String> properties, ConfigInfo config) {
+        super(properties);
         this.connectionManager = connectionManager;
         this.config = config;
     }

@@ -19,9 +19,8 @@
 package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.Value;
-import org.adbcj.mysql.codec.packets.ServerPacket;
 
-public class ResultSetRowResponse extends ServerPacket {
+public class ResultSetRowResponse extends ServerPacket{
 
 	private final Value[] values;
 
@@ -35,3 +34,4 @@ public class ResultSetRowResponse extends ServerPacket {
 	}
 
 }
+

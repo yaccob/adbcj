@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-public abstract class OkResponse extends ServerPacket implements ResponseStart{
+public abstract class OkResponse extends ServerPacket{
 
     protected OkResponse(int packetLength, int packetNumber) {
         super(packetLength, packetNumber);

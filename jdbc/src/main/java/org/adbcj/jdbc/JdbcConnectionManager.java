@@ -17,14 +17,16 @@
 package org.adbcj.jdbc;
 
 import org.adbcj.*;
+import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class JdbcConnectionManager implements ConnectionManager {
+public class JdbcConnectionManager extends AbstractConnectionManager implements ConnectionManager {
 	private final ExecutorService executorService;
 
 	private final Object lock = this;
@@ -37,7 +39,9 @@ public class JdbcConnectionManager implements ConnectionManager {
 
 
     public JdbcConnectionManager(ExecutorService executorService,
-                                 JDBCConnectionProvider connectionProvider) {
+                                 JDBCConnectionProvider connectionProvider,
+                                 Map<String,String> properties) {
+        super(properties);
         this.executorService = executorService;
         this.connectionProvider = connectionProvider;
     }
@@ -51,7 +55,8 @@ public class JdbcConnectionManager implements ConnectionManager {
 			public void run() {
 				try {
 					java.sql.Connection jdbcConnection = connectionProvider.getConnection();
-					JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this, jdbcConnection,getExecutorService());
+					JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this,
+                            jdbcConnection,getExecutorService());
 					synchronized (lock) {
 						if (isClosed()) {
 							connection.close();
@@ -69,10 +74,6 @@ public class JdbcConnectionManager implements ConnectionManager {
 			}
 		});
 		return future;
-	}
-
-	public DbFuture<Void> close() throws DbException {
-        return close(CloseMode.CLOSE_GRACEFULLY);
 	}
 
     @Override

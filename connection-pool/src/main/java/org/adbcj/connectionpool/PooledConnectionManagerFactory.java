@@ -25,7 +25,7 @@ public class PooledConnectionManagerFactory implements ConnectionManagerFactory 
 
         return new PooledConnectionManager(
                 ConnectionManagerProvider.createConnectionManager(nativeUrl, username, password,properties),
-                new ConfigInfo((properties)));
+                properties,new ConfigInfo((properties)));
     }
 
     @Override

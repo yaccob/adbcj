@@ -3,7 +3,6 @@ package org.adbcj.mysql.codec.decoding;
 import org.adbcj.mysql.codec.AbstractMySqlConnection;
 import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MysqlField;
-import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.packets.EofResponse;
 
 import java.io.IOException;
@@ -29,6 +28,11 @@ class FieldEof extends DecoderState {
         }
         EofResponse fieldEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.FIELD);
         return result(ROW(fields),fieldEof);
+    }
+
+    @Override
+    public String toString() {
+        return "FIELD-EOF";
     }
 
 

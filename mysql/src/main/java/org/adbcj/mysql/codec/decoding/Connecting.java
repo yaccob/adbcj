@@ -4,7 +4,6 @@ import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Set;
 
 /**
@@ -57,5 +56,10 @@ class Connecting extends DecoderState {
 
         return new ServerGreeting(length, packetNumber, protocol, version, threadId, salt, serverCapabilities, charSet,
                 serverStatus);
+    }
+
+    @Override
+    public String toString() {
+        return "CONNECTING";
     }
 }

@@ -3,8 +3,6 @@ package org.adbcj.mysql.codec.decoding;
 import org.adbcj.mysql.codec.AbstractMySqlConnection;
 import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MysqlType;
-import org.adbcj.mysql.codec.decoding.DecoderState;
-import org.adbcj.mysql.codec.decoding.FieldDecodingState;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
 import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
@@ -64,6 +62,11 @@ abstract class FinishPrepareStatement extends DecoderState {
                 return result(new EofAndColumns(newStatement), statement);
             }
         }
+
+        @Override
+        public String toString() {
+            return "PREPARED-STATEMENT-READ-PARAMETERS";
+        }
     }
 
     private static class EofAndColumns extends FinishPrepareStatement {
@@ -84,6 +87,11 @@ abstract class FinishPrepareStatement extends DecoderState {
             } else {
                 throw new IllegalStateException("Did not expect a EOF from the server");
             }
+        }
+
+        @Override
+        public String toString() {
+            return "PREPARED-STATEMENT-COLUMNS-EOF";
         }
     }
 
@@ -106,6 +114,11 @@ abstract class FinishPrepareStatement extends DecoderState {
                 return result(new EofStatement(statement), statement);
             }
         }
+
+        @Override
+        public String toString() {
+            return "PREPARED-STATEMENT-READ-COLUMNS";
+        }
     }
 
     private static class EofStatement extends FinishPrepareStatement {
@@ -122,6 +135,11 @@ abstract class FinishPrepareStatement extends DecoderState {
             } else {
                 throw new IllegalStateException("Did not expect a EOF from the server");
             }
+        }
+
+        @Override
+        public String toString() {
+            return "PREPARED-STATEMENT-EOF";
         }
     }
 }

@@ -53,4 +53,12 @@ public class EofResponse extends ServerPacket {
 		return type;
 	}
 
+    @Override
+    public String toString() {
+        return "EofResponse{"  +
+                "type=" + type +
+                ", warnings=" + warnings +
+                ", serverStatus=" + serverStatus +
+                '}';
+    }
 }

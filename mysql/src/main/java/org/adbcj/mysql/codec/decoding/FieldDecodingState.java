@@ -37,6 +37,11 @@ class FieldDecodingState extends DecoderState {
         }
     }
 
+    @Override
+    public String toString() {
+        return "FIELD-DECODING";
+    }
+
 
     private Tuple<ResultSetFieldResponse,List<MysqlField>> decodeFieldResponse(InputStream in,
                                                        int packetLength, int packetNumber) throws IOException {

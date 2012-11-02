@@ -13,12 +13,7 @@
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
-            <!--<class name="org.adbcj.tck.test.CancelingRequests"/>-->
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
+            <!--<class name="org.adbcj.tck.test.SelectTest"/>-->
         </classes>
     </test>
     <test name="MySQL-Pooled">
@@ -32,8 +27,7 @@
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
+            <!--<class name="org.adbcj.tck.test.PreparedStatementsTest"/>-->
         </classes>
     </test>
 
@@ -47,7 +41,7 @@
 		</packages>
 		<classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
+            <!--<class name="org.adbcj.tck.test.SelectTest"/>-->
             <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
 		</classes>
@@ -62,6 +56,7 @@
 		</packages>
 		<classes>
             <class name="org.adbcj.tck.InitMysql" />
+            <!--<class name="org.adbcj.tck.test.SelectTest"/>-->
             <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->

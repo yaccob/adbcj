@@ -20,7 +20,7 @@ package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.mysql.codec.MysqlField;
 
-public class ResultSetFieldResponse extends ServerPacket {
+public class ResultSetFieldResponse extends ServerPacket{
 
 	private final MysqlField field;
 

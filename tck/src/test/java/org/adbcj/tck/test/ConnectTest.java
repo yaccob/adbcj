@@ -71,7 +71,7 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 			}
 		}).get();
 		assertTrue(connection.isClosed());
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
+        assertTrue(latch.await(2, TimeUnit.SECONDS));
 	}
 
 

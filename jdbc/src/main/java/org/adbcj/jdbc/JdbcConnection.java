@@ -44,7 +44,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
     public JdbcConnection(JdbcConnectionManager connectionManager,
                           java.sql.Connection jdbcConnection,
                           ExecutorService threadPool) {
-        super();
+        super(connectionManager.maxConnections());
         this.connectionManager = connectionManager;
         this.jdbcConnection = jdbcConnection;
         this.threadPool = threadPool;
@@ -288,6 +288,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
                 return value;
             } catch (Exception e) {
                 error(DbException.wrap(e));
+                complete(null);
                 synchronized (jdbcConnection){
                     if (jdbcConnection.isClosed()) {
                         connectionManager.removeConnection(JdbcConnection.this);

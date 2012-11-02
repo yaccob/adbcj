@@ -182,7 +182,7 @@ public final class PooledConnection implements Connection, PooledResource {
 
     <TArgument,TResult>DbSessionFuture<TResult> monitor(DbSessionFuture<TArgument> futureToMonitor,
                                    OneArgFunction<TArgument,TResult> transform) {
-        final DefaultDbSessionFuture<TResult> newFuture = FutureUtils.map(futureToMonitor, transform);
+        final DefaultDbSessionFuture<TResult> newFuture = FutureUtils.map(futureToMonitor,this, transform);
         addMonitoring(futureToMonitor, newFuture);
         return newFuture;
     }
