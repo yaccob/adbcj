@@ -33,13 +33,10 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 
 
 	public void testConnectImmediateClose() throws Exception {
-		final boolean[] callbacks = {false, false};
 		final CountDownLatch latch = new CountDownLatch(2);
 
 		DbFuture<Connection> connectFuture = connectionManager.connect().addListener(new DbListener<Connection>() {
 			public void onCompletion(DbFuture<Connection> future) {
-				// Indicate that callback has been invoked
-				callbacks[0] = true;
 				latch.countDown();
 			}
 		});
@@ -47,16 +44,13 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 		assertTrue(!connection.isClosed());
 		DbFuture<Void> closeFuture = connection.close().addListener(new DbListener<Void>() {
 			public void onCompletion(DbFuture<Void> future) {
-				// Indicate that callback has been invoked
-				callbacks[1] = true;
+
 				latch.countDown();
 			}
 		});
 		closeFuture.get(10, TimeUnit.SECONDS);
 		assertTrue(connection.isClosed());
 		latch.await(1, TimeUnit.SECONDS);
-		assertTrue(callbacks[0], "Callback on connection future was not invoked");
-		assertTrue(callbacks[1], "Callback on finalizeClose future was not invoked");
 	}
 
 	public void testConnectNonImmediateClose() throws DbException, InterruptedException {
