@@ -100,6 +100,7 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
         final DefaultDbFuture<Void> transactionReturned = new DefaultDbFuture<Void>();
         aliveConnections.remove(pooledConnection);
         if(pooledConnection.isMayBeCorrupted()){
+            allocatedConnectionsCount.decrementAndGet();
             return pooledConnection.getNativeConnection().close();
         } else {
             return returnConnectionToPool(pooledConnection, transactionReturned);

@@ -6,13 +6,37 @@ import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
 import org.testng.annotations.Test;
 
-import static org.adbcj.connectionpool.MockConnection.*;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.adbcj.connectionpool.MockConnection.FAIL_QUERY;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
 public class ThrowAwayConnectionOnFailureTest {
 
+    @Test
+    public void canGetNewConnectionsForDamagedOnes() throws InterruptedException {
+        Map<String,String> settings = new HashMap<String,String>();
+        settings.put(ConfigInfo.POOL_MAX_CONNECTIONS,"1");
+        final ConnectionManager connectionManager
+                = ConnectionManagerProvider.createConnectionManager("adbcj:pooled:mock:database",
+                "sa", "pwd",settings);
+        final MockConnectionManager mockConnections = MockConnectionFactory.lastInstanceRequestedOnThisThread();
+
+        expectCloseAfterOperation(connectionManager,new ConnectionAction() {
+            @Override
+            public DbFuture invoke(Connection connection) {
+                return connection.executeQuery("fail-query",new DefaultResultEventsHandler(), new DefaultResultSet());
+            }
+        });
+
+        final Connection connection = connectionManager.connect().get();
+        mockConnections.assertConnectionAlive(1);
+        connection.close(CloseMode.CANCEL_PENDING_OPERATIONS);
+
+    }
 
     @Test
     public void failureInSelectThrowsAwayConnection() throws InterruptedException {
@@ -115,6 +139,10 @@ public class ThrowAwayConnectionOnFailureTest {
         final ConnectionManager connectionManager
                 = ConnectionManagerProvider.createConnectionManager("adbcj:pooled:mock:database", "sa", "pwd");
 
+        expectCloseAfterOperation(connectionManager,toInvoke);
+    }
+
+    private void expectCloseAfterOperation(ConnectionManager connectionManager,ConnectionAction toInvoke) throws InterruptedException {
         final MockConnectionManager mockConnections = MockConnectionFactory.lastInstanceRequestedOnThisThread();
 
         final Connection connection = connectionManager.connect().get();
