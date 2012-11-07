@@ -17,6 +17,7 @@
 package org.adbcj.support;
 
 import org.adbcj.*;
+import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -33,6 +34,9 @@ public abstract class AbstractDbSession implements DbSession {
     private boolean pipelining = false; // Access must be synchronized on lock
 
     private final int maxQueueSize;
+
+
+    protected abstract Logger logger();
 
     protected AbstractDbSession(int maxQueueSize) {
         this.maxQueueSize = maxQueueSize;
@@ -396,6 +400,7 @@ public abstract class AbstractDbSession implements DbSession {
 
         private boolean cancelled; // Access must be synchronized on this
         private boolean executed; // Access must be synchronized on this
+        private final Logger logger;
 
 
         public Request(AbstractDbSession session) {
@@ -406,6 +411,7 @@ public abstract class AbstractDbSession implements DbSession {
                 }
             });
             this.session = session;
+            this.logger = session.logger();
         }
 
         /**
@@ -416,13 +422,14 @@ public abstract class AbstractDbSession implements DbSession {
          */
         public final void invokeExecute() throws Exception {
             synchronized (session.lock){
-                if (cancelled || executed) {
-                    synchronized (session.lock) {
-                        if (futureToComplete.isDone() && session.getActiveRequest() == this) {
-                            session.makeNextRequestActive();
-                        }
+                if (executed) {
+                    if (futureToComplete.isDone() && session.getActiveRequest() == this) {
+                        session.makeNextRequestActive();
                     }
                 } else {
+                    if(logger.isDebugEnabled()){
+                        logger.debug("Request is sent to database: "+this);
+                    }
                     executed = true;
                     execute();
                 }
@@ -438,13 +445,10 @@ public abstract class AbstractDbSession implements DbSession {
 
                 // The the request was cancelled and it can be removed
                 if (cancelled && canRemove()) {
-                        // Remove the quest and if the removal was successful and this request is active, go to the next request
-                        synchronized (session.lock) {
-                            if (session.requestQueue.remove(this)) {
-                                if (this == session.getActiveRequest()) {
-                                    session.makeNextRequestActive();
-                                }
-                            }
+                    if (session.requestQueue.remove(this)) {
+                        if (this == session.getActiveRequest()) {
+                            session.makeNextRequestActive();
+                        }
                     }
                     return cancelled;
                 } else{
@@ -474,6 +478,9 @@ public abstract class AbstractDbSession implements DbSession {
 
         public void complete(T result) {
             futureToComplete.trySetResult(result);
+            if(logger.isDebugEnabled()){
+                logger.debug("Request has been completed: "+this + " the future is in state: "+this.getFuture());
+            }
             makeNextRequestActive();
         }
 

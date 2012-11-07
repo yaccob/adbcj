@@ -21,8 +21,6 @@ import org.adbcj.DbFuture;
 import org.adbcj.DbListener;
 import org.adbcj.ResultSet;
 import org.adbcj.tck.TestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
@@ -35,10 +33,7 @@ import static org.testng.Assert.assertTrue;
 @Test(timeOut = 5000)
 public class SelectForUpdateTest extends AbstractWithConnectionManagerTest{
 
-	private final Logger logger = LoggerFactory.getLogger(SelectForUpdateTest.class);
-
 	public void testSelectForUpdate() throws Exception {
-		logger.debug("Using connection manager: {}", connectionManager);
 		final boolean[] invoked = {false, false};
 		final AtomicBoolean locked = new AtomicBoolean(false);
 		final AtomicBoolean error = new AtomicBoolean(false);
@@ -47,25 +42,21 @@ public class SelectForUpdateTest extends AbstractWithConnectionManagerTest{
 		
 		Connection conn1 = connectionManager.connect().get();
 		Connection conn2 = connectionManager.connect().get();
-		logger.debug("Obtained connection managers");
 		
 		// Get lock on locks table
 		conn1.beginTransaction();
 		TestUtils.selectForUpdate(conn1, new DbListener<ResultSet>() {
 			public void onCompletion(DbFuture<ResultSet> future) {
-				logger.debug("In first callback");
 				locked.set(true);
 				invoked[0] = true;
 				latch1.countDown();
 			}
 		}).get();
-		logger.debug("Obtained lock on locks table");
 		
 		// Try to get lock with second connection
 		conn2.beginTransaction();
 		DbFuture<ResultSet> future = TestUtils.selectForUpdate(conn2, new DbListener<ResultSet>() {
 			public void onCompletion(DbFuture<ResultSet> future) {
-				logger.debug("In second callback");
 				invoked[1] = true;
 				if (!locked.get()) {
 					error.set(true);
@@ -73,7 +64,6 @@ public class SelectForUpdateTest extends AbstractWithConnectionManagerTest{
 				latch2.countDown();
 			}
 		});
-		logger.debug("Select for update called with second connection, should be blocking");
 		
 		assertTrue(latch1.await(1, TimeUnit.SECONDS));
 		assertTrue(invoked[0], "First SELECT FOR UPDATE callback should have been invoked");
@@ -82,23 +72,17 @@ public class SelectForUpdateTest extends AbstractWithConnectionManagerTest{
 		assertFalse(error.get());
 		
 		conn1.rollback().get();
-		logger.debug("Released first lock");
 		
 		future.get();
-		logger.debug("Second SELECT FOR UPDATE completed");
 		
 		assertTrue(latch2.await(1, TimeUnit.SECONDS));
 		assertTrue(invoked[1]);
 		assertFalse(error.get(), "An error occurred during SELECT FOR UPDATE");
 		conn2.rollback().get();
-		logger.debug("Released second lock");
 		
 		// Close connections
-		logger.debug("Closing connections");
 		conn1.close().get();
-		logger.debug("Closed connection 1");
 		conn2.close().get();
-		logger.debug("Closed connection 2");
 	}
 	
 }

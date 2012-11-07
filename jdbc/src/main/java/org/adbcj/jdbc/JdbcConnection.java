@@ -50,6 +50,11 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         this.threadPool = threadPool;
     }
 
+    @Override
+    protected Logger logger() {
+        return logger;
+    }
+
     public ConnectionManager getConnectionManager() {
         return connectionManager;
     }
@@ -103,7 +108,9 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         return enqueueTransactionalRequest(new CallableRequest<T>() {
             @Override
             protected T doCall() throws Exception {
-                logger.debug("Executing query '{}'", sql);
+                if(logger.isDebugEnabled()){
+                    logger.debug("Executing query '{}'", sql);
+                }
                 synchronized (jdbcConnection){
                     Statement jdbcStatement = jdbcConnection.createStatement();
                     java.sql.ResultSet jdbcResultSet = null;

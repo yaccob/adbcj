@@ -48,7 +48,6 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     private final CancellationAction optionalCancellation;
 
 
-
     public DefaultDbFuture(CancellationAction cancelAction) {
         this.optionalCancellation = cancelAction;
     }
@@ -68,11 +67,12 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         if (listener == null) {
             throw new IllegalArgumentException("listener can NOT be null");
         }
-        if (isDone()) {
-            notifyListener(listener);
-        } else{
-            synchronized (lock){
+        synchronized (lock) {
+            if (isDone()) {
+                notifyListener(listener);
+            } else {
                 otherListeners.add(listener);
+
             }
         }
         return this;
@@ -89,7 +89,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public final boolean cancel(boolean mayInterruptIfRunning) {
-        if (isDone() || optionalCancellation==null) {
+        if (isDone() || optionalCancellation == null) {
             return false;
         }
         synchronized (lock) {
@@ -104,7 +104,6 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             return cancelled;
         }
     }
-
 
 
     public final T get() throws InterruptedException, DbException {
@@ -131,7 +130,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         }
         synchronized (lock) {
             final long startTime = System.nanoTime();
-            while (!isDone() &&(startTime+timeoutNanos) > System.nanoTime() ){
+            while (!isDone() && (startTime + timeoutNanos) > System.nanoTime()) {
                 lock.wait(timeoutMillis);
             }
             if (!isDone()) {
@@ -145,14 +144,11 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     public final T getResult() throws DbException {
         if (state == FutureState.SUCCESS) {
             return result;
-        }
-        else if (state == FutureState.NOT_COMPLETED) {
+        } else if (state == FutureState.NOT_COMPLETED) {
             throw new IllegalStateException("Should not be calling this method when future is not done");
-        }
-        else if (state == FutureState.FAILURE) {
+        } else if (state == FutureState.FAILURE) {
             throw DbException.wrap(exception);
-        }
-        else if (state == FutureState.CANCELLED) {
+        } else if (state == FutureState.CANCELLED) {
             throw new CancellationException();
         }
         return result;
@@ -165,11 +161,11 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     @Override
     public Throwable getException() {
-        if(state==FutureState.FAILURE){
+        if (state == FutureState.FAILURE) {
             return exception;
-        } else if(state==FutureState.NOT_COMPLETED){
+        } else if (state == FutureState.NOT_COMPLETED) {
             throw new IllegalStateException("Should not be calling this method when future is not done");
-        } else{
+        } else {
             return null;
         }
     }
@@ -211,23 +207,33 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public boolean isCancelled() {
-        return state==FutureState.CANCELLED;
+        return state == FutureState.CANCELLED;
     }
 
     public boolean isDone() {
-        return state!=FutureState.NOT_COMPLETED;
+        return state != FutureState.NOT_COMPLETED;
     }
 
     public void setException(Throwable exception) {
-        if(!trySetException(exception)){
+        if (!trySetException(exception)) {
             throw new IllegalStateException("Can't set exception on completed future");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "DbFuture{" +
+                "state=" + state +
+                ", result=" + result +
+                ", exception=" + exception +
+                '}';
     }
 
     /**
      * Try to complete this future with an exception. If wasn't completed yet, the future
      * will fail with the given exception and the method return true. Otherwise this method
      * doesn't change the state of the future and return false.
+     *
      * @param exception
      * @return true when state of future could be changed to a failure. False otherwise
      */
@@ -248,10 +254,10 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
 
     boolean trySetCancelled() {
-        if(state!=FutureState.NOT_COMPLETED){
+        if (state != FutureState.NOT_COMPLETED) {
             return false;
         }
-        synchronized (this.lock){
+        synchronized (this.lock) {
             state = FutureState.CANCELLED;
             notifyChanges();
             return true;

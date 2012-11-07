@@ -52,9 +52,15 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	}
 
     @Override
+    protected Logger logger() {
+        return logger;
+    }
+
+    @Override
     public DbFuture<Void> close(CloseMode closeMode) throws DbException {
-        // If the connection is already closed, return existing close future
-        logger.debug("Closing");
+        if(logger.isDebugEnabled()){
+            logger.debug("Closing connection: "+this);
+        }
         if (isClosed()) {
             return DefaultDbFuture.completed(null);
         } if(closeRequest!=null){
@@ -66,7 +72,6 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
             closeRequest = new CloseRequest();
             enqueueRequest(closeRequest);
         }
-        logger.trace("Exiting close()");
         return closeRequest.getFuture();
     }
 
@@ -82,7 +87,9 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 		return enqueueTransactionalRequest(new ExpectResultRequest<T>(this,eventHandler, accumulator) {
 			@Override
 			public void execute() throws Exception {
-				logger.debug("Sending query '{}'", sql);
+                if(logger.isDebugEnabled()){
+                    logger.debug("Sending query '{}'", sql);
+                }
 				CommandRequest request = new StringCommandRequest(Command.QUERY, sql);
 				write(request);
         }
@@ -95,10 +102,14 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 
 	public DbSessionFuture<Result> executeUpdate(final String sql) {
 		checkClosed();
-		logger.debug("Scheduling update '{}'", sql);
+        if(logger.isDebugEnabled()){
+            logger.debug("Scheduling update '{}'", sql);
+        }
 		return enqueueTransactionalRequest(new Request<Result>(this) {
 			public void execute() {
-				logger.debug("Sending update '{}'", sql);
+                if(logger.isDebugEnabled()){
+                    logger.debug("Sending update '{}'", sql);
+                }
 				CommandRequest request = new StringCommandRequest(Command.QUERY, sql);
 				write(request);
 			}
