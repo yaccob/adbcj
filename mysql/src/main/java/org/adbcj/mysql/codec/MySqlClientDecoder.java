@@ -60,7 +60,7 @@ public class MySqlClientDecoder {
         ServerPacket message = null;
         try {
             ServerPacket msg = doDecode(connection, input, block);
-            if(state==DecoderState.RESPONSE){
+            if(state==DecoderState.RESPONSE && msg!=null){
                 message =  new ResponseExpected(msg);
             } else{
                 message = msg;

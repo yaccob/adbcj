@@ -30,7 +30,7 @@ public class PasswordEncryption {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
 
-            byte[] hash1 = md.digest(password.getBytes());
+            byte[] hash1 = md.digest(password.getBytes("UTF-8"));
 
             md.reset();
             byte[] hash2 = md.digest(hash1);
@@ -44,7 +44,7 @@ public class PasswordEncryption {
                 digest[i] = (byte) (digest[i] ^ hash1[i]);
             }
             return digest;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (Exception e) {
             throw DbException.wrap(e);
         }
     }

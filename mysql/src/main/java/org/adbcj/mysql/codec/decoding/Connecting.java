@@ -6,6 +6,8 @@ import org.adbcj.mysql.codec.packets.ServerGreeting;
 import java.io.IOException;
 import java.util.Set;
 
+import static org.adbcj.mysql.codec.IoUtils.safeSkip;
+
 /**
 * @author roman.stoffel@gamlor.info
 * @since 12.04.12
@@ -47,7 +49,7 @@ class Connecting extends DecoderState {
         Set<ClientCapabilities> serverCapabilities = IoUtils.readEnumSetShort(in, ClientCapabilities.class);
         MysqlCharacterSet charSet = MysqlCharacterSet.findById(in.read());
         Set<ServerStatus> serverStatus = IoUtils.readEnumSetShort(in, ServerStatus.class);
-        in.skip(GREETING_UNUSED_SIZE);
+        safeSkip(in, GREETING_UNUSED_SIZE);
 
         in.read(salt, SALT_SIZE, SALT2_SIZE);
         // skip all plugin data for now

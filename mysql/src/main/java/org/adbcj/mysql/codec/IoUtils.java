@@ -305,4 +305,12 @@ public final class IoUtils {
         out.write((byte) (calendar.get(Calendar.MONTH) + 1));
         out.write((byte) calendar.get(Calendar.DAY_OF_MONTH));
     }
+
+    public static void safeSkip(InputStream in, long amountToSkip) throws IOException {
+        long actuallySkipped = in.skip(amountToSkip);
+        while (actuallySkipped<amountToSkip){
+            amountToSkip = amountToSkip- actuallySkipped;
+            actuallySkipped = in.skip(amountToSkip);
+        }
+    }
 }

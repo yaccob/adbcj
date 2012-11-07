@@ -67,10 +67,11 @@ class FieldDecodingState extends DecoderState {
         MysqlType fieldType = MysqlType.findById(fieldTypeId);
         Set<FieldFlag> flags = IoUtils.readEnumSet(in, FieldFlag.class);
         int decimals = in.read();
-        in.skip(2); // Skip filler
+        IoUtils.safeSkip(in, 2); // Skip filler
         long fieldDefault = IoUtils.readBinaryLengthEncoding(in);
         return new MysqlField(fieldIndex, catalogName, schemaName, tableLabel, tableName, fieldType, columnLabel,
                 columnName, 0, // Figure out precision
                 decimals, charSet, length, flags, fieldDefault);
     }
+
 }

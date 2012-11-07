@@ -5,6 +5,8 @@ import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.FutureUtils;
 import org.adbcj.support.OneArgFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -12,6 +14,7 @@ import java.util.*;
  * @author roman.stoffel@gamlor.info
  */
 public final class PooledConnection implements Connection, PooledResource {
+    private static final Logger logger = LoggerFactory.getLogger(PooledConnection.class);
     private final Connection nativeConnection;
     private final PooledConnectionManager pooledConnectionManager;
     private volatile DefaultDbFuture<Void> closingFuture;
@@ -28,6 +31,7 @@ public final class PooledConnection implements Connection, PooledResource {
                     mayFinallyCloseConnection();
                 }
                 if(future.getState()==FutureState.FAILURE){
+                    logger.warn("Operation failed. Will close this connection and not return to the pool",future.getException());
                     PooledConnection.this.mayBeCorrupted = true;
                 }
             }

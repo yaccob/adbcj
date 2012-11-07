@@ -448,7 +448,7 @@ public abstract class AbstractDbSession implements DbSession {
                     }
                     return cancelled;
                 } else{
-                    throw new Error("Not expected branch");
+                    throw new RuntimeException("Not expected branch");
                 }
             }
         }
@@ -456,7 +456,7 @@ public abstract class AbstractDbSession implements DbSession {
         protected abstract void execute() throws Exception;
 
         protected boolean cancelRequest() {
-            return true;
+            return !executed;
         }
 
         public boolean canRemove() {

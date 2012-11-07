@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 
-@Test(invocationCount = 10, threadPoolSize = 5, timeOut = 50000)
+@Test(invocationCount = 10, threadPoolSize = 4, timeOut = 50000)
 public class SelectTest extends AbstractWithConnectionManagerTest {
 
     public void testSelectWhichReturnsNothing() throws Exception {
