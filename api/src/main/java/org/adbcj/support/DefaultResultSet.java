@@ -16,17 +16,11 @@
  */
 package org.adbcj.support;
 
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.adbcj.DbSession;
 import org.adbcj.Field;
 import org.adbcj.ResultSet;
 import org.adbcj.Row;
+
+import java.util.*;
 
 
 public class DefaultResultSet extends AbstractList<Row> implements ResultSet {
@@ -86,7 +80,7 @@ public class DefaultResultSet extends AbstractList<Row> implements ResultSet {
 		}
 		// Search by column label
 		for (Field f : fields) {
-			if (stringKey.equals(f.getColumnLabel())) {
+			if (stringKey.equalsIgnoreCase(f.getColumnLabel())) {
 				fieldMapping.put(key, f);
 				return f;
 			}

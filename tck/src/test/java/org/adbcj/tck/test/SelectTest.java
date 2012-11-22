@@ -146,14 +146,14 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
                 "WHERE str_val LIKE 'Zero'", buildStringInCallback(), new StringBuilder());
 
         StringBuilder result = resultFuture.get();
-        Assert.assertEquals(result.toString(), expectedStringFromCallback());
+        Assert.assertEquals(result.toString().toLowerCase(), expectedStringFromCallback());
 
         connection.close();
 
     }
 
     static String expectedStringFromCallback() {
-        return "startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults";
+        return "startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults".toLowerCase();
     }
 
     static ResultHandler<StringBuilder> buildStringInCallback() {

@@ -27,8 +27,11 @@ public class InsertTest extends AbstractWithConnectionManagerTest{
                 "VALUES ('data1'),('data2'),('data3');").get();
         Assert.assertEquals(result.getAffectedRows(), 3L);
         Assert.assertTrue(result.getGeneratedKeys().get(0).get(0).getLong()>0);
-        Assert.assertTrue(result.getGeneratedKeys().get(1).get(0).getLong() > 0);
-        Assert.assertTrue(result.getGeneratedKeys().get(2).get(0).getLong()>0);
+        if(result.getGeneratedKeys().size()>1){
+            // Some databases return just the last key
+            Assert.assertTrue(result.getGeneratedKeys().get(1).get(0).getLong() > 0);
+            Assert.assertTrue(result.getGeneratedKeys().get(2).get(0).getLong()>0);
+        }
 
         connection.close();
     }

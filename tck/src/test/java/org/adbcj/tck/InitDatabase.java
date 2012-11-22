@@ -16,21 +16,39 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class InitMysql {
+public abstract class InitDatabase {
 
+    protected InitDatabase() {
+    }
 
     @Parameters({"jdbcUrl", "user", "password"})
     @BeforeTest
-    public void prepareMySQL(String url, String user, String password) throws Exception {
-        Class.forName("com.mysql.jdbc.Driver");
-        runSQLScript(url, user, password, "sql/setupMySQL.sql");
+    public final void prepareMySQL(String url, String user, String password) throws Exception {
+        loadDriver();
+        beforeSetupScript();
+        runSQLScript(url, user, password, setupScript());
     }
+
+    protected void beforeSetupScript(){
+
+    }
+
+    protected abstract void loadDriver() throws ClassNotFoundException;
+
+    protected abstract String setupScript();
 
     @Parameters({"jdbcUrl", "user", "password"})
     @AfterSuite
     public void cleanUp(String jdbcUrl, String user, String password) {
-        runSQLScript(jdbcUrl, user, password, "sql/cleanUpMySQL.sql");
+        runSQLScript(jdbcUrl, user, password, tearDownScript());
+        afterCleanupScript();
     }
+
+    protected void afterCleanupScript(){
+
+    }
+
+    protected abstract String tearDownScript();
 
     private void runSQLScript(String jdbcUrl, String user, String password, String script) {
         try {

@@ -127,7 +127,7 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
                 new StringBuilder(),"Zero");
 
         StringBuilder result = resultFuture.get();
-        Assert.assertEquals(result.toString(), SelectTest.expectedStringFromCallback());
+        Assert.assertEquals(result.toString().toLowerCase(), SelectTest.expectedStringFromCallback());
 
         connection.close();
 

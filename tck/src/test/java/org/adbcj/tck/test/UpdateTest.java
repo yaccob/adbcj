@@ -49,7 +49,7 @@ public class UpdateTest extends AbstractWithConnectionManagerTest{
 		assertEquals(rs.size(), 1);
 		Value value = rs.get(0).get(0);
 		assertEquals(value.getInt(), 1);
-		assertEquals(value.getField().getColumnLabel(), "id");
+		assertEquals(value.getField().getColumnLabel().toLowerCase(), "id");
 
 		// Update nothing
 		result = connection.executeUpdate("UPDATE updates SET id=1 WHERE id=2").get();
