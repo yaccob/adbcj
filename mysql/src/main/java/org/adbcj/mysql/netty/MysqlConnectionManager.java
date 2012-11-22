@@ -40,13 +40,12 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 	private static final String MESSAGE_QUEUE = MysqlConnectionManager.class.getName() + ".queue";
     private final LoginCredentials credentials;
 
-	private final ExecutorService executorService;
 	private final ClientBootstrap bootstrap;
-    private volatile DefaultDbFuture<Void> closeFuture = null;
     private final Set<AbstractMySqlConnection> connections = new HashSet<AbstractMySqlConnection>();
     private final AtomicInteger idCounter = new AtomicInteger();
+    private final ExecutorService bossExecutor;
 
-	public MysqlConnectionManager(String host,
+    public MysqlConnectionManager(String host,
                                   int port,
                                   String username,
                                   String password,
@@ -54,9 +53,10 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                                   Map<String,String> properties) {
         super(properties);
         credentials = new LoginCredentials(username, password, schema);
-		executorService = Executors.newCachedThreadPool();
 
-		ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
+        this.bossExecutor = Executors.newCachedThreadPool();
+        ChannelFactory factory = new NioClientSocketChannelFactory(bossExecutor,
+                Executors.newCachedThreadPool());
 		bootstrap = new ClientBootstrap(factory);
 		init(host, port);
 	}
@@ -80,19 +80,17 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 		bootstrap.setOption("remoteAddress", new InetSocketAddress(host, port));
 	}
 
-    public DbFuture<Void> close(CloseMode closeMode) throws DbException {
+    protected DbFuture<Void> doClose(CloseMode closeMode) throws DbException {
+        final DefaultDbFuture closeFuture;
         ArrayList<AbstractMySqlConnection> connectionsCopy;
         synchronized (connections) {
-            if (isClosed()) {
-                return closeFuture;
-            }
             closeFuture = new DefaultDbFuture<Void>();
             connectionsCopy = new ArrayList<AbstractMySqlConnection>(connections);
         }
         for (AbstractMySqlConnection connection : connectionsCopy) {
             connection.close(closeMode);
         }
-        executorService.submit(new Runnable() {
+        bossExecutor.submit(new Runnable() {
             @Override
             public void run() {
                 bootstrap.releaseExternalResources();
@@ -151,9 +149,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
     }
 
 
-    public boolean isClosed() {
-        return closeFuture != null;
-    }
 
     public int nextId() {
         return idCounter.incrementAndGet();

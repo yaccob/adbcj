@@ -10,7 +10,6 @@ public class InitH2 extends InitDatabase {
 
     @Override
     protected void loadDriver() throws ClassNotFoundException {
-        Class.forName("org.postgresql.Driver");
     }
 
     @Override

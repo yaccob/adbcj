@@ -26,7 +26,6 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     private final ConcurrentLinkedQueue<DefaultDbFuture<Connection>> waitingForConnection
             = new ConcurrentLinkedQueue<DefaultDbFuture<Connection>>();
     private final ConcurrentHashMap<PooledConnection,Boolean> aliveConnections = new ConcurrentHashMap<PooledConnection,Boolean>();
-    private volatile boolean closed;
     private final ConfigInfo config;
 
     private final Timer timeOutTimer = new Timer("PooledConnectionManager timeout timer",true);
@@ -40,7 +39,7 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
 
     @Override
     public DbFuture<Connection> connect() {
-        if(closed){
+        if(isClosed()){
             throw new DbException("Connection manager is closed. Cannot open a new connection");
         }
         return (DbFuture) FutureUtils.map(findOrGetNewConnection(), new OneArgFunction<Connection, PooledConnection>() {
@@ -82,18 +81,12 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     }
 
     @Override
-    public DbFuture<Void> close(CloseMode mode) throws DbException {
+    public DbFuture<Void> doClose(CloseMode mode) throws DbException {
         timeOutTimer.cancel();
-        closed = true;
         for (Connection pooledConnection : aliveConnections.keySet()) {
             pooledConnection.close(mode);
         }
         return connectionManager.close(mode);
-    }
-
-    @Override
-    public boolean isClosed() {
-        return closed;
     }
 
     public DbFuture<Void> returnConnection(PooledConnection pooledConnection) {

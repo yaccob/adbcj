@@ -27,99 +27,91 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class JdbcConnectionManager extends AbstractConnectionManager implements ConnectionManager {
-	private final ExecutorService executorService;
+    private final ExecutorService executorService;
 
-	private final Object lock = this;
+    private final Object lock = this;
     private final JDBCConnectionProvider connectionProvider;
-	private final Set<JdbcConnection> connections = new HashSet<JdbcConnection>(); // Access must be synchronized on lock
-	
-	private volatile DefaultDbFuture<Void> closeFuture;
+    private final Set<JdbcConnection> connections = new HashSet<JdbcConnection>(); // Access must be synchronized on lock
 
 
     public JdbcConnectionManager(ExecutorService executorService,
                                  JDBCConnectionProvider connectionProvider,
-                                 Map<String,String> properties) {
+                                 Map<String, String> properties) {
         super(properties);
         this.executorService = executorService;
         this.connectionProvider = connectionProvider;
     }
 
     public DbFuture<Connection> connect() throws DbException {
-		if (isClosed()) {
-			throw new DbException("This connection manager is closed");
-		}
-		final DefaultDbFuture<Connection> future = new DefaultDbFuture<Connection>();
-		executorService.execute(new Runnable() {
-			public void run() {
-				try {
-					java.sql.Connection jdbcConnection = connectionProvider.getConnection();
-					JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this,
-                            jdbcConnection,getExecutorService());
-					synchronized (lock) {
-						if (isClosed()) {
-							connection.close();
-							future.setException(new DbException("Connection manager closed"));
-						} else {
-							connections.add(connection);
-							future.setResult(connection);
-						}
-					}
-				} catch (Throwable e) {
+        if (isClosed()) {
+            throw new DbException("This connection manager is closed");
+        }
+        final DefaultDbFuture<Connection> future = new DefaultDbFuture<Connection>();
+        executorService.execute(new Runnable() {
+            public void run() {
+                try {
+                    java.sql.Connection jdbcConnection = connectionProvider.getConnection();
+                    JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this,
+                            jdbcConnection, getExecutorService());
+                    synchronized (lock) {
+                        if (isClosed()) {
+                            connection.close();
+                            future.setException(new DbException("Connection manager closed"));
+                        } else {
+                            connections.add(connection);
+                            future.setResult(connection);
+                        }
+                    }
+                } catch (Throwable e) {
                     DbException ex = DbException.wrap(e);
-					future.setException(ex);
+                    future.setException(ex);
                     throw ex;
-				}
-			}
-		});
-		return future;
-	}
+                }
+            }
+        });
+        return future;
+    }
 
     @Override
-    public DbFuture<Void> close(CloseMode mode) throws DbException {
+    public DbFuture<Void> doClose(CloseMode mode) throws DbException {
         synchronized (lock) {
-            if (closeFuture == null) {
-                closeFuture = new DefaultDbFuture<Void>();
-                closeFuture.addListener(new DbListener<Void>() {
+            final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>();
+            closeFuture.addListener(new DbListener<Void>() {
+                @Override
+                public void onCompletion(DbFuture<Void> future) {
+                    executorService.shutdown();
+                }
+            });
+            final AtomicInteger latch = new AtomicInteger(connections.size());
+            for (JdbcConnection connection : connections) {
+                connection.close(mode).addListener(new DbListener<Void>() {
                     @Override
                     public void onCompletion(DbFuture<Void> future) {
-                        executorService.shutdown();
+                        final int currentCount = latch.decrementAndGet();
+                        if (currentCount <= 0) {
+                            closeFuture.trySetResult(null);
+                        }
                     }
                 });
-                final AtomicInteger latch = new AtomicInteger(connections.size());
-                for (JdbcConnection connection : connections) {
-                    connection.close(mode).addListener(new DbListener<Void>() {
-                        @Override
-                        public void onCompletion(DbFuture<Void> future) {
-                            final int currentCount = latch.decrementAndGet();
-                            if(currentCount<=0){
-                                closeFuture.trySetResult(null);
-                            }
-                        }
-                    });
-                }
             }
             return closeFuture;
         }
     }
 
-    public boolean isClosed() {
-		return closeFuture != null;
-	}
-	
-	public ExecutorService getExecutorService() {
-		return executorService;
-	}
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
 
-	boolean removeConnection(JdbcConnection connection) {
-		synchronized (lock) {
-			return connections.remove(connection);
-		}
-	}
+    boolean removeConnection(JdbcConnection connection) {
+        synchronized (lock) {
+            return connections.remove(connection);
+        }
+    }
 
-	@Override
-	public String toString() {
-		return "JdbcConnectionManager with" + connectionProvider.toString();
-	}
+    @Override
+    public String toString() {
+        return "JdbcConnectionManager with" + connectionProvider.toString();
+    }
 
     private static ExecutorService createPool() {
         ExecutorService executorService = new ThreadPoolExecutor(0, 64,
@@ -138,5 +130,5 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
                 });
         return executorService;
     }
-	
+
 }
