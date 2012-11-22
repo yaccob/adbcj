@@ -35,8 +35,6 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
 	
 	private volatile DefaultDbFuture<Void> closeFuture;
 
-	private volatile boolean pipeliningEnabled = false;
-
 
     public JdbcConnectionManager(ExecutorService executorService,
                                  JDBCConnectionProvider connectionProvider,
@@ -87,26 +85,21 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
                         executorService.shutdown();
                     }
                 });
-            } else {
-                return closeFuture;
-            }
-        }
-
-        synchronized (lock) {
-            final AtomicInteger latch = new AtomicInteger(connections.size());
-            for (JdbcConnection connection : connections) {
-                connection.close(mode).addListener(new DbListener<Void>() {
-                    @Override
-                    public void onCompletion(DbFuture<Void> future) {
-                        final int currentCount = latch.decrementAndGet();
-                        if(currentCount==0){
-                            closeFuture.trySetResult(null);
+                final AtomicInteger latch = new AtomicInteger(connections.size());
+                for (JdbcConnection connection : connections) {
+                    connection.close(mode).addListener(new DbListener<Void>() {
+                        @Override
+                        public void onCompletion(DbFuture<Void> future) {
+                            final int currentCount = latch.decrementAndGet();
+                            if(currentCount<=0){
+                                closeFuture.trySetResult(null);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
+            return closeFuture;
         }
-        return closeFuture;
     }
 
     public boolean isClosed() {
@@ -121,14 +114,6 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
 		synchronized (lock) {
 			return connections.remove(connection);
 		}
-	}
-
-	public boolean isPipeliningEnabled() {
-		return pipeliningEnabled;
-	}
-
-	public void setPipeliningEnabled(boolean pipeliningEnabled) {
-		this.pipeliningEnabled = pipeliningEnabled;
 	}
 
 	@Override

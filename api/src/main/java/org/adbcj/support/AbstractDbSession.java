@@ -489,7 +489,7 @@ public abstract class AbstractDbSession implements DbSession {
         }
 
         public void error(DbException exception) {
-            futureToComplete.setException(exception);
+            futureToComplete.trySetException(exception);
             if (transaction != null) {
                 transaction.cancelPendingRequests();
             }
