@@ -30,6 +30,7 @@
 		<module>jdbc</module>
 		<module>connection-pool</module>
 		<module>mysql</module>
+		<module>h2</module>
 		<module>tck</module>
 	</modules>
 
@@ -192,6 +193,11 @@
 			</dependency>
 			<dependency>
 				<artifactId>mysql-async-driver</artifactId>
+				<groupId>${project.groupId}</groupId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>h2-async-driver</artifactId>
 				<groupId>${project.groupId}</groupId>
 				<version>${project.version}</version>
 			</dependency>
