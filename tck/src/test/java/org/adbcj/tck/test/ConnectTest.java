@@ -17,6 +17,7 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.Connection;
+import org.adbcj.DbFuture;
 import org.testng.annotations.Test;
 
 //@Test(invocationCount = 10, threadPoolSize = 5, timeOut = 30000)
@@ -61,7 +62,8 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 //	}
 
     public void testConnectAndDisconnect() throws Exception {
-        Connection connection = connectionManager.connect().get();
+        final DbFuture<Connection> future = connectionManager.connect();
+        Connection connection = future.get();
         connection.close().get();
     }
 

@@ -2,6 +2,7 @@ package org.adbcj.h2;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 
 /**
@@ -10,6 +11,12 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 class Handler  extends SimpleChannelHandler {
     public Handler(H2Connection connection) {
         //To change body of created methods use File | Settings | File Templates.
+    }
+
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        //System.out.println("Msg");
     }
 
 
