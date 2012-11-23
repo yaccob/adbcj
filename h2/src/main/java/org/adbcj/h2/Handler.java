@@ -1,12 +1,21 @@
 package org.adbcj.h2;
 
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class Handler  extends SimpleChannelHandler {
+class Handler  extends SimpleChannelHandler {
     public Handler(H2Connection connection) {
         //To change body of created methods use File | Settings | File Templates.
+    }
+
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        super.exceptionCaught(ctx, e);
+        e.getCause().printStackTrace();
     }
 }

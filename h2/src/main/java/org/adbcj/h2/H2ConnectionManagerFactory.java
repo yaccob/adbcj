@@ -34,8 +34,8 @@ public class H2ConnectionManagerFactory implements ConnectionManagerFactory {
             }
             String schema = path.substring(1);
 
-            return new H2ConnectionManager(host, port,
-                    new LoginCredentials(username,password, schema), properties);
+            return new H2ConnectionManager(uri.toString(),host, port,
+                    new LoginCredentials(username.toUpperCase(),password, schema), properties);
 
         }catch (Exception e){
             throw DbException.wrap(e);

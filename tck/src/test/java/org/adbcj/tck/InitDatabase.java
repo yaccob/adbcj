@@ -25,11 +25,11 @@ public abstract class InitDatabase {
     @BeforeTest
     public final void prepareMySQL(String url, String user, String password) throws Exception {
         loadDriver();
-        beforeSetupScript();
+        beforeSetupScript(url, user, password);
         runSQLScript(url, user, password, setupScript());
     }
 
-    protected void beforeSetupScript(){
+    protected void beforeSetupScript(String url, String user, String password){
 
     }
 
@@ -52,7 +52,8 @@ public abstract class InitDatabase {
 
     private void runSQLScript(String jdbcUrl, String user, String password, String script) {
         try {
-            Connection connection = new PlainJDBCConnection(jdbcUrl, user, password, new HashMap<String, String>()).getConnection();
+            Connection connection
+                    = new PlainJDBCConnection(jdbcUrl, user, password, new HashMap<String, String>()).getConnection();
             try {
                 for (String line : setupSQL(script)) {
                     Statement stmt = connection.createStatement();

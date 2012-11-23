@@ -1,6 +1,8 @@
 package org.adbcj.h2;
 
 import org.adbcj.*;
+import org.adbcj.h2.decoding.Decoder;
+import org.adbcj.h2.packets.ClientHandshake;
 import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
@@ -26,12 +28,16 @@ public class H2ConnectionManager extends AbstractConnectionManager {
     private final ClientBootstrap bootstrap;
     private static final String ENCODER = H2ConnectionManager.class.getName() + ".encoder";
     private static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
+    private final String url;
+    private final LoginCredentials credentials;
 
-    public H2ConnectionManager(String host,
+    public H2ConnectionManager(String url,String host,
                                int port,
                                LoginCredentials credentials,
                                Map<String, String> properties) {
         super(properties);
+        this.url = url;
+        this.credentials = credentials;
 
         this.bossExecutor = Executors.newCachedThreadPool();
         ChannelFactory factory = new NioClientSocketChannelFactory(bossExecutor,
@@ -46,7 +52,6 @@ public class H2ConnectionManager extends AbstractConnectionManager {
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast(DECODER, new Decoder());
                 pipeline.addLast(ENCODER, new Encoder());
 
                 return pipeline;
@@ -79,13 +84,13 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                 logger.debug("Connect completed");
 
                 Channel channel = future.getChannel();
+                channel.write(
+                        new ClientHandshake(credentials.getDatabase(),url,
+                                credentials.getUserName(),
+                                credentials.getPassword()));
                 H2Connection connection = new H2Connection();
+                channel.getPipeline().addLast(DECODER, new Decoder(connectFuture,connection));
                 channel.getPipeline().addLast("handler", new Handler(connection));
-
-
-
-                Decoder decoder = channel.getPipeline().get(Decoder.class);
-
 
                 if(future.getCause()!=null){
                     connectFuture.setException(future.getCause());

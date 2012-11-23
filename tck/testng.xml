@@ -62,6 +62,22 @@
             <!--&lt;!&ndash;<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>&ndash;&gt;-->
 		<!--</classes>-->
 	<!--</test>-->
+    <!--<test name="H2-VIA-PG-JDBC">-->
+        <!--<parameter name="jdbcUrl" value="jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />-->
+        <!--<parameter name="url" value="adbcj:jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />-->
+        <!--<parameter name="user" value="adbcjtck" />-->
+        <!--<parameter name="password" value="adbcjtck" />-->
+        <!--<packages>-->
+            <!--&lt;!&ndash;<package name="org.adbcj.tck.test" />&ndash;&gt;-->
+        <!--</packages>-->
+        <!--<classes>-->
+            <!--<class name="org.adbcj.tck.InitH2" />-->
+            <!--<class name="org.adbcj.tck.test.ConnectTest"/>-->
+            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.TransactionTest"/>&ndash;&gt;-->
+            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.CloseConnectionsTest"/>&ndash;&gt;-->
+            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>&ndash;&gt;-->
+        <!--</classes>-->
+    <!--</test>-->
     <test name="H2-ADBCJ">
         <parameter name="jdbcUrl" value="jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />
         <parameter name="url" value="adbcj:h2://localhost:14242/adbcjtck" />
@@ -77,19 +93,4 @@
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
         </classes>
     </test>
-    <!--<test name="H2-VIA-PG-JDBC">-->
-        <!--<parameter name="jdbcUrl" value="jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />-->
-        <!--<parameter name="url" value="adbcj:jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />-->
-        <!--<parameter name="user" value="adbcjtck" />-->
-        <!--<parameter name="password" value="adbcjtck" />-->
-        <!--<packages>-->
-            <!--<package name="org.adbcj.tck.test" />-->
-        <!--</packages>-->
-        <!--<classes>-->
-            <!--<class name="org.adbcj.tck.InitH2" />-->
-            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.TransactionTest"/>&ndash;&gt;-->
-            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.CloseConnectionsTest"/>&ndash;&gt;-->
-            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>&ndash;&gt;-->
-        <!--</classes>-->
-    <!--</test>-->
 </suite>

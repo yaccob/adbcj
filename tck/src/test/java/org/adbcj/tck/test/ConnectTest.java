@@ -17,17 +17,7 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.Connection;
-import org.adbcj.DbSessionFuture;
-import org.adbcj.ResultSet;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
 
 //@Test(invocationCount = 10, threadPoolSize = 5, timeOut = 30000)
 @Test(invocationCount = 1, threadPoolSize = 5, timeOut = 30000)
@@ -70,32 +60,36 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 //        assertTrue(latch.await(2, TimeUnit.SECONDS));
 //	}
 
+    public void testConnectAndDisconnect() throws Exception {
+        Connection connection = connectionManager.connect().get();
+        connection.close().get();
+    }
 
-	public void testNonImmediateClose() throws Exception {
-		Connection connection = connectionManager.connect().get();
-
-		List<DbSessionFuture<ResultSet>> futures = new ArrayList<DbSessionFuture<ResultSet>>();
-
-		for (int i = 0; i < 5; i++) {
-			futures.add(connection.executeQuery(String.format("SELECT *, %d FROM simple_values", i)));
-		}
-		try {
-			connection.close().get(10, TimeUnit.SECONDS);
-		} catch (TimeoutException e) {
-			for (DbSessionFuture<ResultSet> future : futures) {
-				if (future.isDone()) {
-					future.get(); // Will throw exception if failed
-				} else {
-					throw new AssertionError("future " + future + " did not complete in time");
-				}
-			}
-			throw new AssertionError("finalizeClose future failed to complete");
-		}
-		assertTrue(connection.isClosed(), "Connection should be closed");
-		for (DbSessionFuture<ResultSet> future : futures) {
-			assertTrue(future.isDone(), "Request did not finish before connection was closed: " + future);
-			assertFalse(future.isCancelled(), "Future was cancelled and should have been");
-		}
-	}
+//	public void testNonImmediateClose() throws Exception {
+//		Connection connection = connectionManager.connect().get();
+//
+//		List<DbSessionFuture<ResultSet>> futures = new ArrayList<DbSessionFuture<ResultSet>>();
+//
+//		for (int i = 0; i < 5; i++) {
+//			futures.add(connection.executeQuery(String.format("SELECT *, %d FROM simple_values", i)));
+//		}
+//		try {
+//			connection.close().get(10, TimeUnit.SECONDS);
+//		} catch (TimeoutException e) {
+//			for (DbSessionFuture<ResultSet> future : futures) {
+//				if (future.isDone()) {
+//					future.get(); // Will throw exception if failed
+//				} else {
+//					throw new AssertionError("future " + future + " did not complete in time");
+//				}
+//			}
+//			throw new AssertionError("finalizeClose future failed to complete");
+//		}
+//		assertTrue(connection.isClosed(), "Connection should be closed");
+//		for (DbSessionFuture<ResultSet> future : futures) {
+//			assertTrue(future.isDone(), "Request did not finish before connection was closed: " + future);
+//			assertFalse(future.isCancelled(), "Future was cancelled and should have been");
+//		}
+//	}
 
 }

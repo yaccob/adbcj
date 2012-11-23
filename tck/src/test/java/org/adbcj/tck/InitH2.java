@@ -1,6 +1,11 @@
 package org.adbcj.tck;
 
+import org.adbcj.jdbc.PlainJDBCConnection;
 import org.h2.tools.Server;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.HashMap;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -23,7 +28,20 @@ public class InitH2 extends InitDatabase {
     }
 
     @Override
-    protected void beforeSetupScript() {
+    protected void beforeSetupScript(String jdbcUrl, String user, String password) {
+
+        try {
+            Connection connection  = new PlainJDBCConnection(jdbcUrl,
+                        user,
+                        password,
+                        new HashMap<String, String>()).getConnection();
+            if (null != connection) {
+                connection.close();
+                return;
+            }
+        } catch (SQLException e) {
+            // expected, server not running
+        }
         try {
 //            this.server = Server.createPgServer("-pgAllowOthers",
 //                    "-pgDaemon",
@@ -42,6 +60,5 @@ public class InitH2 extends InitDatabase {
 
     @Override
     protected void afterCleanupScript() {
-        server.stop();
     }
 }

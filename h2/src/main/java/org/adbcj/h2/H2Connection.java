@@ -6,6 +6,8 @@ import org.adbcj.*;
  * @author roman.stoffel@gamlor.info
  */
 public class H2Connection implements Connection {
+    private final String sessionId = StringUtils.convertBytesToHex(MathUtils.secureRandomBytes(32));
+
     @Override
     public ConnectionManager getConnectionManager() {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
@@ -74,5 +76,9 @@ public class H2Connection implements Connection {
     @Override
     public boolean isOpen() throws DbException {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 }
