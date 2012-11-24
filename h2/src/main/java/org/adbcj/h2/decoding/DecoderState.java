@@ -20,7 +20,7 @@ public abstract class DecoderState {
      */
     public final ResultAndState decode(DataInputStream stream, Channel channel) throws IOException {
         if(stream.available()<SizeConstants.INT_SIZE){
-            return ResultAndState.waitForMoreInput();
+            return ResultAndState.waitForMoreInput(this);
         }
         final int status = stream.readInt();
         if(StatusCodes.STATUS_ERROR.isStatus(status)){

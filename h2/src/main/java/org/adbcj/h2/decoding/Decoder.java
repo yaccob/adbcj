@@ -28,10 +28,11 @@ public class Decoder extends FrameDecoder {
         in.mark(Integer.MAX_VALUE);
         try {
             final ResultAndState resultState = currentState.decode(new DataInputStream(in),ctx.getChannel());
+            currentState = resultState.getNewState();
             if(resultState.isWaitingForMoreInput()){
                 in.reset();
+                return null;
             }
-            currentState = resultState.getNewState();
             return "Parsed";
         } finally {
             in.close();

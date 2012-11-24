@@ -1,16 +1,38 @@
 package org.adbcj.h2;
 
 import org.adbcj.*;
+import org.adbcj.h2.decoding.DecoderState;
+import org.adbcj.h2.packets.CloseCommand;
+import org.adbcj.support.DefaultDbFuture;
+import org.jboss.netty.channel.Channel;
+
+import java.util.ArrayDeque;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
 public class H2Connection implements Connection {
     private final String sessionId = StringUtils.convertBytesToHex(MathUtils.secureRandomBytes(32));
+    private final ArrayDeque<Request> requestQueue;
+    private final int maxQueueSize;
+    private final ConnectionManager manager;
+    private final Channel channel;
+    private final Object lock = new Object();
+    private volatile DefaultDbFuture<Void> closeFuture;
+
+    public H2Connection(int maxQueueSize, ConnectionManager manager, Channel channel) {
+        this.maxQueueSize = maxQueueSize;
+        this.manager = manager;
+        this.channel = channel;
+        synchronized (lock){
+            requestQueue = new ArrayDeque<Request>(maxQueueSize+1);
+        }
+    }
+
 
     @Override
     public ConnectionManager getConnectionManager() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return manager;
     }
 
     @Override
@@ -60,25 +82,39 @@ public class H2Connection implements Connection {
 
     @Override
     public DbFuture<Void> close() throws DbException {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return close(CloseMode.CLOSE_GRACEFULLY);
     }
 
     @Override
     public DbFuture<Void> close(CloseMode closeMode) throws DbException {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        synchronized (lock){
+            if(this.closeFuture!=null){
+                return closeFuture;
+            }
+            closeFuture = new DefaultDbFuture<Void>();
+            requestQueue.add(Request.createCloseRequest(closeFuture));
+            channel.write(new CloseCommand());
+            return closeFuture;
+        }
     }
 
     @Override
     public boolean isClosed() throws DbException {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return null!=closeFuture;
     }
 
     @Override
     public boolean isOpen() throws DbException {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return !isClosed();
     }
 
     public String getSessionId() {
         return sessionId;
+    }
+
+    public DecoderState dequeRequest() {
+        synchronized (lock){
+            return requestQueue.poll().getStartState();
+        }
     }
 }

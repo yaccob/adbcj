@@ -21,8 +21,11 @@ public final class ResultAndState{
     public static ResultAndState newState(DecoderState newState) {
         return new ResultAndState(newState, false);
     }
+    public static ResultAndState switchState(DecoderState newState) {
+        return new ResultAndState(newState, true);
+    }
 
-    public static ResultAndState waitForMoreInput() {
-        return new ResultAndState(null, true);
+    public static ResultAndState waitForMoreInput(DecoderState newState) {
+        return new ResultAndState(newState, true);
     }
 }

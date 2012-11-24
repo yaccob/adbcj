@@ -14,9 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -30,6 +33,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
     private static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
     private final String url;
     private final LoginCredentials credentials;
+    private final Set<H2Connection> connections = new HashSet<H2Connection>();
 
     public H2ConnectionManager(String url,String host,
                                int port,
@@ -88,12 +92,15 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                         new ClientHandshake(credentials.getDatabase(),url,
                                 credentials.getUserName(),
                                 credentials.getPassword()));
-                H2Connection connection = new H2Connection();
+                H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
                 channel.getPipeline().addLast(DECODER, new Decoder(connectFuture,connection));
                 channel.getPipeline().addLast("handler", new Handler(connection));
 
                 if(future.getCause()!=null){
                     connectFuture.setException(future.getCause());
+                }
+                synchronized (connections){
+                    connections.add(connection);
                 }
 
             }
@@ -103,7 +110,31 @@ public class H2ConnectionManager extends AbstractConnectionManager {
     }
 
     @Override
-    protected DbFuture<Void> doClose(CloseMode mode) {
-        return new DefaultDbFuture<Void>();
+    public DbFuture<Void> doClose(CloseMode mode) throws DbException {
+        synchronized (connections) {
+            final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>();
+            closeFuture.addListener(new DbListener<Void>() {
+                @Override
+                public void onCompletion(DbFuture<Void> future) {
+                    bossExecutor.shutdown();
+                }
+            });
+            final AtomicInteger latch = new AtomicInteger(connections.size());
+            if(connections.isEmpty()){
+                closeFuture.trySetResult(null);
+            }
+            for (H2Connection connection : connections) {
+                connection.close(mode).addListener(new DbListener<Void>() {
+                    @Override
+                    public void onCompletion(DbFuture<Void> future) {
+                        final int currentCount = latch.decrementAndGet();
+                        if (currentCount <= 0) {
+                            closeFuture.trySetResult(null);
+                        }
+                    }
+                });
+            }
+            return closeFuture;
+        }
     }
 }

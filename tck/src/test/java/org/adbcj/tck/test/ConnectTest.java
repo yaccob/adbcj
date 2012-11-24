@@ -64,7 +64,8 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
     public void testConnectAndDisconnect() throws Exception {
         final DbFuture<Connection> future = connectionManager.connect();
         Connection connection = future.get();
-        connection.close().get();
+        final DbFuture<Void> closeFuture = connection.close();
+        closeFuture.get();
     }
 
 //	public void testNonImmediateClose() throws Exception {

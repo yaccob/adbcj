@@ -28,7 +28,7 @@ class FirstServerHandshake extends DecoderState {
                                             int status) throws IOException {
         expectStatus(StatusCodes.STATUS_OK, status);
         if (input.available() < SizeConstants.INT_SIZE) {
-            return ResultAndState.waitForMoreInput();
+            return ResultAndState.waitForMoreInput(this);
         }
         int clientVersion = input.readInt();
         if (clientVersion != Constants.TCP_PROTOCOL_VERSION_12) {
@@ -53,6 +53,6 @@ class SessionIdReceived extends DecoderState {
     protected ResultAndState processFurther(DataInputStream input, Channel channel, int status) throws IOException {
         expectStatus(StatusCodes.STATUS_OK, status);
         currentState.setResult(connection);
-        return ResultAndState.newState(new SessionIdReceived(currentState, connection));
+        return ResultAndState.newState(new AnswerNextRequest(connection));
     }
 }

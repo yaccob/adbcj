@@ -30,7 +30,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
 	private final MysqlCharacterSet charset = MysqlCharacterSet.UTF8_UNICODE_CI;
 
 	protected AbstractMySqlConnection(MysqlConnectionManager connectionManager, LoginCredentials credentials) {
-		super(connectionManager.maxConnections());
+		super(connectionManager.maxQueueLength());
 		this.connectionManager = connectionManager;
 		this.credentials = credentials;
 		this.id = connectionManager.nextId();

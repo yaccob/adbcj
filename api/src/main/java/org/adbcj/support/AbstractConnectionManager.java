@@ -38,7 +38,7 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
 
     protected abstract DbFuture<Void> doClose(CloseMode mode);
 
-    public int maxConnections() {
+    public int maxQueueLength() {
         try {
             int maxConnections = Integer.parseInt(properties.get(StandardProperties.MAX_QUEUE_LENGTH));
             if (maxConnections <= 0) {
