@@ -1,7 +1,5 @@
 package org.adbcj.h2.packets;
 
-import org.adbcj.h2.decoding.SizeConstants;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 

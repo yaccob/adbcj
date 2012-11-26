@@ -1,5 +1,7 @@
 package org.adbcj.h2.decoding;
 
+import org.adbcj.DbException;
+
 /**
  * @author roman.stoffel@gamlor.info
  */
@@ -19,5 +21,15 @@ public enum StatusCodes {
 
     public boolean isStatus(int status) {
         return this.statusValue == status;
+    }
+
+    /**
+     * Expect this status or throw
+     * @param status
+     */
+    public void expectStatusOrThrow(int status) {
+        if(!isStatus(status)){
+            throw new DbException("Expected status: "+status+" bus got: "+status);
+        }
     }
 }

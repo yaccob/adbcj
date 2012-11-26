@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class CloseConnection extends DecoderState {
+public class CloseConnection extends StatusReadingDecoder {
     private final DefaultDbFuture<Void> finishedClose;
 
     public CloseConnection(DefaultDbFuture<Void> finishedClose) {
@@ -20,7 +20,7 @@ public class CloseConnection extends DecoderState {
 
     @Override
     protected ResultAndState processFurther(DataInputStream stream, Channel channel, int status) throws IOException {
-        expectStatus(StatusCodes.STATUS_OK, status);
+        StatusCodes.STATUS_OK.expectStatusOrThrow(status);
         channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {

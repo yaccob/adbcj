@@ -3,10 +3,15 @@ package org.adbcj.h2;
 import org.adbcj.*;
 import org.adbcj.h2.decoding.DecoderState;
 import org.adbcj.h2.packets.CloseCommand;
+import org.adbcj.h2.packets.DirectQuery;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultResultEventsHandler;
+import org.adbcj.support.DefaultResultSet;
 import org.jboss.netty.channel.Channel;
 
 import java.util.ArrayDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -19,6 +24,7 @@ public class H2Connection implements Connection {
     private final Channel channel;
     private final Object lock = new Object();
     private volatile DefaultDbFuture<Void> closeFuture;
+    private final AtomicInteger requestId = new AtomicInteger(0);
 
     public H2Connection(int maxQueueSize, ConnectionManager manager, Channel channel) {
         this.maxQueueSize = maxQueueSize;
@@ -57,12 +63,19 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
+        DefaultResultSet resultSet = new DefaultResultSet();
+        return (DbSessionFuture) executeQuery(sql, eventHandler, resultSet);
     }
 
     @Override
     public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        synchronized (lock){
+            DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(this);
+            requestQueue.add(Request.createQuery(sql,eventHandler, accumulator,resultFuture));
+            channel.write(new DirectQuery(nextId(),nextId(),sql));
+            return resultFuture;
+        }
     }
 
     @Override
@@ -116,5 +129,8 @@ public class H2Connection implements Connection {
         synchronized (lock){
             return requestQueue.poll().getStartState();
         }
+    }
+    private int nextId() {
+        return requestId.incrementAndGet();
     }
 }

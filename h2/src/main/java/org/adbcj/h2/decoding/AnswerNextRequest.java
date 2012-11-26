@@ -9,7 +9,7 @@ import java.io.IOException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public final class AnswerNextRequest extends DecoderState {
+public final class AnswerNextRequest extends StatusReadingDecoder {
     private final H2Connection connection;
 
     public AnswerNextRequest(H2Connection connection) {
@@ -18,6 +18,6 @@ public final class AnswerNextRequest extends DecoderState {
 
     @Override
     protected ResultAndState processFurther(DataInputStream stream, Channel channel, int status) throws IOException {
-        return ResultAndState.switchState(connection.dequeRequest());
+        return ResultAndState.waitForMoreInput(connection.dequeRequest());
     }
 }

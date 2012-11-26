@@ -10,6 +10,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -34,7 +35,10 @@ public class Decoder extends FrameDecoder {
                 return null;
             }
             return "Parsed";
-        } finally {
+        } catch (IOException ex){
+            ex.printStackTrace();
+            throw ex;
+        }finally {
             in.close();
         }
     }

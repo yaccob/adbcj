@@ -9,7 +9,7 @@ import org.jboss.netty.channel.SimpleChannelHandler;
  * @author roman.stoffel@gamlor.info
  */
 class Handler  extends SimpleChannelHandler {
-    public Handler(H2Connection connection) {
+    public Handler() {
         //To change body of created methods use File | Settings | File Templates.
     }
 

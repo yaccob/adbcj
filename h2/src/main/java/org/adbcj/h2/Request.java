@@ -1,8 +1,11 @@
 package org.adbcj.h2;
 
+import org.adbcj.ResultHandler;
 import org.adbcj.h2.decoding.CloseConnection;
 import org.adbcj.h2.decoding.DecoderState;
+import org.adbcj.h2.decoding.QueryPrepare;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.DefaultDbSessionFuture;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -26,5 +29,9 @@ public class Request {
 
     public static Request createCloseRequest(DefaultDbFuture<Void> future) {
         return new Request(future,new CloseConnection(future));
+    }
+
+    public static <T> Request createQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DefaultDbSessionFuture<T> resultFuture) {
+        return new Request(resultFuture,new QueryPrepare(sql,eventHandler,accumulator,resultFuture));
     }
 }

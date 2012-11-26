@@ -62,12 +62,9 @@ public class MysqlField extends DefaultField {
 				flags.contains(FieldFlag.AUTO_INCREMENT),
 				mysqlType.isCaseSensitive(),
 				mysqlType.isCurrency(),
-				false,
 				!flags.contains(FieldFlag.NOT_NULL),
 				true, // TODO Determine how to handle currency flag for MySQL driver
-				false, // TODO Determine what to do with definitely writable flag for MySQL driver
 				!flags.contains(FieldFlag.UNSIGNED),
-				false, // TODO Determine what to do with writable flag for MySQL driver
 				mysqlType.getClassName());
 		this.mysqlType = mysqlType;
 		this.characterSet = characterSet;

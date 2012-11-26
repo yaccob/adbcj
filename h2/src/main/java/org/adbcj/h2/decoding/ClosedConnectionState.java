@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public final class ClosedConnectionState extends DecoderState {
+public final class ClosedConnectionState extends StatusReadingDecoder {
     public static final ClosedConnectionState INSTANCE = new ClosedConnectionState();
     private ClosedConnectionState(){}
 

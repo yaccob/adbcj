@@ -2,13 +2,14 @@ package org.adbcj.h2.packets;
 
 import org.adbcj.DbException;
 import org.adbcj.h2.decoding.Constants;
+import org.adbcj.h2.decoding.IoUtils;
 import org.adbcj.h2.h2.SHA256;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import static org.adbcj.h2.decoding.SizeConstants.CHAR_SIZE;
-import static org.adbcj.h2.decoding.SizeConstants.INT_SIZE;
+import static org.adbcj.h2.packets.SizeConstants.CHAR_SIZE;
+import static org.adbcj.h2.packets.SizeConstants.INT_SIZE;
 
 /**
  * @author roman.stoffel@gamlor.info

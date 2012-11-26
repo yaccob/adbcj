@@ -130,7 +130,7 @@ public enum Type {
 		case Types.VARCHAR:
 			return Type.VARCHAR;
 		default:
-			throw new IllegalStateException("Don't know how to handle column type" + jdbcType);
+			throw new IllegalStateException("Don't know how to handle column type: " + jdbcType);
 		}
 	}
 }

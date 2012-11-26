@@ -57,6 +57,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
                 pipeline.addLast(ENCODER, new Encoder());
+                pipeline.addLast("handler", new Handler());
 
                 return pipeline;
             }
@@ -93,8 +94,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                                 credentials.getUserName(),
                                 credentials.getPassword()));
                 H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
-                channel.getPipeline().addLast(DECODER, new Decoder(connectFuture,connection));
-                channel.getPipeline().addLast("handler", new Handler(connection));
+                channel.getPipeline().addFirst(DECODER, new Decoder(connectFuture,connection));
 
                 if(future.getCause()!=null){
                     connectFuture.setException(future.getCause());

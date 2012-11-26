@@ -4,6 +4,7 @@ import org.adbcj.Connection;
 import org.adbcj.DbException;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.packets.AnnounceClientSession;
+import org.adbcj.h2.packets.SizeConstants;
 import org.adbcj.support.DefaultDbFuture;
 import org.jboss.netty.channel.Channel;
 
@@ -13,7 +14,7 @@ import java.io.IOException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-class FirstServerHandshake extends DecoderState {
+class FirstServerHandshake extends StatusReadingDecoder {
     private final DefaultDbFuture<Connection> currentState;
     private final H2Connection connection;
 
@@ -26,7 +27,7 @@ class FirstServerHandshake extends DecoderState {
     protected ResultAndState processFurther(DataInputStream input,
                                             Channel channel,
                                             int status) throws IOException {
-        expectStatus(StatusCodes.STATUS_OK, status);
+        StatusCodes.STATUS_OK.expectStatusOrThrow(status);
         if (input.available() < SizeConstants.INT_SIZE) {
             return ResultAndState.waitForMoreInput(this);
         }
@@ -40,7 +41,7 @@ class FirstServerHandshake extends DecoderState {
     }
 }
 
-class SessionIdReceived extends DecoderState {
+class SessionIdReceived extends StatusReadingDecoder {
     private final DefaultDbFuture<Connection> currentState;
     private final H2Connection connection;
 
@@ -51,7 +52,7 @@ class SessionIdReceived extends DecoderState {
 
     @Override
     protected ResultAndState processFurther(DataInputStream input, Channel channel, int status) throws IOException {
-        expectStatus(StatusCodes.STATUS_OK, status);
+        StatusCodes.STATUS_OK.expectStatusOrThrow(status);
         currentState.setResult(connection);
         return ResultAndState.newState(new AnswerNextRequest(connection));
     }

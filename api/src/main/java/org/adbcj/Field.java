@@ -60,16 +60,10 @@ public interface Field {
 	
 	boolean isCurrency();
 	
-	boolean isDefinitelyWritable();
-	
 	boolean isNullable();
 	
 	boolean isReadOnly();
 	
-	boolean isSearchable();
-	
 	boolean isSigned();
-	
-	boolean isWritable();
 	
 }

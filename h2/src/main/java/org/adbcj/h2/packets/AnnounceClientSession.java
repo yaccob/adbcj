@@ -1,6 +1,6 @@
 package org.adbcj.h2.packets;
 
-import org.adbcj.h2.decoding.SizeConstants;
+import org.adbcj.h2.decoding.IoUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class AnnounceClientSession implements ClientToServerPacket {
     @Override
     public void writeToStream(DataOutputStream stream) throws IOException {
         stream.writeInt(SESSION_SET_ID);
-        IoUtils.writeString(stream,sessionId);
+        IoUtils.writeString(stream, sessionId);
     }
 
     @Override

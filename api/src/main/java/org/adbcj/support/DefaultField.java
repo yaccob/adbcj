@@ -34,12 +34,9 @@ public class DefaultField implements Field {
 	private final boolean autoIncrement;
 	private final boolean caseSensitive;
 	private final boolean currency;
-	private final boolean definitelyWritable;
 	private final boolean nullable;
 	private final boolean readOnly;
-	private final boolean searchable;
 	private final boolean signed;
-	private final boolean writable;
 	private final String fieldClassName;
 	
 	public DefaultField(
@@ -56,12 +53,9 @@ public class DefaultField implements Field {
 			boolean autoIncrement,
 			boolean caseSensitive,
 			boolean currency,
-			boolean definitelyWritable,
 			boolean nullable,
 			boolean readOnly,
-			boolean searchable,
 			boolean signed,
-			boolean writable,
 			String fieldClassName
 			) {
 		this.index = index;
@@ -77,12 +71,9 @@ public class DefaultField implements Field {
 		this.autoIncrement = autoIncrement;
 		this.caseSensitive = caseSensitive;
 		this.currency = currency;
-		this.definitelyWritable = definitelyWritable;
 		this.nullable = nullable;
 		this.readOnly = readOnly;
-		this.searchable = searchable;
 		this.signed = signed;
-		this.writable = writable;
 		this.fieldClassName = fieldClassName;
 	}
 	
@@ -142,10 +133,6 @@ public class DefaultField implements Field {
 		return currency;
 	}
 
-	public boolean isDefinitelyWritable() {
-		return definitelyWritable;
-	}
-
 	public boolean isNullable() {
 		return nullable;
 	}
@@ -154,16 +141,8 @@ public class DefaultField implements Field {
 		return readOnly;
 	}
 
-	public boolean isSearchable() {
-		return searchable;
-	}
-
 	public boolean isSigned() {
 		return signed;
-	}
-
-	public boolean isWritable() {
-		return writable;
 	}
 
 	@Override

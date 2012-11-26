@@ -38,12 +38,9 @@ public class ResultSetCopier {
                     metaData.isAutoIncrement(i),
                     metaData.isCaseSensitive(i),
                     metaData.isCurrency(i),
-                    metaData.isDefinitelyWritable(i),
                     metaData.isNullable(i) == 1,
                     metaData.isReadOnly(i),
-                    metaData.isSearchable(i),
                     metaData.isSigned(i),
-                    metaData.isWritable(i),
                     metaData.getColumnClassName(i)
             );
             fields.add(field);
