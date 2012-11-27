@@ -2,6 +2,7 @@ package org.adbcj.h2.decoding;
 
 import org.adbcj.Field;
 import org.adbcj.ResultHandler;
+import org.adbcj.h2.H2Connection;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultField;
 import org.jboss.netty.channel.Channel;
@@ -80,11 +81,7 @@ public class ColumnDecoder<T>  implements DecoderState {
             columnsBuildUp.add(field);
             if((columnsBuildUp.size())==columnsAvailable){
                 eventHandler.endFields(accumulator);
-                return ResultAndState.newState(
-                        new RowDecoder<T>(eventHandler,
-                                accumulator,
-                                resultFuture,columnsBuildUp, rows)
-                );
+                return goToRowParsing();
             } else{
                 return ResultAndState.newState(
                         new ColumnDecoder<T>(eventHandler,
@@ -93,6 +90,22 @@ public class ColumnDecoder<T>  implements DecoderState {
             }
         } else{
             return ResultAndState.waitForMoreInput(this);
+        }
+    }
+
+    private ResultAndState goToRowParsing() {
+        if(rows==0){
+            eventHandler.startResults(accumulator);
+            eventHandler.endResults(accumulator);
+            resultFuture.trySetResult(accumulator);
+            return ResultAndState.newState(new AnswerNextRequest((H2Connection) resultFuture.getSession()));
+        } else{
+            return ResultAndState.newState(
+                    new RowDecoder<T>(eventHandler,
+                            accumulator,
+                            resultFuture, columnsBuildUp, rows)
+            );
+
         }
     }
 }

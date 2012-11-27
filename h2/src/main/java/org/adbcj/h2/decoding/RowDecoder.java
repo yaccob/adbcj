@@ -56,7 +56,6 @@ public class RowDecoder<T> implements DecoderState {
         if(row.couldReadResult && !row.result){
             return finishResultRead();
         }
-
         return decodeRow(stream, row);
 
     }
