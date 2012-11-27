@@ -24,9 +24,9 @@ public class CloseConnection extends StatusReadingDecoder {
         channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                finishedClose.setResult(null);
+                finishedClose.trySetResult(null);
             }
         });
-        return ResultAndState.newState(ClosedConnectionState.INSTANCE);
+        return ResultAndState.newState(new ClosedConnectionState(finishedClose));
     }
 }

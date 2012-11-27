@@ -11,10 +11,12 @@ import org.adbcj.support.DefaultDbSessionFuture;
  * @author roman.stoffel@gamlor.info
  */
 public class Request {
+    private final String description;
     private final DefaultDbFuture toComplete;
     private final DecoderState startState;
 
-    private Request(DefaultDbFuture toComplete, DecoderState startState) {
+    private Request(String description,DefaultDbFuture toComplete, DecoderState startState) {
+        this.description = description;
         this.toComplete = toComplete;
         this.startState = startState;
     }
@@ -28,10 +30,15 @@ public class Request {
     }
 
     public static Request createCloseRequest(DefaultDbFuture<Void> future) {
-        return new Request(future,new CloseConnection(future));
+        return new Request("Close-Request",future,new CloseConnection(future));
     }
 
     public static <T> Request createQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DefaultDbSessionFuture<T> resultFuture) {
-        return new Request(resultFuture,new QueryPrepare(sql,eventHandler,accumulator,resultFuture));
+        return new Request("Query Request: "+sql,resultFuture,new QueryPrepare(sql,eventHandler,accumulator,resultFuture));
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(description);
     }
 }

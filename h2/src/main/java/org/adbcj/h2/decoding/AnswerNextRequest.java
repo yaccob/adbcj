@@ -18,6 +18,9 @@ public final class AnswerNextRequest extends StatusReadingDecoder {
 
     @Override
     protected ResultAndState processFurther(DataInputStream stream, Channel channel, int status) throws IOException {
-        return ResultAndState.waitForMoreInput(connection.dequeRequest());
+        final DecoderState request = connection.dequeRequest();
+        stream.reset();
+        stream.mark(Integer.MAX_VALUE);
+        return request.decode(stream, channel);
     }
 }

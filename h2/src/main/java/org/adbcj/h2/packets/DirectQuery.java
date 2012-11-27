@@ -57,4 +57,11 @@ public class DirectQuery implements ClientToServerPacket{
                 SizeConstants.INT_SIZE + // command id
                 0;
     }
+
+    @Override
+    public String toString() {
+        return "DirectQuery{" +
+                "sql='" + sql + '\'' +
+                '}';
+    }
 }

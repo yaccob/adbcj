@@ -127,10 +127,19 @@ public class H2Connection implements Connection {
 
     public DecoderState dequeRequest() {
         synchronized (lock){
-            return requestQueue.poll().getStartState();
+            final Request request = requestQueue.poll();
+            return request.getStartState();
         }
     }
     private int nextId() {
         return requestId.incrementAndGet();
+    }
+
+    public void tryCompleteClose() {
+        synchronized (lock){
+            if(null!=closeFuture){
+                closeFuture.trySetResult(null);
+            }
+        }
     }
 }
