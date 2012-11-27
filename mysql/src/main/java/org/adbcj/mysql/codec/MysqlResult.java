@@ -29,7 +29,7 @@ class MysqlResult extends DefaultResult {
                 EnumSet.of(FieldFlag.NOT_NULL),0);
         generatedKeys.addField(autoIdField);
         for(int i=0;i<affectedRows;i++){
-            DefaultRow row = new DefaultRow(generatedKeys,new DefaultValue(autoIdField, autoKey+i));
+            DefaultRow row = new DefaultRow(generatedKeys,new DefaultValue(autoKey+i));
             generatedKeys.addResult(row);
         }
         this.generatedKeys = generatedKeys;

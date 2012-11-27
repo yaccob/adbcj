@@ -16,15 +16,12 @@
  */
 package org.adbcj.support;
 
-import java.util.AbstractMap;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.adbcj.Field;
 import org.adbcj.ResultSet;
 import org.adbcj.Row;
 import org.adbcj.Value;
+
+import java.util.*;
 
 
 public class DefaultRow extends AbstractMap<Object, Value> implements Row {
@@ -48,9 +45,11 @@ public class DefaultRow extends AbstractMap<Object, Value> implements Row {
 	public Set<java.util.Map.Entry<Object, Value>> entrySet() {
 		if (entrySet == null) {
 			Set<java.util.Map.Entry<Object, Value>> set = new HashSet<Entry<Object,Value>>();
-			for (Value value : values) {
-				set.add(new AbstractMap.SimpleEntry<Object, Value>(value.getField(), value));
-			}
+            final List<? extends Field> fields = resultSet.getFields();
+            for(int i=0;i< fields.size();i++){
+                set.add(new AbstractMap.SimpleEntry<Object, Value>(fields.get(i), values[i]));
+
+            }
 			entrySet = Collections.unmodifiableSet(set);
 		}
 		return entrySet;

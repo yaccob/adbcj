@@ -40,7 +40,7 @@ class QueryHeader<T> extends StatusReadingDecoder {
             return ResultAndState.newState(
                     new ColumnDecoder<T>(eventHandler,
                             accumulator,
-                            resultFuture, rowCount, columnCount, 0)
+                            resultFuture, rowCount, columnCount)
             );
         }
 

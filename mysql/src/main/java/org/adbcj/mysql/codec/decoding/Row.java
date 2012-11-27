@@ -99,7 +99,7 @@ class Row extends DecoderState {
 
             }
 
-            values[field.getIndex()] = new DefaultValue(field, value);
+            values[field.getIndex()] = new DefaultValue(value);
         }
 
     }
@@ -167,7 +167,7 @@ class Row extends DecoderState {
                                 + field.getColumnType());
                 }
             }
-            values[field.getIndex()] = new DefaultValue(field, value);
+            values[field.getIndex()] = new DefaultValue(value);
             i++;
             if (i < fields.size()) {
                 fieldCount = in.read();

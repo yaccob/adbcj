@@ -11,6 +11,8 @@ import java.io.IOException;
 public class DirectQuery implements ClientToServerPacket{
     public static final int SESSION_PREPARE = 0;
     public static final int COMMAND_EXECUTE_QUERY = 2;
+    public static final int RESULT_CLOSE = 7;
+    public static final int COMMAND_CLOSE = 4;
     private int id;
     private int queryId;
     private String sql;
@@ -29,8 +31,13 @@ public class DirectQuery implements ClientToServerPacket{
         stream.writeInt(COMMAND_EXECUTE_QUERY);
         stream.writeInt(id);
         stream.writeInt(queryId);
+        stream.writeInt(Integer.MAX_VALUE); // max rows size
         stream.writeInt(Integer.MAX_VALUE); // fetch size
         stream.writeInt(0); // parameters
+        stream.writeInt(RESULT_CLOSE);
+        stream.writeInt(queryId);
+        stream.writeInt(COMMAND_CLOSE);
+        stream.writeInt(id);
     }
 
     @Override
@@ -41,8 +48,13 @@ public class DirectQuery implements ClientToServerPacket{
                 SizeConstants.INT_SIZE + // Query command
                 SizeConstants.INT_SIZE + // again, command id
                 SizeConstants.INT_SIZE + // query id
+                SizeConstants.INT_SIZE + // max rows size
                 SizeConstants.INT_SIZE + // fetch size
                 SizeConstants.INT_SIZE + // parameters
+                SizeConstants.INT_SIZE + // result close
+                SizeConstants.INT_SIZE + // result id
+                SizeConstants.INT_SIZE + // command close
+                SizeConstants.INT_SIZE + // command id
                 0;
     }
 }

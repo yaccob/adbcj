@@ -17,7 +17,6 @@
 package org.adbcj.support;
 
 import org.adbcj.DbException;
-import org.adbcj.Field;
 import org.adbcj.Value;
 
 import java.math.BigDecimal;
@@ -27,17 +26,11 @@ import java.util.Date;
 
 public class DefaultValue implements Value {
 
-	private final Field field;
 	private final Object value;
     private final static String[] SUPPORTED_DATE_FORMATS = {"yyyy-MM-dd HH:mm:ss.S","yyyy-MM-dd","HH:mm:ss"};
 
-	public DefaultValue(Field field, Object value) {
-		this.field = field;
+	public DefaultValue(Object value) {
 		this.value = value;
-	}
-
-	public Field getField() {
-		return field;
 	}
 
 	public BigDecimal getBigDecimal() {

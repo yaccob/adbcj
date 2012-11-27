@@ -27,13 +27,6 @@ import java.util.Date;
 public interface Value {
 
 	/**
-	 * Return the field type for this value.
-	 *
-	 * @return  the field type for this value.
-	 */
-	Field getField();
-
-	/**
 	 * The value as a {@code BigDecimal} with full precision .  If the value is {@code null}, returns {@code null}.
 	 *
 	 * @return the value as a {@link BigDecimal} or {@code null} if the value is {@code null}.

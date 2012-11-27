@@ -29,8 +29,7 @@ import java.util.concurrent.TimeoutException;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-@Test(invocationCount = 1, threadPoolSize = 5, timeOut = 30000)
-//@Test(invocationCount = 1, threadPoolSize = 5, timeOut = 30000)
+@Test(invocationCount = 2, threadPoolSize = 5, timeOut = 30000)
 public class ConnectTest extends AbstractWithConnectionManagerTest{
 
 

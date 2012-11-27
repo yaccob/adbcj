@@ -95,7 +95,7 @@ public class ResultSetCopier {
                 if (jdbcResultSet.wasNull()) {
                     value = null;
                 }
-                eventHandler.value(new DefaultValue(field, value), accumulator);
+                eventHandler.value(new DefaultValue(value), accumulator);
             }
             eventHandler.endRow(accumulator);
         }

@@ -14,6 +14,7 @@ public class DefaultResultEventsHandler implements ResultHandler<DefaultResultSe
     private static final Logger logger = LoggerFactory.getLogger(DefaultResultEventsHandler.class);
 
     private Value[] currentRow;
+    private int rowIndex;
 
     public void startFields(DefaultResultSet accumulator) {
         logger.trace("ResultSetEventHandler: startFields");
@@ -42,7 +43,8 @@ public class DefaultResultEventsHandler implements ResultHandler<DefaultResultSe
     public void value(Value value, DefaultResultSet accumulator) {
         logger.trace("ResultSetEventHandler: value");
 
-        currentRow[value.getField().getIndex()] = value;
+        currentRow[rowIndex%currentRow.length] = value;
+        rowIndex++;
     }
 
     public void endRow(DefaultResultSet accumulator) {

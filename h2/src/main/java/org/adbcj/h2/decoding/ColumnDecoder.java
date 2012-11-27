@@ -1,5 +1,6 @@
 package org.adbcj.h2.decoding;
 
+import org.adbcj.Field;
 import org.adbcj.ResultHandler;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultField;
@@ -7,6 +8,8 @@ import org.jboss.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.adbcj.h2.decoding.IoUtils.*;
 
@@ -19,20 +22,28 @@ public class ColumnDecoder<T>  implements DecoderState {
     private final DefaultDbSessionFuture<T> resultFuture;
     private final int rows;
     private final int columnsAvailable;
-    private final int columnToParse;
+    private final List<Field> columnsBuildUp;
 
     public ColumnDecoder(ResultHandler<T> eventHandler,
+                          T accumulator,
+                          DefaultDbSessionFuture<T> resultFuture,
+                          int rows,
+                          int columnsAvailable){
+        this(eventHandler, accumulator, resultFuture, rows, columnsAvailable, new ArrayList<Field>());
+    }
+
+    private ColumnDecoder(ResultHandler<T> eventHandler,
                          T accumulator,
                          DefaultDbSessionFuture<T> resultFuture,
                          int rows,
                          int columnsAvailable,
-                         int columnToParse) {
+                         List<Field> columnsBuildUp) {
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
         this.resultFuture = resultFuture;
         this.rows = rows;
         this.columnsAvailable = columnsAvailable;
-        this.columnToParse = columnToParse;
+        this.columnsBuildUp = columnsBuildUp;
     }
 
     @Override
@@ -49,7 +60,7 @@ public class ColumnDecoder<T>  implements DecoderState {
         ResultOrWait<Integer> nullable = tryReadNextInt(stream, autoIncrement);
 
         if(nullable.couldReadResult){
-            final DefaultField field = new DefaultField(columnToParse,
+            final DefaultField field = new DefaultField(columnsBuildUp.size(),
                     "",
                     schemaName.result,
                     tableName.result,
@@ -57,7 +68,7 @@ public class ColumnDecoder<T>  implements DecoderState {
                     H2Types.typeCodeToType(columnType.result),
                     columnName.result,
                     columnName.result,
-                    (int) precision.result.intValue(),
+                    precision.result.intValue(),
                     scale.result,
                     autoIncrement.result,
                     false,
@@ -66,18 +77,19 @@ public class ColumnDecoder<T>  implements DecoderState {
                     true, true, "");
 
             eventHandler.field(field,accumulator );
-            if((columnToParse+1)==columnsAvailable){
+            columnsBuildUp.add(field);
+            if((columnsBuildUp.size())==columnsAvailable){
                 eventHandler.endFields(accumulator);
-                return ResultAndState.waitForMoreInput(
+                return ResultAndState.newState(
                         new RowDecoder<T>(eventHandler,
                                 accumulator,
-                                resultFuture,rows)
+                                resultFuture,columnsBuildUp, rows)
                 );
             } else{
                 return ResultAndState.newState(
                         new ColumnDecoder<T>(eventHandler,
                                 accumulator,
-                                resultFuture,rows, columnsAvailable, columnToParse+1));
+                                resultFuture,rows, columnsAvailable, columnsBuildUp));
             }
         } else{
             return ResultAndState.waitForMoreInput(this);

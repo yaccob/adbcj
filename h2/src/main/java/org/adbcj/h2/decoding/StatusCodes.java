@@ -29,7 +29,7 @@ public enum StatusCodes {
      */
     public void expectStatusOrThrow(int status) {
         if(!isStatus(status)){
-            throw new DbException("Expected status: "+status+" bus got: "+status);
+            throw new DbException("Expected status: "+this+" bus got: "+status);
         }
     }
 }
