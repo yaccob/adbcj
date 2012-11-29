@@ -69,9 +69,6 @@ public class RowDecoder<T> implements DecoderState {
             values[i] = lastValue;
         }
         if (lastValue.couldReadResult) {
-            if (rowToRead == 0) {
-                eventHandler.startResults(accumulator);
-            }
             eventHandler.startRow(accumulator);
             for (ResultOrWait<Value> value : values) {
                 eventHandler.value(value.result, accumulator);

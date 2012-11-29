@@ -34,7 +34,11 @@ public class Request {
     }
 
     public static <T> Request createQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DefaultDbSessionFuture<T> resultFuture) {
-        return new Request("Query Request: "+sql,resultFuture,new QueryPrepare(sql,eventHandler,accumulator,resultFuture));
+        return new Request("Query Request: "+sql,resultFuture,
+                new QueryPrepare<T>(sql,
+                        new SafeResultHandlerDecorator<T>(eventHandler),
+                        accumulator,
+                        resultFuture));
     }
 
     @Override
