@@ -81,7 +81,11 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<Result> executeUpdate(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(this);
+        int sessionId = nextId();
+        final Request request = Request.executeUpdate(sql, resultFuture, sessionId);
+        queResponseHandlerAndSendMessage(request);
+        return resultFuture;
     }
 
     @Override

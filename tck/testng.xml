@@ -88,7 +88,7 @@
         </packages>
         <classes>
             <class name="org.adbcj.tck.InitH2" />
-            <class name="org.adbcj.tck.test.SelectTest"/>
+            <class name="org.adbcj.tck.test.UpdateTest"/>
             <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
         </classes>

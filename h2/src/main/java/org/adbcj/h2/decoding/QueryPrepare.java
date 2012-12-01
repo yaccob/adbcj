@@ -1,7 +1,6 @@
 package org.adbcj.h2.decoding;
 
 import org.adbcj.DbException;
-import org.adbcj.ResultHandler;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.Request;
@@ -16,20 +15,17 @@ import java.io.IOException;
  * @author roman.stoffel@gamlor.info
  */
 public class QueryPrepare<T> extends StatusReadingDecoder {
-    private final ResultHandler<T> eventHandler;
-    private final T accumulator;
     private final DefaultDbSessionFuture<T> resultFuture;
+    private final Request followUpRequest;
     private final int sessionId;
 
-    public QueryPrepare(ResultHandler<T> eventHandler,
-                        T accumulator,
+    public QueryPrepare(Request followUpRequest,
                         DefaultDbSessionFuture<T> resultFuture,
                         int sessionId) {
         super((H2Connection) resultFuture.getSession());
-        this.eventHandler = eventHandler;
-        this.accumulator = accumulator;
-        this.resultFuture = resultFuture;
+        this.followUpRequest = followUpRequest;
         this.sessionId = sessionId;
+        this.resultFuture = resultFuture;
     }
 
     @Override
@@ -42,8 +38,7 @@ public class QueryPrepare<T> extends StatusReadingDecoder {
             if(0!=paramsSite){
                 throw new DbException("TODO");
             } else{
-                connection.queResponseHandlerAndSendMessage(
-                        Request.executeQueryAndClose(eventHandler, accumulator, resultFuture, sessionId, connection.nextId()));
+                connection.queResponseHandlerAndSendMessage(followUpRequest);
 
             }
             return ResultAndState.newState(new AnswerNextRequest(connection));

@@ -1,10 +1,8 @@
 package org.adbcj.h2;
 
+import org.adbcj.Result;
 import org.adbcj.ResultHandler;
-import org.adbcj.h2.decoding.CloseConnection;
-import org.adbcj.h2.decoding.DecoderState;
-import org.adbcj.h2.decoding.QueryHeader;
-import org.adbcj.h2.decoding.QueryPrepare;
+import org.adbcj.h2.decoding.*;
 import org.adbcj.h2.packets.*;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
@@ -40,27 +38,6 @@ public class Request {
         return new Request("Close-Request",future,new CloseConnection(future,connection),new CloseCommand());
     }
 
-    public static <T> Request createQuery(String sql,
-                                          ResultHandler<T> eventHandler,
-                                          T accumulator,
-                                          DefaultDbSessionFuture<T> resultFuture,
-                                          int sessionId) {
-        return new Request("Query Request: "+sql,resultFuture,
-                new QueryPrepare<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
-                        accumulator,
-                        resultFuture,sessionId), new QueryPrepareCommand(sessionId, sql));
-    }
-    public static <T> Request executeQueryAndClose(ResultHandler<T> eventHandler,
-                                                   T accumulator,
-                                                   DefaultDbSessionFuture<T> resultFuture,
-                                                   int sessionId,
-                                                   int queryId) {
-        return new Request("ExecuteQuery",resultFuture,
-                new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
-                        accumulator,
-                        resultFuture), new CompoundCommand(new QueryExecute(sessionId, queryId),new CommandClose(sessionId)));
-    }
-
     @Override
     public String toString() {
         return String.valueOf(description);
@@ -68,5 +45,40 @@ public class Request {
 
     public ClientToServerPacket getRequest() {
         return request;
+    }
+
+    public static <T> Request createQuery(String sql,
+                                          ResultHandler<T> eventHandler,
+                                          T accumulator,
+                                          DefaultDbSessionFuture<T> resultFuture,
+                                          int sessionId) {
+        int queryId = ((H2Connection)resultFuture.getSession()).nextId();
+        final Request executeQuery = executeQueryAndClose(sql,eventHandler, accumulator, resultFuture, sessionId, queryId);
+        return new Request("Prepare Query: "+sql,resultFuture,
+                new QueryPrepare<T>(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+    }
+
+    public static Request executeUpdate(String sql, DefaultDbSessionFuture<Result> resultFuture, int sessionId) {
+        final Request executeQuery = executeUpdateAndClose(sql, resultFuture, sessionId);
+        return new Request("Prepare Query: "+sql,resultFuture,
+                new QueryPrepare<Result>(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+    }
+
+    static <T> Request executeQueryAndClose(String sql,ResultHandler<T> eventHandler,
+                                            T accumulator,
+                                            DefaultDbSessionFuture<T> resultFuture,
+                                            int sessionId,
+                                            int queryId) {
+        return new Request("ExecuteQuery: "+sql,resultFuture,
+                new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
+                        accumulator,
+                        resultFuture), new CompoundCommand(new QueryExecute(sessionId, queryId),new CommandClose(sessionId)));
+    }
+
+    static <T> Request executeUpdateAndClose(String sql,
+                                            DefaultDbSessionFuture<Result> resultFuture,
+                                            int sessionId) {
+        return new Request("ExecuteUpdate: "+sql,resultFuture,
+                new UpdateResult(resultFuture), new CompoundCommand(new ExecuteUpdate(sessionId),new CommandClose(sessionId)));
     }
 }
