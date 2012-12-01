@@ -1,13 +1,13 @@
 package org.adbcj.h2;
 
 import org.adbcj.*;
-import org.adbcj.h2.packets.CloseCommand;
-import org.adbcj.h2.packets.DirectQuery;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
 import org.jboss.netty.channel.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author roman.stoffel@gamlor.info
  */
 public class H2Connection implements Connection {
+    private static final Logger logger = LoggerFactory.getLogger(H2Connection.class);
     private final String sessionId = StringUtils.convertBytesToHex(MathUtils.secureRandomBytes(32));
     private final ArrayDeque<Request> requestQueue;
     private final int maxQueueSize;
@@ -71,8 +72,9 @@ public class H2Connection implements Connection {
     public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
         synchronized (lock){
             DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(this);
-            requestQueue.add(Request.createQuery(sql,eventHandler, accumulator,resultFuture));
-            channel.write(new DirectQuery(nextId(),nextId(),sql));
+            int sessionId = nextId();
+            final Request request = Request.createQuery(sql, eventHandler, accumulator, resultFuture, sessionId);
+            queResponseHandlerAndSendMessage(request);
             return resultFuture;
         }
     }
@@ -104,8 +106,7 @@ public class H2Connection implements Connection {
                 return closeFuture;
             }
             closeFuture = new DefaultDbFuture<Void>();
-            requestQueue.add(Request.createCloseRequest(closeFuture,this));
-            channel.write(new CloseCommand());
+            queResponseHandlerAndSendMessage(Request.createCloseRequest(closeFuture,this));
             return closeFuture;
         }
     }
@@ -120,6 +121,13 @@ public class H2Connection implements Connection {
         return !isClosed();
     }
 
+    public void queResponseHandlerAndSendMessage(Request request) {
+        synchronized (lock){
+            requestQueue.add(request);
+            channel.write(request.getRequest());
+        }
+    }
+
     public String getSessionId() {
         return sessionId;
     }
@@ -127,10 +135,13 @@ public class H2Connection implements Connection {
     public Request dequeRequest() {
         synchronized (lock){
             final Request request = requestQueue.poll();
+            if(logger.isDebugEnabled()){
+                logger.debug("Dequeued request: {}",request);
+            }
             return request;
         }
     }
-    private int nextId() {
+    public int nextId() {
         return requestId.incrementAndGet();
     }
 

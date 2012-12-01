@@ -13,7 +13,7 @@ import java.io.IOException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-class QueryHeader<T> extends StatusReadingDecoder {
+public class QueryHeader<T> extends StatusReadingDecoder {
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
     private final DefaultDbSessionFuture<T> resultFuture;
