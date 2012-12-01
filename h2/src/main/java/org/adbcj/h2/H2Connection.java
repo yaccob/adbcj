@@ -1,7 +1,6 @@
 package org.adbcj.h2;
 
 import org.adbcj.*;
-import org.adbcj.h2.decoding.DecoderState;
 import org.adbcj.h2.packets.CloseCommand;
 import org.adbcj.h2.packets.DirectQuery;
 import org.adbcj.support.DefaultDbFuture;
@@ -105,7 +104,7 @@ public class H2Connection implements Connection {
                 return closeFuture;
             }
             closeFuture = new DefaultDbFuture<Void>();
-            requestQueue.add(Request.createCloseRequest(closeFuture));
+            requestQueue.add(Request.createCloseRequest(closeFuture,this));
             channel.write(new CloseCommand());
             return closeFuture;
         }
@@ -125,10 +124,10 @@ public class H2Connection implements Connection {
         return sessionId;
     }
 
-    public DecoderState dequeRequest() {
+    public Request dequeRequest() {
         synchronized (lock){
             final Request request = requestQueue.poll();
-            return request.getStartState();
+            return request;
         }
     }
     private int nextId() {

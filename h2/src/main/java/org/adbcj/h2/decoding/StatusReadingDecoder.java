@@ -1,5 +1,6 @@
 package org.adbcj.h2.decoding;
 
+import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.packets.SizeConstants;
 import org.jboss.netty.channel.Channel;
@@ -11,6 +12,11 @@ import java.io.IOException;
  * @author roman.stoffel@gamlor.info
  */
 public abstract class StatusReadingDecoder implements DecoderState {
+    protected final H2Connection connection;
+
+    protected StatusReadingDecoder(H2Connection connection) {
+        this.connection = connection;
+    }
 
     public final ResultAndState decode(DataInputStream stream, Channel channel) throws IOException {
         if(stream.available()< SizeConstants.INT_SIZE){
@@ -24,7 +30,8 @@ public abstract class StatusReadingDecoder implements DecoderState {
             ResultOrWait<Integer> errorCode = IoUtils.tryReadNextInt(stream, sql);
             ResultOrWait<String> stackTrace = IoUtils.tryReadNextString(stream, errorCode);
             if(stackTrace.couldReadResult) {
-                throw new H2DbException(sqlstate.result,message.result,sql.result,errorCode.result,stackTrace.result);
+                handleException(new H2DbException(sqlstate.result,message.result,sql.result,errorCode.result,stackTrace.result));
+                return ResultAndState.newState(new AnswerNextRequest(connection));
             }  else{
                 return ResultAndState.waitForMoreInput(this);
             }
@@ -32,4 +39,6 @@ public abstract class StatusReadingDecoder implements DecoderState {
         return processFurther(stream, channel, status);
     }
     protected abstract ResultAndState processFurther(DataInputStream stream, Channel channel, int status) throws IOException;
+    protected abstract void handleException(H2DbException exception);
+
 }

@@ -1,5 +1,7 @@
 package org.adbcj.h2.decoding;
 
+import org.adbcj.h2.H2Connection;
+import org.adbcj.h2.H2DbException;
 import org.adbcj.support.DefaultDbFuture;
 import org.jboss.netty.channel.Channel;
 
@@ -13,8 +15,8 @@ public final class ClosedConnectionState extends StatusReadingDecoder {
 
     private final DefaultDbFuture<Void> finishedClose;
 
-    public ClosedConnectionState(DefaultDbFuture<Void> finishedClose) {
-
+    public ClosedConnectionState(DefaultDbFuture<Void> finishedClose, H2Connection connection) {
+        super(connection);
         this.finishedClose = finishedClose;
     }
 
@@ -24,4 +26,8 @@ public final class ClosedConnectionState extends StatusReadingDecoder {
         return ResultAndState.waitForMoreInput(this);
     }
 
+    @Override
+    protected void handleException(H2DbException exception) {
+        finishedClose.trySetException(exception);
+    }
 }

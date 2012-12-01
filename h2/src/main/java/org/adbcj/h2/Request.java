@@ -29,14 +29,13 @@ public class Request {
         return startState;
     }
 
-    public static Request createCloseRequest(DefaultDbFuture<Void> future) {
-        return new Request("Close-Request",future,new CloseConnection(future));
+    public static Request createCloseRequest(DefaultDbFuture<Void> future, H2Connection connection) {
+        return new Request("Close-Request",future,new CloseConnection(future,connection));
     }
 
     public static <T> Request createQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DefaultDbSessionFuture<T> resultFuture) {
         return new Request("Query Request: "+sql,resultFuture,
-                new QueryPrepare<T>(sql,
-                        new SafeResultHandlerDecorator<T>(eventHandler),
+                new QueryPrepare<T>(new SafeResultHandlerDecorator<T>(eventHandler),
                         accumulator,
                         resultFuture));
     }

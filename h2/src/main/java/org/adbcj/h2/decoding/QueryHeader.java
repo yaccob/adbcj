@@ -1,6 +1,8 @@
 package org.adbcj.h2.decoding;
 
 import org.adbcj.ResultHandler;
+import org.adbcj.h2.H2Connection;
+import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.packets.SizeConstants;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.jboss.netty.channel.Channel;
@@ -19,7 +21,7 @@ class QueryHeader<T> extends StatusReadingDecoder {
     public QueryHeader(ResultHandler<T> eventHandler,
                        T accumulator,
                        DefaultDbSessionFuture<T> resultFuture) {
-
+        super((H2Connection) resultFuture.getSession());
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
         this.resultFuture = resultFuture;
@@ -46,5 +48,9 @@ class QueryHeader<T> extends StatusReadingDecoder {
 
     }
 
+    @Override
+    protected void handleException(H2DbException exception) {
+        this.resultFuture.setException(exception);
+    }
 }
 
