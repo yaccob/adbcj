@@ -1,5 +1,6 @@
 package org.adbcj.h2;
 
+import org.adbcj.PreparedQuery;
 import org.adbcj.Result;
 import org.adbcj.ResultHandler;
 import org.adbcj.h2.decoding.*;
@@ -55,13 +56,18 @@ public class Request {
         int queryId = ((H2Connection)resultFuture.getSession()).nextId();
         final Request executeQuery = executeQueryAndClose(sql,eventHandler, accumulator, resultFuture, sessionId, queryId);
         return new Request("Prepare Query: "+sql,resultFuture,
-                new QueryPrepare<T>(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+                QueryPrepare.continueWithRequest(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
     }
 
     public static Request executeUpdate(String sql, DefaultDbSessionFuture<Result> resultFuture, int sessionId) {
         final Request executeQuery = executeUpdateAndClose(sql, resultFuture, sessionId);
         return new Request("Prepare Query: "+sql,resultFuture,
-                new QueryPrepare<Result>(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+                QueryPrepare.continueWithRequest(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+    }
+    public static Request executePrepareQuery(String sql, DefaultDbSessionFuture<PreparedQuery> resultFuture, int sessionId) {
+        //final Request executeQuery = executeUpdateAndClose(sql, resultFuture, sessionId);
+        return new Request("Prepare Query: "+sql,resultFuture,
+                QueryPrepare.createPrepareQuery(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
     }
 
     static <T> Request executeQueryAndClose(String sql,ResultHandler<T> eventHandler,

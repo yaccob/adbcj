@@ -90,7 +90,11 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(this);
+        int sessionId = nextId();
+        final Request request = Request.executePrepareQuery(sql, resultFuture, sessionId);
+        queResponseHandlerAndSendMessage(request);
+        return resultFuture;
     }
 
     @Override

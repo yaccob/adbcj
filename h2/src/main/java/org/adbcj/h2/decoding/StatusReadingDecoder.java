@@ -43,7 +43,7 @@ public abstract class StatusReadingDecoder implements DecoderState {
     protected abstract void handleException(H2DbException exception);
 
 
-    public static H2Connection connectionOfFuture(DefaultDbSessionFuture<?> future){
+    static H2Connection connectionOfFuture(DefaultDbSessionFuture<?> future){
         return (H2Connection) future.getSession();
     }
 }
