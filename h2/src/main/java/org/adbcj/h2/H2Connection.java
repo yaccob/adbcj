@@ -160,4 +160,8 @@ public class H2Connection implements Connection {
             }
         }
     }
+
+    Object connectionLock(){
+        return lock;
+    }
 }
