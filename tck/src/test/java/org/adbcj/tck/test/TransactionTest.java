@@ -177,4 +177,34 @@ public class TransactionTest extends AbstractWithConnectionManagerTest{
 			connection2.close();
 		}
 	}
+    public void testAfterCommitAutoCommit() throws Exception {
+        Connection connection = connectionManager.connect().get();
+        Connection connection2 = connectionManager.connect().get();
+        try {
+            // Clear out updates table
+            Result result = connection.executeUpdate("DELETE FROM updates").get();
+            assertNotNull(result);
+
+            connection.beginTransaction();
+
+            // Insert a row
+            result = connection.executeUpdate("INSERT INTO updates (id) VALUES (1)").get();
+            assertNotNull(result);
+            assertEquals(result.getAffectedRows(), 1L);
+
+            connection.commit().get();
+
+
+            result = connection.executeUpdate("INSERT INTO updates (id) VALUES (2)").get();
+
+            // Make sure both connections can see data
+            ResultSet rs = connection2.executeQuery("SELECT id FROM updates").get();
+            assertNotNull(rs);
+            assertEquals(rs.size(), 2);
+
+        } finally {
+            connection.close();
+            connection2.close();
+        }
+    }
 }

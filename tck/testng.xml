@@ -2,20 +2,20 @@
 
 
 <suite name="ADBCJ-TCK" verbose="1" >
-    <!--<test name="MySQL">-->
-        <!--<parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />-->
-        <!--<parameter name="url" value="adbcj:mysql://localhost/adbcjtck" />-->
-        <!--<parameter name="user" value="adbcjtck" />-->
-        <!--<parameter name="password" value="adbcjtck" />-->
-        <!--<packages>-->
-            <!--<package name="org.adbcj.tck.test" />-->
-        <!--</packages>-->
+    <test name="MySQL">
+        <parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
+        <parameter name="url" value="adbcj:mysql://localhost/adbcjtck" />
+        <parameter name="user" value="adbcjtck" />
+        <parameter name="password" value="adbcjtck" />
+        <packages>
+            <package name="org.adbcj.tck.test" />
+        </packages>
 
-        <!--<classes>-->
-            <!--<class name="org.adbcj.tck.InitMysql" />-->
-            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.SelectTest"/>&ndash;&gt;-->
-        <!--</classes>-->
-    <!--</test>-->
+        <classes>
+            <class name="org.adbcj.tck.InitMysql" />
+            <!--<class name="org.adbcj.tck.test.PreparedUpdateTest"/>-->
+        </classes>
+    </test>
     <!--<test name="MySQL-Pooled">-->
         <!--<parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />-->
         <!--<parameter name="url" value="adbcj:pooled:mysql://localhost/adbcjtck" />-->

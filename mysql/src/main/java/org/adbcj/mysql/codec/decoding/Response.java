@@ -5,6 +5,7 @@ import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
+import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +43,13 @@ class Response extends DecoderState {
 
     private ResultAndState processOKMessage(int length, int packetNumber, BoundedInputStream in) throws IOException {
         final OkResponse.PreparedStatementOK statementOK = OkResponse.interpretAsPreparedStatement(length, packetNumber, in);
-        return result(FINISH_PREPARE_STATEMENT_OK(new PreparedStatementToBuild(length, packetNumber, statementOK)), statementOK);
+        final PreparedStatementToBuild statement = new PreparedStatementToBuild(length, packetNumber, statementOK);
+        final DecoderState nextState = FINISH_PREPARE_STATEMENT_OK(statement);
+        if(RESPONSE==nextState){
+            return result(nextState, new StatementPreparedEOF(length, packetNumber,statement ));
+        } else{
+            return result(nextState, statementOK);
+        }
     }
 
     private ResultAndState parseAsResult(int length, int packetNumber, BoundedInputStream in, int fieldCount) throws IOException {

@@ -62,7 +62,7 @@ public abstract class AbstractMySqlConnection extends AbstractDbSession implemen
             logger.debug("Closing connection: "+this);
         }
         if (isClosed()) {
-            return DefaultDbFuture.completed(null);
+            return closeRequest.getFuture();
         } if(closeRequest!=null){
             return closeRequest.getFuture();
         }else {

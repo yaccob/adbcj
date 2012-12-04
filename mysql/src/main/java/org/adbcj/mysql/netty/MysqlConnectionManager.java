@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,7 +42,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 	private final ClientBootstrap bootstrap;
     private final Set<AbstractMySqlConnection> connections = new HashSet<AbstractMySqlConnection>();
     private final AtomicInteger idCounter = new AtomicInteger();
-    private final ExecutorService bossExecutor;
 
     public MysqlConnectionManager(String host,
                                   int port,
@@ -54,8 +52,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         super(properties);
         credentials = new LoginCredentials(username, password, schema);
 
-        this.bossExecutor = Executors.newCachedThreadPool();
-        ChannelFactory factory = new NioClientSocketChannelFactory(bossExecutor,
+        ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
                 Executors.newCachedThreadPool());
 		bootstrap = new ClientBootstrap(factory);
 		init(host, port);
@@ -90,13 +87,13 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         for (AbstractMySqlConnection connection : connectionsCopy) {
             connection.close(closeMode);
         }
-        bossExecutor.submit(new Runnable() {
+        new Thread("Closing MySQL ConnectionManager"){
             @Override
             public void run() {
                 bootstrap.releaseExternalResources();
                 closeFuture.setResult(null);
             }
-        });
+        }.start();
         return closeFuture;
     }
 
