@@ -1,5 +1,6 @@
 package org.adbcj.h2;
 
+import org.adbcj.Connection;
 import org.adbcj.PreparedQuery;
 import org.adbcj.Result;
 import org.adbcj.ResultHandler;
@@ -36,7 +37,7 @@ public class Request {
     }
 
     public static Request createCloseRequest(DefaultDbFuture<Void> future, H2Connection connection) {
-        return new Request("Close-Request",future,new CloseConnection(future,connection),new CloseCommand());
+        return new Request("Close-Request", future, new CloseConnection(future, connection), new CloseCommand());
     }
 
     @Override
@@ -53,54 +54,67 @@ public class Request {
                                           T accumulator,
                                           DefaultDbSessionFuture<T> resultFuture,
                                           int sessionId) {
-        int queryId = ((H2Connection)resultFuture.getSession()).nextId();
-        final Request executeQuery = executeQueryAndClose(sql,eventHandler, accumulator, resultFuture, sessionId, queryId);
-        return new Request("Prepare Query: "+sql,resultFuture,
-                QueryPrepare.continueWithRequest(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+        int queryId = ((H2Connection) resultFuture.getSession()).nextId();
+        final Request executeQuery = executeQueryAndClose(sql, eventHandler, accumulator, resultFuture, sessionId, queryId);
+        return new Request("Prepare Query: " + sql, resultFuture,
+                QueryPrepare.continueWithRequest(executeQuery, resultFuture), new QueryPrepareCommand(sessionId, sql));
     }
 
     public static Request executeUpdate(String sql, DefaultDbSessionFuture<Result> resultFuture, int sessionId) {
         final Request executeQuery = executeUpdateAndClose(sql, resultFuture, sessionId);
-        return new Request("Prepare Query: "+sql,resultFuture,
-                QueryPrepare.continueWithRequest(executeQuery,resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+        return new Request("Prepare Query: " + sql, resultFuture,
+                QueryPrepare.continueWithRequest(executeQuery, resultFuture), new QueryPrepareCommand(sessionId, sql));
     }
+
     public static Request executePrepareQuery(String sql, DefaultDbSessionFuture<PreparedQuery> resultFuture, int sessionId) {
-        return new Request("Prepare Query: "+sql,resultFuture,
+        return new Request("Prepare Query: " + sql, resultFuture,
                 QueryPrepare.createPrepareQuery(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
     }
 
     public static <T> Request executeQueryStatement(ResultHandler<T> eventHandler,
-                                            T accumulator,
-                                            DefaultDbSessionFuture<T> resultFuture,
-                                            int sessionId,
-                                            int queryId,
-                                            Object[] params) {
-        return new Request("ExecutePreparedQuery: ",resultFuture,
+                                                    T accumulator,
+                                                    DefaultDbSessionFuture<T> resultFuture,
+                                                    int sessionId,
+                                                    int queryId,
+                                                    Object[] params) {
+        return new Request("ExecutePreparedQuery: ", resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
                         accumulator,
-                        resultFuture), new QueryExecute(sessionId, queryId,params));
+                        resultFuture), new QueryExecute(sessionId, queryId, params));
     }
 
-    static <T> Request executeQueryAndClose(String sql,ResultHandler<T> eventHandler,
+    static <T> Request executeQueryAndClose(String sql, ResultHandler<T> eventHandler,
                                             T accumulator,
                                             DefaultDbSessionFuture<T> resultFuture,
                                             int sessionId,
                                             int queryId) {
-        return new Request("ExecuteQuery: "+sql,resultFuture,
+        return new Request("ExecuteQuery: " + sql, resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
                         accumulator,
-                        resultFuture), new CompoundCommand(new QueryExecute(sessionId, queryId, new Object[0]),new CommandClose(sessionId)));
+                        resultFuture), new CompoundCommand(new QueryExecute(sessionId, queryId), new CommandClose(sessionId)));
     }
 
     static <T> Request executeUpdateAndClose(String sql,
-                                            DefaultDbSessionFuture<Result> resultFuture,
-                                            int sessionId) {
-        return new Request("ExecuteUpdate: "+sql,resultFuture,
-                new UpdateResult(resultFuture), new CompoundCommand(new ExecuteUpdate(sessionId),new CommandClose(sessionId)));
+                                             DefaultDbSessionFuture<Result> resultFuture,
+                                             int sessionId) {
+        H2Connection connection = (H2Connection) resultFuture.getSession();
+        return new Request("ExecuteUpdate: " + sql, resultFuture,
+                new UpdateResult(resultFuture),
+                new CompoundCommand(
+                        new ExecuteUpdate(sessionId),
+                        new QueryExecute(connection.idForAutoId(), connection.nextId()),
+                        new CommandClose(sessionId)));
     }
 
-    public static Request executeCloseStatement(H2Connection connection,DefaultDbFuture<Void> resultFuture, int sessionId) {
-        return new Request("ExecuteCloseStatement: ",resultFuture,
-                new AnswerNextRequest(connection), new CommandClose(sessionId,resultFuture));
+    public static Request executeCloseStatement(H2Connection connection, DefaultDbFuture<Void> resultFuture, int sessionId) {
+        return new Request("ExecuteCloseStatement: ", resultFuture,
+                new AnswerNextRequest(connection), new CommandClose(sessionId, resultFuture));
+    }
+
+    public static Request createGetAutoIdStatement(int sessionId, DefaultDbFuture<Connection> completeConnection,
+                                                   H2Connection connection) {
+        String sql = "SELECT SCOPE_IDENTITY() WHERE SCOPE_IDENTITY() IS NOT NULL";
+        return new Request("Prepare Query: " + sql, completeConnection,
+                QueryPrepare.createAutoIdCompletion(completeConnection, connection), new QueryPrepareCommand(sessionId, sql));
     }
 }

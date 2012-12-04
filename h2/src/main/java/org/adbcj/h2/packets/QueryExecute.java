@@ -15,6 +15,7 @@ import java.util.Date;
 public class QueryExecute implements ClientToServerPacket {
     public static final int COMMAND_EXECUTE_QUERY = 2;
     public static final int RESULT_CLOSE = 7;
+    private static final Object[] NO_PARAMS = new Object[0];
     private int id;
     private int queryId;
     private final Object[] params;
@@ -23,6 +24,11 @@ public class QueryExecute implements ClientToServerPacket {
         this.id = id;
         this.queryId = queryId;
         this.params = params;
+    }
+    public QueryExecute(int id, int queryId) {
+        this.id = id;
+        this.queryId = queryId;
+        this.params = NO_PARAMS;
     }
 
     @Override
@@ -71,7 +77,7 @@ public class QueryExecute implements ClientToServerPacket {
             stream.writeDouble(((Double) param).longValue());
         } else if (Date.class.isInstance(param)) {
             stream.writeInt(H2Types.DATE.id());
-            stream.writeLong(DateTimeUtils.dateValueFromDate(((Date)param).getTime()));
+            stream.writeLong(DateTimeUtils.dateValueFromDate(((Date) param).getTime()));
         } else if (String.class.isInstance(param)) {
             stream.writeInt(H2Types.STRING.id());
             IoUtils.writeString(stream, param.toString());

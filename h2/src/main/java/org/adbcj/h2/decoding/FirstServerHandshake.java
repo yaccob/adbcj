@@ -4,6 +4,7 @@ import org.adbcj.Connection;
 import org.adbcj.DbException;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
+import org.adbcj.h2.Request;
 import org.adbcj.h2.packets.AnnounceClientSession;
 import org.adbcj.h2.packets.SizeConstants;
 import org.adbcj.support.DefaultDbFuture;
@@ -61,7 +62,8 @@ class SessionIdReceived extends StatusReadingDecoder {
     @Override
     protected ResultAndState processFurther(DataInputStream input, Channel channel, int status) throws IOException {
         StatusCodes.STATUS_OK.expectStatusOrThrow(status);
-        currentState.setResult(connection);
+        int autoId = connection.idForAutoId();
+        connection.queResponseHandlerAndSendMessage(Request.createGetAutoIdStatement(autoId,currentState,connection));
         return ResultAndState.newState(new AnswerNextRequest(connection));
     }
 

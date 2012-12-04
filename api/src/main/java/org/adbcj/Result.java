@@ -23,7 +23,7 @@ public interface Result {
 	long getAffectedRows();
 
 	List<String> getWarnings();
-	
+
 	ResultSet getGeneratedKeys();
 	
 }

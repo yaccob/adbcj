@@ -25,6 +25,7 @@ public class H2Connection implements Connection {
     private final Object lock = new Object();
     private volatile DefaultDbFuture<Void> closeFuture;
     private final AtomicInteger requestId = new AtomicInteger(0);
+    private final int autoIdSession = nextId();
 
     public H2Connection(int maxQueueSize, ConnectionManager manager, Channel channel) {
         this.maxQueueSize = maxQueueSize;
@@ -163,5 +164,9 @@ public class H2Connection implements Connection {
 
     Object connectionLock(){
         return lock;
+    }
+
+    public int idForAutoId() {
+        return autoIdSession;
     }
 }
