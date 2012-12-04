@@ -33,15 +33,18 @@ public class H2ConnectionManager extends AbstractConnectionManager {
     private static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
     private final String url;
     private final LoginCredentials credentials;
+    private final Map<String, String> keys;
     private final Set<H2Connection> connections = new HashSet<H2Connection>();
 
     public H2ConnectionManager(String url,String host,
                                int port,
                                LoginCredentials credentials,
-                               Map<String, String> properties) {
+                               Map<String, String> properties,
+                               Map<String,String> keys) {
         super(properties);
         this.url = url;
         this.credentials = credentials;
+        this.keys = keys;
 
         this.bossExecutor = Executors.newCachedThreadPool();
         ChannelFactory factory = new NioClientSocketChannelFactory(bossExecutor,
@@ -92,7 +95,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                 channel.write(
                         new ClientHandshake(credentials.getDatabase(),url,
                                 credentials.getUserName(),
-                                credentials.getPassword()));
+                                credentials.getPassword(),keys));
                 H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
                 channel.getPipeline().addFirst(DECODER, new Decoder(connectFuture,connection));
 

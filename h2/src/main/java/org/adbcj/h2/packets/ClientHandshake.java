@@ -7,6 +7,7 @@ import org.adbcj.h2.h2.SHA256;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Map;
 
 import static org.adbcj.h2.packets.SizeConstants.CHAR_SIZE;
 import static org.adbcj.h2.packets.SizeConstants.INT_SIZE;
@@ -19,12 +20,18 @@ public class ClientHandshake implements ClientToServerPacket{
     private String database;
     private String originalUrl;
     private String userName;
+    private final Map<String, String> keys;
     private byte[] pwdHash;
 
-    public ClientHandshake(String database, String originalUrl, String userName, String password) {
+    public ClientHandshake(String database,
+                           String originalUrl,
+                           String userName,
+                           String password,
+                           Map<String,String> keys) {
         this.database = database;
         this.originalUrl = originalUrl;
         this.userName = userName;
+        this.keys = keys;
         pwdHash = hashPassword(false, userName, password.toCharArray());
     }
 
@@ -39,7 +46,7 @@ public class ClientHandshake implements ClientToServerPacket{
         IoUtils.writeBytes(stream, pwdHash);
         writeFileHash(stream);
 
-        writeKeys(stream);
+        writeKeys(stream,keys);
     }
 
     @Override
@@ -51,8 +58,17 @@ public class ClientHandshake implements ClientToServerPacket{
                INT_SIZE + userName.toCharArray().length* CHAR_SIZE +  // url
                INT_SIZE + pwdHash.length +  // password
                INT_SIZE +  // empty file hash
-               INT_SIZE +  // empty properties
+               INT_SIZE + calculateSizeKeys(keys) +
                0;
+    }
+
+    private int calculateSizeKeys(Map<String, String> keys) {
+        int size = 0;
+        for (Map.Entry<String, String> key : keys.entrySet()) {
+            size+= INT_SIZE + SizeConstants.lengthOfString( key.getKey());
+            size+= INT_SIZE + SizeConstants.lengthOfString( key.getValue()) ;
+        }
+        return size;
     }
 
     private void writeFileHash(DataOutputStream stream) throws IOException {
@@ -60,9 +76,12 @@ public class ClientHandshake implements ClientToServerPacket{
         stream.writeInt(-1);
     }
 
-    private void writeKeys(DataOutputStream stream) throws IOException {
-        // NO keys in use at the moment
-        stream.writeInt(0);
+    private void writeKeys(DataOutputStream stream,Map<String,String> keys) throws IOException {
+        stream.writeInt(keys.size());
+        for (Map.Entry<String, String> key : keys.entrySet()) {
+            IoUtils.writeString(stream, key.getKey());
+            IoUtils.writeString(stream, key.getValue());
+        }
     }
 
 

@@ -12,11 +12,9 @@ import java.io.IOException;
  * @author roman.stoffel@gamlor.info
  */
 public final class AnswerNextRequest extends StatusReadingDecoder {
-    private final H2Connection connection;
 
     public AnswerNextRequest(H2Connection connection) {
         super(connection);
-        this.connection = connection;
     }
 
     @Override

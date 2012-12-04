@@ -1,10 +1,7 @@
 package org.adbcj.h2;
 
 import org.adbcj.*;
-import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultDbSessionFuture;
-import org.adbcj.support.DefaultResultEventsHandler;
-import org.adbcj.support.DefaultResultSet;
+import org.adbcj.support.*;
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +26,10 @@ public class H2Connection implements Connection {
     private final int autoIdSession = nextId();
     private BlockingRequestInProgress blockingRequest;
 
+    private volatile boolean isInTransaction = false;
+    private DbSessionFuture<PreparedUpdate> commit = null;
+    private DbSessionFuture<PreparedUpdate> rollback;
+
     public H2Connection(int maxQueueSize, ConnectionManager manager, Channel channel) {
         this.maxQueueSize = maxQueueSize;
         this.manager = manager;
@@ -46,22 +47,69 @@ public class H2Connection implements Connection {
 
     @Override
     public void beginTransaction() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        synchronized (lock){
+            if (isInTransaction()) {
+                throw new DbException("Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
+            }
+            isInTransaction = true;
+            final Request request = Request.beginTransaction(this);
+            queResponseHandlerAndSendMessage(request);
+        }
     }
 
     @Override
     public DbSessionFuture<Void> commit() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        synchronized (lock){
+            if (!isInTransaction()) {
+                throw new DbException("Not currently in a transaction, cannot commit");
+            }
+            if(null==commit){
+                commit = prepareUpdate("COMMIT");
+            }
+            final DefaultDbSessionFuture<Void> commitExecution = FutureUtils.flatMap(commit, this, new OneArgFunction<PreparedUpdate, DbFuture<Void>>() {
+                @Override
+                public DefaultDbSessionFuture<Void> apply(PreparedUpdate arg) {
+                    return FutureUtils.map(arg.execute(), H2Connection.this, new OneArgFunction<Result, Void>() {
+                        @Override
+                        public Void apply(Result arg) {
+                            return null;
+                        }
+                    });
+                }
+            });
+            isInTransaction = false;
+            return commitExecution;
+        }
     }
 
     @Override
     public DbSessionFuture<Void> rollback() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        synchronized (lock){
+            if (!isInTransaction()) {
+                throw new DbException("Not currently in a transaction, cannot rollback");
+            }
+            if(null==rollback){
+                rollback = prepareUpdate("ROLLBACK");
+            }
+            final DefaultDbSessionFuture<Void> rollbackExecution = FutureUtils.flatMap(rollback, this, new OneArgFunction<PreparedUpdate, DbFuture<Void>>() {
+                @Override
+                public DefaultDbSessionFuture<Void> apply(PreparedUpdate arg) {
+                    return FutureUtils.map(arg.execute(), H2Connection.this, new OneArgFunction<Result, Void>() {
+                        @Override
+                        public Void apply(Result arg) {
+                            return null;
+                        }
+                    });
+                }
+            });
+            isInTransaction = false;
+            return rollbackExecution;
+        }
     }
 
     @Override
     public boolean isInTransaction() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return isInTransaction;
     }
 
     @Override

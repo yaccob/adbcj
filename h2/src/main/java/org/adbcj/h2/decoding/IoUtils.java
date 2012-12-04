@@ -45,6 +45,9 @@ public final class IoUtils {
             out.write(data);
         }
     }
+    public static void writeBoolean(DataOutputStream out, boolean value) throws IOException {
+        out.writeByte((byte) (value ? 1 : 0));
+    }
 
     public static boolean readBoolean(DataInputStream stream) throws IOException {
         return stream.readByte() == 1;

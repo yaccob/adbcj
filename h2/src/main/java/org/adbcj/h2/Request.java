@@ -108,10 +108,6 @@ public class Request {
                 StatementPrepare.createPrepareUpdate(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
     }
 
-    private static int nextId(DefaultDbSessionFuture<?> resultFuture) {
-        return ((H2Connection)resultFuture.getSession()).nextId();
-    }
-
     public static <T> Request executeQueryStatement(ResultHandler<T> eventHandler,
                                                     T accumulator,
                                                     DefaultDbSessionFuture<T> resultFuture,
@@ -145,6 +141,13 @@ public class Request {
                 StatementPrepare.createAutoIdCompletion(completeConnection, connection), new QueryPrepareCommand(sessionId, sql));
     }
 
+    public static Request beginTransaction(H2Connection connection){
+        return new Request("Begin Transacton",new DefaultDbFuture(),
+                new AwaitOk(connection),
+                new BeginTransactionCommand() );
+
+    }
+
     static <T> Request executeQueryAndClose(String sql, ResultHandler<T> eventHandler,
                                             T accumulator,
                                             DefaultDbSessionFuture<T> resultFuture,
@@ -166,6 +169,10 @@ public class Request {
                         new UpdateExecute(sessionId),
                         new QueryExecute(connection.idForAutoId(), connection.nextId()),
                         new CommandClose(sessionId)));
+    }
+
+    private static int nextId(DefaultDbSessionFuture<?> resultFuture) {
+        return ((H2Connection)resultFuture.getSession()).nextId();
     }
 
 }

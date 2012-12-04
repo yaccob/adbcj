@@ -93,7 +93,7 @@ public class TransactionTest extends AbstractWithConnectionManagerTest{
 
         connection.beginTransaction();
 
-        connection.executeQuery("SELECT * FROM updates ").get();
+        connection.executeQuery("SELECT * FROM updates").get();
 
         connection.rollback().get();
 
