@@ -77,6 +77,7 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
         statement.close();
         connection.close();
     }
+
     public void testCanSelectNull() throws DbException, InterruptedException{
         Connection connection = connectionManager.connect().get();
         PreparedQuery statement = connection.prepareQuery("SELECT * FROM table_with_some_values " +

@@ -83,8 +83,7 @@ public class H2Connection implements Connection {
     @Override
     public DbSessionFuture<Result> executeUpdate(String sql) {
         DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(this);
-        int sessionId = nextId();
-        final Request request = Request.executeUpdate(sql, resultFuture, sessionId);
+        final Request request = Request.executeUpdate(sql, resultFuture);
         queResponseHandlerAndSendMessage(request);
         return resultFuture;
     }
@@ -92,15 +91,17 @@ public class H2Connection implements Connection {
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
         DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(this);
-        int sessionId = nextId();
-        final Request request = Request.executePrepareQuery(sql, resultFuture, sessionId);
+        final Request request = Request.executePrepareQuery(sql, resultFuture);
         queResponseHandlerAndSendMessage(request);
         return resultFuture;
     }
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        DefaultDbSessionFuture<PreparedUpdate> resultFuture = new DefaultDbSessionFuture<PreparedUpdate>(this);
+        final Request request = Request.executePrepareUpdate(sql, resultFuture);
+        queResponseHandlerAndSendMessage(request);
+        return resultFuture;
     }
 
     @Override
