@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -26,6 +27,7 @@ public class H2Connection implements Connection {
     private volatile DefaultDbFuture<Void> closeFuture;
     private final AtomicInteger requestId = new AtomicInteger(0);
     private final int autoIdSession = nextId();
+    private BlockingRequestInProgress blockingRequest;
 
     public H2Connection(int maxQueueSize, ConnectionManager manager, Channel channel) {
         this.maxQueueSize = maxQueueSize;
@@ -133,8 +135,26 @@ public class H2Connection implements Connection {
 
     public void queResponseHandlerAndSendMessage(Request request) {
         synchronized (lock){
-            requestQueue.add(request);
-            channel.write(request.getRequest());
+            if(blockingRequest==null){
+                requestQueue.add(request);
+                channel.write(request.getRequest());
+                if(request.isBlocking()){
+                    blockingRequest = new BlockingRequestInProgress(request);
+                    request.getToComplete().addListener(new DbListener<Object>() {
+                        @Override
+                        public void onCompletion(DbFuture<Object> future) {
+                            blockingRequest.continueWithRequests();
+                        }
+                    });
+                }
+            } else{
+                if(blockingRequest.unblockBy(request)){
+                    requestQueue.add(request);
+                    channel.write(request.getRequest());
+                } else {
+                    blockingRequest.add(request);
+                }
+            }
         }
     }
 
@@ -170,4 +190,35 @@ public class H2Connection implements Connection {
     public int idForAutoId() {
         return autoIdSession;
     }
+
+    /**
+     * Expects that it is executed withing the connection lock
+     */
+    class BlockingRequestInProgress{
+        private final ArrayList<Request> waitingRequests = new ArrayList<Request>();
+        private final Request blockingRequest;
+
+        BlockingRequestInProgress(Request blockingRequest) {
+            this.blockingRequest = blockingRequest;
+        }
+
+
+        public void add(Request request) {
+            waitingRequests.add(request);
+        }
+
+        public boolean unblockBy(Request nextRequest) {
+            return blockingRequest.unblockBy(nextRequest);
+        }
+
+        public void continueWithRequests() {
+            H2Connection.this.blockingRequest = null;
+            for (Request waitingRequest : waitingRequests) {
+                queResponseHandlerAndSendMessage(waitingRequest);
+            }
+        }
+    }
 }
+
+
+

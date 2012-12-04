@@ -14,6 +14,13 @@ public class Request {
     private final DefaultDbFuture toComplete;
     private final DecoderState startState;
     private final ClientToServerPacket request;
+    /**
+     * A blocking request is one where the operation is split across multiple
+     * request-responses, but are treated as one logical operation.
+     * To avoid invalid interleaving, we need to ensure that now other request is sent
+     * during the communication for such a request.
+     */
+    private final Request blocksFor;
 
     private Request(String description,
                     DefaultDbFuture toComplete,
@@ -23,6 +30,17 @@ public class Request {
         this.toComplete = toComplete;
         this.startState = startState;
         this.request = request;
+        this.blocksFor = null;
+    }
+    private Request(String description,
+                    DefaultDbFuture toComplete,
+                    DecoderState startState,
+                    ClientToServerPacket request, Request blocksFor) {
+        this.description = description;
+        this.toComplete = toComplete;
+        this.startState = startState;
+        this.request = request;
+        this.blocksFor = blocksFor;
     }
 
     public DefaultDbFuture<Object> getToComplete() {
@@ -35,6 +53,14 @@ public class Request {
 
     public static Request createCloseRequest(DefaultDbFuture<Void> future, H2Connection connection) {
         return new Request("Close-Request", future, new CloseConnection(future, connection), new CloseCommand());
+    }
+
+    public boolean isBlocking() {
+        return blocksFor!=null;
+    }
+
+    public boolean unblockBy(Request nextRequest) {
+        return blocksFor==nextRequest;
     }
 
     @Override
@@ -53,15 +79,20 @@ public class Request {
                                           int sessionId) {
         int queryId = ((H2Connection) resultFuture.getSession()).nextId();
         final Request executeQuery = executeQueryAndClose(sql, eventHandler, accumulator, resultFuture, sessionId, queryId);
-        return new Request("Prepare Query: " + sql, resultFuture,
-                StatementPrepare.continueWithRequest(executeQuery, resultFuture), new QueryPrepareCommand(sessionId, sql));
+        return new Request("Prepare Query: " + sql,
+                resultFuture,
+                StatementPrepare.continueWithRequest(executeQuery, resultFuture),
+                new QueryPrepareCommand(sessionId, sql),
+                executeQuery);
     }
 
     public static Request executeUpdate(String sql, DefaultDbSessionFuture<Result> resultFuture) {
         int sessionId = nextId(resultFuture);
         final Request executeQuery = executeUpdateAndClose(sql, resultFuture, sessionId);
         return new Request("Prepare Query: " + sql, resultFuture,
-                StatementPrepare.continueWithRequest(executeQuery, resultFuture), new QueryPrepareCommand(sessionId, sql));
+                StatementPrepare.continueWithRequest(executeQuery, resultFuture),
+                new QueryPrepareCommand(sessionId, sql),
+                executeQuery);
     }
 
     public static Request executePrepareQuery(String sql, DefaultDbSessionFuture<PreparedQuery> resultFuture) {
