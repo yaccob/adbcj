@@ -4,6 +4,7 @@ import org.adbcj.h2.packets.SizeConstants;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 /**
@@ -79,6 +80,16 @@ public final class IoUtils {
         return ResultOrWait.result(stream.readLong());
     }
 
+    public static ResultOrWait<Double> tryReadNextDouble(DataInputStream stream, ResultOrWait previousResult) throws IOException {
+        if(!previousResult.couldReadResult){
+            return previousResult;
+        }
+        if(stream.available()< SizeConstants.DOUBLE_SIZE){
+            return ResultOrWait.WaitLonger;
+        }
+        return ResultOrWait.result(stream.readDouble());
+    }
+
     public static ResultOrWait<String> tryReadNextString(DataInputStream stream, ResultOrWait previousResult) throws IOException {
         if(!previousResult.couldReadResult){
             return previousResult;
@@ -99,6 +110,33 @@ public final class IoUtils {
                 stringChars[i] = stream.readChar();
             }
             return ResultOrWait.result(new String(stringChars));
+        }
+    }
+
+    public static ResultOrWait<String> readEncodedString(DataInputStream stream, int stringLength) throws IOException {
+        if(stream.available()< stringLength){
+            return ResultOrWait.WaitLonger;
+        } else{
+            char[] buff = new char[stringLength];
+            int i = 0;
+            try {
+                for (; i < stringLength; i++) {
+                    buff[i] = readChar(stream);
+                }
+                return ResultOrWait.result(new String(buff));
+            } catch (EOFException e) {
+                return ResultOrWait.WaitLonger;
+            }
+        }
+    }
+    private static char readChar(DataInputStream stream) throws IOException {
+        int x = stream.readByte() & 0xff;
+        if (x < 0x80) {
+            return (char) x;
+        } else if (x >= 0xe0) {
+            return (char) (((x & 0xf) << 12) + ((stream.readByte() & 0x3f) << 6) + (stream.readByte() & 0x3f));
+        } else {
+            return (char) (((x & 0x1f) << 6) + (stream.readByte() & 0x3f));
         }
     }
 }

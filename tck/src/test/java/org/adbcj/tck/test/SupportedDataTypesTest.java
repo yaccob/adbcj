@@ -1,6 +1,9 @@
 package org.adbcj.tck.test;
 
-import org.adbcj.*;
+import org.adbcj.Connection;
+import org.adbcj.PreparedQuery;
+import org.adbcj.ResultSet;
+import org.adbcj.Row;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

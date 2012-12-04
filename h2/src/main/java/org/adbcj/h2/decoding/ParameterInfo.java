@@ -27,7 +27,7 @@ public final class ParameterInfo {
         final ResultOrWait<Integer> scale = IoUtils.tryReadNextInt(input, precision);
         final ResultOrWait<Integer> nullable = IoUtils.tryReadNextInt(input, scale);
         if(nullable.couldReadResult){
-            return ResultOrWait.result(new ParameterInfo(H2Types.typeCodeToType(dataType.result),precision.result,scale.result,nullable.result));
+            return ResultOrWait.result(new ParameterInfo(H2Types.typeCodeToType(dataType.result).getType(),precision.result,scale.result,nullable.result));
         } else{
             return ResultOrWait.WaitLonger;
         }

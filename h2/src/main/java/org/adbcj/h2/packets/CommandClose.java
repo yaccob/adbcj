@@ -27,7 +27,9 @@ public class CommandClose implements ClientToServerPacket {
     public void writeToStream(DataOutputStream stream) throws IOException {
         stream.writeInt(COMMAND_CLOSE);
         stream.writeInt(id);
-        optionalCloseOnSent.trySetResult(null);
+        if(null!=optionalCloseOnSent){
+            optionalCloseOnSent.trySetResult(null);
+        }
     }
 
     @Override

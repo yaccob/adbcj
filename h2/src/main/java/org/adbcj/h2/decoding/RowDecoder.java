@@ -4,6 +4,7 @@ import org.adbcj.DbException;
 import org.adbcj.Field;
 import org.adbcj.ResultHandler;
 import org.adbcj.Value;
+import org.adbcj.h2.DateTimeUtils;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultValue;
@@ -11,7 +12,7 @@ import org.jboss.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.sql.Types;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -97,14 +98,44 @@ public class RowDecoder<T> implements DecoderState {
         if (!maybeType.couldReadResult) {
             return ResultOrWait.WaitLonger;
         }
-        int type = maybeType.result;
+        int typeCode = maybeType.result;
+        H2Types type = H2Types.typeCodeToType(typeCode);
         switch (type) {
-            case Types.NULL:
+            case NULL:
                 return convertToValue(ResultOrWait.result(null));
-            case Types.INTEGER:
+            case LONG:
+                return convertToValue(IoUtils.tryReadNextLong(stream, maybeType));
+            case DATE:
+                return convertToDateValue(IoUtils.tryReadNextLong(stream, maybeType));
+            case TIME:
+                return convertNanoToTime(IoUtils.tryReadNextLong(stream, maybeType));
+            case TIMESTAMP:
+                final ResultOrWait<Long> dateValues = IoUtils.tryReadNextLong(stream, maybeType);
+                final ResultOrWait<Long> nanos = IoUtils.tryReadNextLong(stream, dateValues);
+                return convertToTimestampValue(dateValues, nanos);
+            case INTEGER:
                 return convertToValue(IoUtils.tryReadNextInt(stream, maybeType));
-            case H2Types.STRING:
+            case DOUBLE:
+                return convertToValue(IoUtils.tryReadNextDouble(stream, maybeType));
+            case DECIMAL:
+                return convertToDecimalValue(IoUtils.tryReadNextString(stream, maybeType));
+            case STRING:
                 return convertToValue(IoUtils.tryReadNextString(stream, maybeType));
+            case CLOB:
+                final ResultOrWait<Long> length = IoUtils.tryReadNextLong(stream, ResultOrWait.Start);
+                if(length.couldReadResult){
+                    final ResultOrWait<Value> value
+                            = convertToValue(IoUtils.readEncodedString(stream, length.result.intValue()));
+                    final ResultOrWait<Integer> lobMagicBits = IoUtils.tryReadNextInt(stream, value);
+                    if(lobMagicBits.couldReadResult){
+                        return value;
+                    }else{
+                        return ResultOrWait.WaitLonger;
+                    }
+
+                } else{
+                    return ResultOrWait.WaitLonger;
+                }
             default:
                 throw new DbException("Cannot handle type: " + type);
         }
@@ -116,6 +147,35 @@ public class RowDecoder<T> implements DecoderState {
         } else {
             return ResultOrWait.result((Value) new DefaultValue(maybeValue.result));
         }
+    }
 
+    private ResultOrWait<Value> convertToDecimalValue(ResultOrWait<String> maybeValue) {
+        if (!maybeValue.couldReadResult) {
+            return ResultOrWait.WaitLonger;
+        } else {
+            return ResultOrWait.result((Value) new DefaultValue(new BigDecimal(maybeValue.result)));
+        }
+    }
+    private ResultOrWait<Value> convertNanoToTime(ResultOrWait<Long> maybeValue) {
+        if (!maybeValue.couldReadResult) {
+            return ResultOrWait.WaitLonger;
+        } else {
+            return ResultOrWait.result((Value) new DefaultValue(DateTimeUtils.convertNanoToTime(maybeValue.result)));
+        }
+    }
+    private ResultOrWait<Value> convertToDateValue(ResultOrWait<Long> maybeValue) {
+        if (!maybeValue.couldReadResult) {
+            return ResultOrWait.WaitLonger;
+        } else {
+            return ResultOrWait.result((Value) new DefaultValue(DateTimeUtils.convertDateValueToDate(maybeValue.result)));
+        }
+    }
+    private ResultOrWait<Value> convertToTimestampValue(ResultOrWait<Long> dateValue,ResultOrWait<Long> nanos) {
+        if (dateValue.couldReadResult && nanos.couldReadResult) {
+            return ResultOrWait.result((Value) new DefaultValue(
+                    DateTimeUtils.convertDateValueToTimestamp(dateValue.result,nanos.result)));
+        } else {
+            return ResultOrWait.WaitLonger;
+        }
     }
 }

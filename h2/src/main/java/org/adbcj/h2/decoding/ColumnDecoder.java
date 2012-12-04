@@ -66,7 +66,7 @@ public class ColumnDecoder<T>  implements DecoderState {
                     schemaName.result,
                     tableName.result,
                     columnName.result,
-                    H2Types.typeCodeToType(columnType.result),
+                    H2Types.typeCodeToType(columnType.result).getType(),
                     columnName.result,
                     columnName.result,
                     precision.result.intValue(),
