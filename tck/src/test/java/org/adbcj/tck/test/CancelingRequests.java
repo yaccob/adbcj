@@ -32,7 +32,7 @@ public class CancelingRequests extends AbstractWithConnectionManagerTest{
         final Connection connection = connectionManager.connect().get();
 
         final DbSessionFuture<ResultSet> runningStatment = connection.executeQuery("SELECT SLEEP(5)");
-        final DbSessionFuture<ResultSet> toCancel = connection.executeQuery("SELECT SLEEP(5)");
+        final DbSessionFuture<ResultSet> toCancel = connection.executeQuery("SELECT SLEEP(2)");
         boolean canCancel = toCancel.cancel(true);
 
         Assert.assertTrue(canCancel);

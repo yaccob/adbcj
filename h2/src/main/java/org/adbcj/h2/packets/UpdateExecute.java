@@ -1,22 +1,26 @@
 package org.adbcj.h2.packets;
 
+import org.adbcj.h2.CancellationToken;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class UpdateExecute implements  ClientToServerPacket {
+public class UpdateExecute extends ClientToServerPacket {
     public static final int COMMAND_EXECUTE_UPDATE = 3;
     private final int id;
     private final Object[] params;
     private static final Object[] NO_PARAMS = new Object[0];
 
-    public UpdateExecute(int id) {
+    public UpdateExecute(int id, CancellationToken cancelSupport) {
+        super(cancelSupport);
         this.id = id;
         this.params = NO_PARAMS;
     }
-    public UpdateExecute(int id, Object[] params) {
+    public UpdateExecute(int id, CancellationToken cancelSupport, Object[] params) {
+        super(cancelSupport);
         this.id = id;
         this.params = params;
     }

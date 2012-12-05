@@ -1,12 +1,18 @@
 package org.adbcj.h2.packets;
 
+import org.adbcj.h2.CancellationToken;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
-public final class CloseCommand implements ClientToServerPacket {
+public final class CloseCommand extends ClientToServerPacket {
+
+    public CloseCommand() {
+        super(CancellationToken.NO_CANCELLATION);
+    }
 
     public static final int SESSION_CLOSE = 1;
     @Override

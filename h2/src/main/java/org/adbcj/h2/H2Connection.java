@@ -216,6 +216,12 @@ public class H2Connection implements Connection {
             if(logger.isDebugEnabled()){
                 logger.debug("Dequeued request: {}",request);
             }
+            if(request.getToComplete().isCancelled()){
+                if(logger.isDebugEnabled()){
+                    logger.debug("Request has been cancelled: {}",request);
+                }
+                return dequeRequest();
+            }
             return request;
         }
     }

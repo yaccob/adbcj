@@ -1,12 +1,14 @@
 package org.adbcj.h2.packets;
 
+import org.adbcj.h2.CancellationToken;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class QueryExecute implements ClientToServerPacket {
+public class QueryExecute extends ClientToServerPacket {
     public static final int COMMAND_EXECUTE_QUERY = 2;
     public static final int RESULT_CLOSE = 7;
     private static final Object[] NO_PARAMS = new Object[0];
@@ -14,12 +16,14 @@ public class QueryExecute implements ClientToServerPacket {
     private int queryId;
     private final Object[] params;
 
-    public QueryExecute(int id, int queryId, Object[] params) {
+    public QueryExecute(int id, int queryId,CancellationToken cancelSupport, Object[] params) {
+        super(cancelSupport);
         this.id = id;
         this.queryId = queryId;
         this.params = params;
     }
-    public QueryExecute(int id, int queryId) {
+    public QueryExecute(int id, int queryId,CancellationToken cancelSupport) {
+        super(cancelSupport);
         this.id = id;
         this.queryId = queryId;
         this.params = NO_PARAMS;

@@ -1,5 +1,6 @@
 package org.adbcj.h2.packets;
 
+import org.adbcj.h2.CancellationToken;
 import org.adbcj.h2.decoding.IoUtils;
 
 import java.io.DataOutputStream;
@@ -8,11 +9,12 @@ import java.io.IOException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class AutoCommitChangeCommand implements ClientToServerPacket {
+public class AutoCommitChangeCommand extends ClientToServerPacket {
     public static final int SESSION_SET_AUTOCOMMIT = 15;
     private final AutoCommit autoCommit;
 
     public AutoCommitChangeCommand(AutoCommit autoCommit) {
+        super(CancellationToken.NO_CANCELLATION);
         this.autoCommit = autoCommit;
     }
 

@@ -1,6 +1,7 @@
 package org.adbcj.h2.packets;
 
 import org.adbcj.DbException;
+import org.adbcj.h2.CancellationToken;
 import org.adbcj.h2.decoding.Constants;
 import org.adbcj.h2.decoding.IoUtils;
 import org.adbcj.h2.h2.SHA256;
@@ -15,7 +16,7 @@ import static org.adbcj.h2.packets.SizeConstants.INT_SIZE;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class ClientHandshake implements ClientToServerPacket{
+public class ClientHandshake extends ClientToServerPacket{
 
     private String database;
     private String originalUrl;
@@ -28,6 +29,7 @@ public class ClientHandshake implements ClientToServerPacket{
                            String userName,
                            String password,
                            Map<String,String> keys) {
+        super(CancellationToken.NO_CANCELLATION);
         this.database = database;
         this.originalUrl = originalUrl;
         this.userName = userName;

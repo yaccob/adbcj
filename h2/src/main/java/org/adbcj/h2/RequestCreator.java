@@ -25,61 +25,73 @@ public class RequestCreator {
     public <T> Request createQuery(String sql,
                                           ResultHandler<T> eventHandler,
                                           T accumulator) {
+        CancellationToken cancelSupport = new CancellationToken();
         final int sessionId = connection.nextId();
         final int queryId = connection.nextId();
-        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection);
-        final Request executeQuery = executeQueryAndClose(sql, eventHandler, accumulator, resultFuture, sessionId, queryId);
+        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection,cancelSupport);
+        final Request executeQuery = executeQueryAndClose(sql,
+                eventHandler,
+                accumulator,
+                resultFuture,
+                cancelSupport,
+                sessionId,
+                queryId);
         return new Request("Prepare Query: " + sql,
                 resultFuture,
                 StatementPrepare.continueWithRequest(executeQuery, resultFuture),
-                new QueryPrepareCommand(sessionId, sql),
+                new QueryPrepareCommand(sessionId, sql,cancelSupport),
                 executeQuery);
     }
 
     public Request executeUpdate(String sql) {
+        CancellationToken cancelSupport = new CancellationToken();
         final int sessionId = connection.nextId();
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection);
-        final Request executeQuery = executeUpdateAndClose(sql, resultFuture, sessionId);
+        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection,cancelSupport);
+        final Request executeQuery = executeUpdateAndClose(sql, resultFuture,cancelSupport, sessionId);
         return new Request("Prepare Query: " + sql, resultFuture,
                 StatementPrepare.continueWithRequest(executeQuery, resultFuture),
-                new QueryPrepareCommand(sessionId, sql),
+                new QueryPrepareCommand(sessionId, sql,cancelSupport),
                 executeQuery);
     }
 
     public Request executePrepareQuery(String sql) {
-        DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(connection);
+        CancellationToken cancelSupport = new CancellationToken();
+        DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(connection,cancelSupport);
         final int sessionId = connection.nextId();
         return new Request("Prepare Query: " + sql, resultFuture,
-                StatementPrepare.createPrepareQuery(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+                StatementPrepare.createPrepareQuery(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
     }
 
 
     public Request executePrepareUpdate(String sql) {
-        DefaultDbSessionFuture<PreparedUpdate> resultFuture = new DefaultDbSessionFuture<PreparedUpdate>(connection);
+        CancellationToken cancelSupport = new CancellationToken();
+        DefaultDbSessionFuture<PreparedUpdate> resultFuture = new DefaultDbSessionFuture<PreparedUpdate>(connection,cancelSupport);
         final int sessionId = connection.nextId();
         return new Request("Prepare Update: " + sql, resultFuture,
-                StatementPrepare.createPrepareUpdate(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql));
+                StatementPrepare.createPrepareUpdate(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
     }
 
     public <T> Request executeQueryStatement(ResultHandler<T> eventHandler,
                                                     T accumulator,
                                                     int sessionId,
                                                     Object[] params) {
-        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection);
+        CancellationToken cancelSupport = new CancellationToken();
+        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection,cancelSupport);
         int queryId = connection.nextId();
         return new Request("ExecutePreparedQuery: ", resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
                         accumulator,
-                        resultFuture), new QueryExecute(sessionId, queryId, params));
+                        resultFuture), new QueryExecute(sessionId, queryId,cancelSupport, params));
     }
     public Request executeUpdateStatement(int sessionId,
                                                  Object[] params) {
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection);
+        CancellationToken cancelSupport = new CancellationToken();
+        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection,cancelSupport);
         return new Request("ExecutePreparedUpdate: ", resultFuture,
                 new UpdateResult(resultFuture),
-                new CompoundCommand(
-                        new UpdateExecute(sessionId,params),
-                        new QueryExecute(connection.idForAutoId(), connection.nextId())));
+                new CompoundCommand(cancelSupport,
+                        new UpdateExecute(sessionId,cancelSupport,params),
+                        new QueryExecute(connection.idForAutoId(), connection.nextId(),cancelSupport)));
     }
     public Request executeCloseStatement() {
         DefaultDbSessionFuture<Void> resultFuture = new DefaultDbSessionFuture<Void>(connection);
@@ -92,7 +104,8 @@ public class RequestCreator {
         final int sessionId = connection.idForAutoId();
         String sql = "SELECT SCOPE_IDENTITY() WHERE SCOPE_IDENTITY() IS NOT NULL";
         return new Request("Prepare Query: " + sql, completeConnection,
-                StatementPrepare.createAutoIdCompletion(completeConnection, connection), new QueryPrepareCommand(sessionId, sql));
+                StatementPrepare.createAutoIdCompletion(completeConnection, connection),
+                new QueryPrepareCommand(sessionId, sql,CancellationToken.NO_CANCELLATION));
     }
 
     public Request beginTransaction(){
@@ -111,23 +124,28 @@ public class RequestCreator {
     <T> Request executeQueryAndClose(String sql, ResultHandler<T> eventHandler,
                                             T accumulator,
                                             DefaultDbSessionFuture<T> resultFuture,
+                                            CancellationToken cancelSupport,
                                             int sessionId,
                                             int queryId) {
         return new Request("ExecuteQuery: " + sql, resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
                         accumulator,
-                        resultFuture), new CompoundCommand(new QueryExecute(sessionId, queryId), new CommandClose(sessionId)));
+                        resultFuture),
+                new CompoundCommand(cancelSupport,
+                new QueryExecute(sessionId, queryId,cancelSupport),
+                new CommandClose(sessionId)));
     }
 
     <T> Request executeUpdateAndClose(String sql,
                                              DefaultDbSessionFuture<Result> resultFuture,
+                                             CancellationToken cancelSupport,
                                              int sessionId) {
         H2Connection connection = (H2Connection) resultFuture.getSession();
         return new Request("UpdateExecute: " + sql, resultFuture,
                 new UpdateResult(resultFuture),
-                new CompoundCommand(
-                        new UpdateExecute(sessionId),
-                        new QueryExecute(connection.idForAutoId(), connection.nextId()),
+                new CompoundCommand(cancelSupport,
+                        new UpdateExecute(sessionId,cancelSupport),
+                        new QueryExecute(connection.idForAutoId(), connection.nextId(),cancelSupport),
                         new CommandClose(sessionId)));
     }
 }

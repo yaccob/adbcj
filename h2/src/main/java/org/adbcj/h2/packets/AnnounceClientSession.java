@@ -1,5 +1,6 @@
 package org.adbcj.h2.packets;
 
+import org.adbcj.h2.CancellationToken;
 import org.adbcj.h2.decoding.IoUtils;
 
 import java.io.DataOutputStream;
@@ -8,13 +9,14 @@ import java.io.IOException;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class AnnounceClientSession implements ClientToServerPacket {
+public class AnnounceClientSession extends ClientToServerPacket {
 
 
     public static final int SESSION_SET_ID = 12;
     private final String sessionId;
 
     public AnnounceClientSession(String sessionId) {
+        super(CancellationToken.NO_CANCELLATION);
         this.sessionId = sessionId;
     }
 

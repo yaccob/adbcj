@@ -30,15 +30,20 @@ class Encoder implements ChannelDownstreamHandler {
         }
 
         ClientToServerPacket  request = (ClientToServerPacket) e.getMessage();
-        ChannelBuffer buffer = ChannelBuffers.buffer(request.getLength());
-        ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
-        DataOutputStream dataOutputStream = new DataOutputStream(out);
-        request.writeToStream(dataOutputStream);
-        dataOutputStream.close();
-        out.close();
-        if(logger.isDebugEnabled()){
-            logger.debug("Sent {} down stream",request);
+        if(request.startWriteOrCancel()){
+            ChannelBuffer buffer = ChannelBuffers.buffer(request.getLength());
+            ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
+            DataOutputStream dataOutputStream = new DataOutputStream(out);
+            request.writeToStream(dataOutputStream);
+            dataOutputStream.close();
+            out.close();
+            if(logger.isDebugEnabled()){
+                logger.debug("Sent {} down stream",request);
+            }
+            Channels.write(context, e.getFuture(), buffer);
+        } else{
+            // was cancelled
+            logger.debug("Message has been cancelled {}",request);
         }
-        Channels.write(context, e.getFuture(), buffer);
     }
 }
