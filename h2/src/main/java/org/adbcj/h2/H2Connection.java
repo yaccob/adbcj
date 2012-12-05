@@ -68,8 +68,8 @@ public class H2Connection implements Connection {
             }
             final DefaultDbSessionFuture<Void> commitExecution = FutureUtils.flatMap(commit, this, new OneArgFunction<PreparedUpdate, DbFuture<Void>>() {
                 @Override
-                public DefaultDbSessionFuture<Void> apply(PreparedUpdate arg) {
-                    return FutureUtils.map(arg.execute(), H2Connection.this, new OneArgFunction<Result, Void>() {
+                public DefaultDbSessionFuture<Void> apply(PreparedUpdate statement) {
+                    return FutureUtils.map(statement.execute(), H2Connection.this, new OneArgFunction<Result, Void>() {
                         @Override
                         public Void apply(Result arg) {
                             return null;
@@ -77,6 +77,7 @@ public class H2Connection implements Connection {
                     });
                 }
             });
+            endTransaction();
             isInTransaction = false;
             return commitExecution;
         }
@@ -102,6 +103,7 @@ public class H2Connection implements Connection {
                     });
                 }
             });
+            endTransaction();
             isInTransaction = false;
             return rollbackExecution;
         }
@@ -237,6 +239,13 @@ public class H2Connection implements Connection {
 
     public int idForAutoId() {
         return autoIdSession;
+    }
+
+
+
+    private void endTransaction() {
+        final Request request = Request.endTransaction(this);
+        queResponseHandlerAndSendMessage(request);
     }
 
     /**

@@ -144,7 +144,13 @@ public class Request {
     public static Request beginTransaction(H2Connection connection){
         return new Request("Begin Transacton",new DefaultDbFuture(),
                 new AwaitOk(connection),
-                new BeginTransactionCommand() );
+                new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_OFF) );
+
+    }
+    public static Request endTransaction(H2Connection connection){
+        return new Request("Begin Transacton",new DefaultDbFuture(),
+                new AwaitOk(connection),
+                new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_ON) );
 
     }
 

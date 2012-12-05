@@ -2,20 +2,20 @@
 
 
 <suite name="ADBCJ-TCK" verbose="1" >
-    <test name="MySQL">
-        <parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
-        <parameter name="url" value="adbcj:mysql://localhost/adbcjtck" />
-        <parameter name="user" value="adbcjtck" />
-        <parameter name="password" value="adbcjtck" />
-        <packages>
-            <package name="org.adbcj.tck.test" />
-        </packages>
+    <!--<test name="MySQL">-->
+        <!--<parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />-->
+        <!--<parameter name="url" value="adbcj:mysql://localhost/adbcjtck" />-->
+        <!--<parameter name="user" value="adbcjtck" />-->
+        <!--<parameter name="password" value="adbcjtck" />-->
+        <!--<packages>-->
+            <!--<package name="org.adbcj.tck.test" />-->
+        <!--</packages>-->
 
-        <classes>
-            <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.PreparedUpdateTest"/>-->
-        </classes>
-    </test>
+        <!--<classes>-->
+            <!--<class name="org.adbcj.tck.InitMysql" />-->
+            <!--&lt;!&ndash;<class name="org.adbcj.tck.test.PreparedUpdateTest"/>&ndash;&gt;-->
+        <!--</classes>-->
+    <!--</test>-->
     <!--<test name="MySQL-Pooled">-->
         <!--<parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />-->
         <!--<parameter name="url" value="adbcj:pooled:mysql://localhost/adbcjtck" />-->
@@ -84,12 +84,12 @@
         <parameter name="user" value="adbcjtck" />
         <parameter name="password" value="adbcjtck" />
         <packages>
-            <!--<package name="org.adbcj.tck.test" />-->
+            <package name="org.adbcj.tck.test" />
         </packages>
         <classes>
             <class name="org.adbcj.tck.InitH2" />
-            <class name="org.adbcj.tck.test.UpdateTest"/>
-            <class name="org.adbcj.tck.test.TransactionTest"/>
+            <!--<class name="org.adbcj.tck.test.UpdateTest"/>-->
+            <!--<class name="org.adbcj.tck.test.TransactionTest"/>-->
             <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
         </classes>
