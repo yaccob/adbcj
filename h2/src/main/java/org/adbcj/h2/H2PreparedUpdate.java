@@ -18,9 +18,8 @@ public class H2PreparedUpdate extends AbstractStatement implements PreparedUpdat
         if(paramsCount!=params.length){
             throw new IllegalArgumentException("Expect "+paramsCount+" parameters, but got: "+params.length);
         }
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection);
-        final Request request = Request.executeUpdateStatement(resultFuture, sessionId, params);
+        final Request request = connection.requestCreator().executeUpdateStatement(sessionId, params);
         connection.queResponseHandlerAndSendMessage(request);
-        return resultFuture;
+        return (DbSessionFuture<Result>) request.getToComplete();
     }
 }

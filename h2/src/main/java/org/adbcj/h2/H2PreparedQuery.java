@@ -4,7 +4,6 @@ import org.adbcj.DbSessionFuture;
 import org.adbcj.PreparedQuery;
 import org.adbcj.ResultHandler;
 import org.adbcj.ResultSet;
-import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
 
@@ -29,16 +28,12 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
         if(paramsCount!=params.length){
             throw new IllegalArgumentException("Expect "+paramsCount+" parameters, but got: "+params.length);
         }
-        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection);
-        int queryId = connection.nextId();
-        final Request request = Request.executeQueryStatement(eventHandler,
+        final Request request = connection.requestCreator().executeQueryStatement(eventHandler,
                 accumulator,
-                resultFuture,
                 sessionId,
-                queryId,
                 params);
         connection.queResponseHandlerAndSendMessage(request);
-        return resultFuture;
+        return (DbSessionFuture<T>) request.getToComplete();
     }
 
 }

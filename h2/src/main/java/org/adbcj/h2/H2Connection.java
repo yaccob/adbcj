@@ -30,6 +30,8 @@ public class H2Connection implements Connection {
     private DbSessionFuture<PreparedUpdate> commit = null;
     private DbSessionFuture<PreparedUpdate> rollback;
 
+    private final RequestCreator requestCreator = new RequestCreator(this);
+
     public H2Connection(int maxQueueSize, ConnectionManager manager, Channel channel) {
         this.maxQueueSize = maxQueueSize;
         this.manager = manager;
@@ -52,7 +54,7 @@ public class H2Connection implements Connection {
                 throw new DbException("Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
             }
             isInTransaction = true;
-            final Request request = Request.beginTransaction(this);
+            final Request request = requestCreator.beginTransaction();
             queResponseHandlerAndSendMessage(request);
         }
     }
@@ -124,36 +126,31 @@ public class H2Connection implements Connection {
     @Override
     public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
         synchronized (lock){
-            DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(this);
-            int sessionId = nextId();
-            final Request request = Request.createQuery(sql, eventHandler, accumulator, resultFuture, sessionId);
+            final Request request = requestCreator.createQuery(sql, eventHandler, accumulator);
             queResponseHandlerAndSendMessage(request);
-            return resultFuture;
+            return (DbSessionFuture<T>) request.getToComplete();
         }
     }
 
     @Override
     public DbSessionFuture<Result> executeUpdate(String sql) {
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(this);
-        final Request request = Request.executeUpdate(sql, resultFuture);
+        final Request request = requestCreator.executeUpdate(sql);
         queResponseHandlerAndSendMessage(request);
-        return resultFuture;
+        return (DbSessionFuture) request.getToComplete();
     }
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
-        DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(this);
-        final Request request = Request.executePrepareQuery(sql, resultFuture);
+        final Request request = requestCreator.executePrepareQuery(sql);
         queResponseHandlerAndSendMessage(request);
-        return resultFuture;
+        return (DbSessionFuture<PreparedQuery>) request.getToComplete();
     }
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
-        DefaultDbSessionFuture<PreparedUpdate> resultFuture = new DefaultDbSessionFuture<PreparedUpdate>(this);
-        final Request request = Request.executePrepareUpdate(sql, resultFuture);
+        final Request request = requestCreator.executePrepareUpdate(sql);
         queResponseHandlerAndSendMessage(request);
-        return resultFuture;
+        return (DbSessionFuture<PreparedUpdate>) request.getToComplete();
     }
 
     @Override
@@ -167,8 +164,9 @@ public class H2Connection implements Connection {
             if(this.closeFuture!=null){
                 return closeFuture;
             }
-            closeFuture = new DefaultDbFuture<Void>();
-            queResponseHandlerAndSendMessage(Request.createCloseRequest(closeFuture,this));
+            Request request = requestCreator.createCloseRequest();
+            queResponseHandlerAndSendMessage(request);
+            closeFuture = (DefaultDbFuture<Void>) request.getToComplete();
             return closeFuture;
         }
     }
@@ -241,10 +239,14 @@ public class H2Connection implements Connection {
         return autoIdSession;
     }
 
+    public RequestCreator requestCreator() {
+        return requestCreator;
+    }
+
 
 
     private void endTransaction() {
-        final Request request = Request.endTransaction(this);
+        final Request request = requestCreator.endTransaction();
         queResponseHandlerAndSendMessage(request);
     }
 
