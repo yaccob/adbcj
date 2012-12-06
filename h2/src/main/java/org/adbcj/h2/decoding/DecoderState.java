@@ -1,5 +1,6 @@
 package org.adbcj.h2.decoding;
 
+import org.adbcj.h2.H2DbException;
 import org.jboss.netty.channel.Channel;
 
 import java.io.DataInputStream;
@@ -18,6 +19,13 @@ public interface DecoderState {
      * @return state
      */
     public ResultAndState decode(DataInputStream stream, Channel channel) throws IOException;
+    /**
+     * Handle the exception occurred for this decoding staten
+     *
+     * Returns the new state
+     * @return state
+     */
+    public ResultAndState handleException(H2DbException exception);
 
 
 

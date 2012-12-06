@@ -49,7 +49,7 @@ public class QueryHeader<T> extends StatusReadingDecoder {
     }
 
     @Override
-    protected void handleException(H2DbException exception) {
+    protected void requestFailedContinue(H2DbException exception) {
         this.resultFuture.setException(exception);
     }
 }

@@ -43,7 +43,7 @@ class FirstServerHandshake extends StatusReadingDecoder {
     }
 
     @Override
-    protected void handleException(H2DbException exception) {
+    protected void requestFailedContinue(H2DbException exception) {
         currentState.trySetException(exception);
     }
 }
@@ -68,7 +68,7 @@ class SessionIdReceived extends StatusReadingDecoder {
     }
 
     @Override
-    protected void handleException(H2DbException exception) {
+    protected void requestFailedContinue(H2DbException exception) {
         this.currentState.trySetException(exception);
     }
 }

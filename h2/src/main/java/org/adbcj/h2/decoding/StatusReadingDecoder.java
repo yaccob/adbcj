@@ -31,16 +31,27 @@ public abstract class StatusReadingDecoder implements DecoderState {
             ResultOrWait<Integer> errorCode = IoUtils.tryReadNextInt(stream, sql);
             ResultOrWait<String> stackTrace = IoUtils.tryReadNextString(stream, errorCode);
             if(stackTrace.couldReadResult) {
-                handleException(new H2DbException(sqlstate.result,message.result,sql.result,errorCode.result,stackTrace.result));
-                return ResultAndState.newState(new AnswerNextRequest(connection));
+                return handleException(new H2DbException(sqlstate.result,message.result,sql.result,errorCode.result,stackTrace.result));
             }  else{
-                return ResultAndState.waitForMoreInput(this);
+                return continueWithNextRequest();
             }
         }
         return processFurther(stream, channel, status);
     }
+
+    private ResultAndState continueWithNextRequest() {
+        return ResultAndState.waitForMoreInput(this);
+    }
+
     protected abstract ResultAndState processFurther(DataInputStream stream, Channel channel, int status) throws IOException;
-    protected abstract void handleException(H2DbException exception);
+
+    @Override
+    public ResultAndState handleException(H2DbException exception) {
+        requestFailedContinue(exception);
+        return ResultAndState.newState(new AnswerNextRequest(connection));
+    }
+
+    protected void requestFailedContinue(H2DbException exception){};
 
 
     static H2Connection connectionOfFuture(DefaultDbSessionFuture<?> future){

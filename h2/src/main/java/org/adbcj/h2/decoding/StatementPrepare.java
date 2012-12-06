@@ -46,7 +46,7 @@ public abstract class StatementPrepare<T> extends StatusReadingDecoder {
 
 
     @Override
-    protected void handleException(H2DbException exception) {
+    protected void requestFailedContinue(H2DbException exception) {
         resultFuture.trySetException(exception);
     }
 

@@ -3,6 +3,7 @@ package org.adbcj.h2.decoding;
 import org.adbcj.Field;
 import org.adbcj.ResultHandler;
 import org.adbcj.h2.H2Connection;
+import org.adbcj.h2.H2DbException;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultField;
 import org.jboss.netty.channel.Channel;
@@ -91,6 +92,12 @@ public class ColumnDecoder<T>  implements DecoderState {
         } else{
             return ResultAndState.waitForMoreInput(this);
         }
+    }
+
+    @Override
+    public ResultAndState handleException(H2DbException exception) {
+        resultFuture.trySetException(exception);
+        return ResultAndState.newState(new AnswerNextRequest((H2Connection) resultFuture.getSession()));
     }
 
     private ResultAndState goToRowParsing() {

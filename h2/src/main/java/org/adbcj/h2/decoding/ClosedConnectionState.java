@@ -27,7 +27,7 @@ public final class ClosedConnectionState extends StatusReadingDecoder {
     }
 
     @Override
-    protected void handleException(H2DbException exception) {
+    protected void requestFailedContinue(H2DbException exception) {
         finishedClose.trySetException(exception);
     }
 }

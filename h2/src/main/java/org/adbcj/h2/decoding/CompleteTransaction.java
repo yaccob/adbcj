@@ -35,7 +35,7 @@ public class CompleteTransaction extends StatusReadingDecoder {
     }
 
     @Override
-    protected void handleException(H2DbException exception) {
+    protected void requestFailedContinue(H2DbException exception) {
         throw exception;
     }
 }
