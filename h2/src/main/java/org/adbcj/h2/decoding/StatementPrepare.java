@@ -86,7 +86,16 @@ public abstract class StatementPrepare<T> extends StatusReadingDecoder {
         };
     }
 
-    public static StatementPrepare<Connection> createAutoIdCompletion(
+    public static StatementPrepare<Connection> createOnlyPassFailure(
+            final DefaultDbFuture<Connection> resultFuture,
+            final H2Connection connection) {
+        return new StatementPrepare<Connection>(resultFuture,connection ) {
+            @Override
+            protected void handleCompletion(H2Connection connection, int paramsCount) {
+            }
+        };
+    }
+    public static StatementPrepare<Connection> completeFuture(
             final DefaultDbFuture<Connection> resultFuture,
             final H2Connection connection) {
         return new StatementPrepare<Connection>(resultFuture,connection ) {

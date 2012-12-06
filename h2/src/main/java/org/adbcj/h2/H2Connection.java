@@ -24,6 +24,8 @@ public class H2Connection implements Connection {
     private volatile DefaultDbFuture<Void> closeFuture;
     private final AtomicInteger requestId = new AtomicInteger(0);
     private final int autoIdSession = nextId();
+    private final int commitIdSession = nextId();
+    private final int rollbackIdSession = nextId();
     private BlockingRequestInProgress blockingRequest;
 
     private volatile boolean isInTransaction = false;
@@ -67,23 +69,10 @@ public class H2Connection implements Connection {
             if (!isInTransaction()) {
                 throw new DbException("Not currently in a transaction, cannot commit");
             }
-            if(null==commit){
-                commit = prepareUpdate("COMMIT");
-            }
-            final DefaultDbSessionFuture<Void> commitExecution = FutureUtils.flatMap(commit, this, new OneArgFunction<PreparedUpdate, DbFuture<Void>>() {
-                @Override
-                public DefaultDbSessionFuture<Void> apply(PreparedUpdate statement) {
-                    return FutureUtils.map(statement.execute(), H2Connection.this, new OneArgFunction<Result, Void>() {
-                        @Override
-                        public Void apply(Result arg) {
-                            return null;
-                        }
-                    });
-                }
-            });
-            endTransaction();
+            final Request request = requestCreator.commitTransaction();
+            queResponseHandlerAndSendMessage(request);
             isInTransaction = false;
-            return commitExecution;
+            return (DbSessionFuture<Void>) request.getToComplete();
         }
     }
 
@@ -94,23 +83,10 @@ public class H2Connection implements Connection {
             if (!isInTransaction()) {
                 throw new DbException("Not currently in a transaction, cannot rollback");
             }
-            if(null==rollback){
-                rollback = prepareUpdate("ROLLBACK");
-            }
-            final DefaultDbSessionFuture<Void> rollbackExecution = FutureUtils.flatMap(rollback, this, new OneArgFunction<PreparedUpdate, DbFuture<Void>>() {
-                @Override
-                public DefaultDbSessionFuture<Void> apply(PreparedUpdate arg) {
-                    return FutureUtils.map(arg.execute(), H2Connection.this, new OneArgFunction<Result, Void>() {
-                        @Override
-                        public Void apply(Result arg) {
-                            return null;
-                        }
-                    });
-                }
-            });
-            endTransaction();
+            final Request request = requestCreator.rollbackTransaction();
+            queResponseHandlerAndSendMessage(request);
             isInTransaction = false;
-            return rollbackExecution;
+            return (DbSessionFuture<Void>) request.getToComplete();
         }
     }
 
@@ -259,18 +235,22 @@ public class H2Connection implements Connection {
         return lock;
     }
 
-    public int idForAutoId() {
+    int idForAutoId() {
         return autoIdSession;
     }
+
+    int idForCommit() {
+        return commitIdSession;
+    }
+    int idForRollback() {
+        return rollbackIdSession;
+    }
+
 
     public RequestCreator requestCreator() {
         return requestCreator;
     }
 
-    private void endTransaction() {
-        final Request request = requestCreator.endTransaction();
-        queResponseHandlerAndSendMessage(request);
-    }
 
     private void forceCloseOnPendingRequests() {
         for (Request request : requestQueue) {
@@ -292,7 +272,6 @@ public class H2Connection implements Connection {
             throw new DbSessionClosedException("This connection is closed");
         }
     }
-
     /**
      * Expects that it is executed withing the connection lock
      */

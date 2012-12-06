@@ -62,6 +62,8 @@ class SessionIdReceived extends StatusReadingDecoder {
     protected ResultAndState processFurther(DataInputStream input, Channel channel, int status) throws IOException {
         StatusCodes.STATUS_OK.expectStatusOrThrow(status);
         connection.queResponseHandlerAndSendMessage(connection.requestCreator().createGetAutoIdStatement(currentState));
+        connection.queResponseHandlerAndSendMessage(connection.requestCreator().createCommitStatement(currentState));
+        connection.queResponseHandlerAndSendMessage(connection.requestCreator().createRollbackStatement(currentState));
         return ResultAndState.newState(new AnswerNextRequest(connection));
     }
 

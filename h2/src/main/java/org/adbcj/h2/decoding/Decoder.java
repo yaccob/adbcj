@@ -49,6 +49,6 @@ public class Decoder extends FrameDecoder {
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         super.channelClosed(ctx, e);
-//        connection.tryCompleteClose();
+        connection.tryCompleteClose();
     }
 }

@@ -78,7 +78,7 @@ public class RequestCreator {
         CancellationToken cancelSupport = new CancellationToken();
         DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection,cancelSupport);
         int queryId = connection.nextId();
-        return new Request("ExecutePreparedQuery: ", resultFuture,
+        return new Request("ExecutePreparedQuery", resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
                         accumulator,
                         resultFuture), new QueryExecute(sessionId, queryId,cancelSupport, params));
@@ -104,7 +104,21 @@ public class RequestCreator {
         final int sessionId = connection.idForAutoId();
         String sql = "SELECT SCOPE_IDENTITY() WHERE SCOPE_IDENTITY() IS NOT NULL";
         return new Request("Prepare Query: " + sql, completeConnection,
-                StatementPrepare.createAutoIdCompletion(completeConnection, connection),
+                StatementPrepare.createOnlyPassFailure(completeConnection, connection),
+                new QueryPrepareCommand(sessionId, sql,CancellationToken.NO_CANCELLATION));
+    }
+    public Request createCommitStatement(DefaultDbFuture<Connection> completeConnection) {
+        final int sessionId = connection.idForCommit();
+        String sql = "COMMIT";
+        return new Request("Prepare Query: " + sql, completeConnection,
+                StatementPrepare.createOnlyPassFailure(completeConnection, connection),
+                new QueryPrepareCommand(sessionId, sql,CancellationToken.NO_CANCELLATION));
+    }
+    public Request createRollbackStatement(DefaultDbFuture<Connection> completeConnection) {
+        final int sessionId = connection.idForRollback();
+        String sql = "ROLLBACK";
+        return new Request("Prepare Query: " + sql, completeConnection,
+                StatementPrepare.completeFuture(completeConnection, connection),
                 new QueryPrepareCommand(sessionId, sql,CancellationToken.NO_CANCELLATION));
     }
 
@@ -114,10 +128,22 @@ public class RequestCreator {
                 new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_OFF) );
 
     }
-    public Request endTransaction(){
-        return new Request("Begin Transacton",new DefaultDbSessionFuture(connection),
-                new AwaitOk(connection),
-                new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_ON) );
+    public Request commitTransaction(){
+        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection);
+        return new Request("Commit Transaction", future,
+                new CompleteTransaction(future),
+                new CompoundCommand(CancellationToken.NO_CANCELLATION,
+                        new UpdateExecute(connection.idForCommit(),CancellationToken.NO_CANCELLATION),
+                        new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_ON) ));
+
+    }
+    public Request rollbackTransaction(){
+        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection);
+        return new Request("Rollback Transaction", future,
+                new CompleteTransaction(future),
+                new CompoundCommand(CancellationToken.NO_CANCELLATION,
+                        new UpdateExecute(connection.idForRollback(),CancellationToken.NO_CANCELLATION),
+                        new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_ON) ));
 
     }
 

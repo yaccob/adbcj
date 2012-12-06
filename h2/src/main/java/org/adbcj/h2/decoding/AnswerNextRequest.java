@@ -25,7 +25,8 @@ public final class AnswerNextRequest extends StatusReadingDecoder {
 
     @Override
     protected void handleException(H2DbException exception) {
-        final DefaultDbFuture<Object> toComplete = connection.dequeRequest().getToComplete();
+        final Request requestInfo = connection.dequeRequest();
+        final DefaultDbFuture<Object> toComplete = requestInfo.getToComplete();
         toComplete.trySetException(exception);
     }
 
