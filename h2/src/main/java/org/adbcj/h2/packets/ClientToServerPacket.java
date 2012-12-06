@@ -22,4 +22,12 @@ public abstract class ClientToServerPacket {
     public boolean startWriteOrCancel(){
         return cancelSupport.tryStartOrIsCancel();
     }
+
+    public boolean tryCancel() {
+        return cancelSupport.cancel();
+    }
+
+    public boolean wasCancelled(){
+        return cancelSupport.isCancelled();
+    }
 }

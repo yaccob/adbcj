@@ -53,6 +53,7 @@ public class CloseConnectionsTest {
         final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(4)");
         manager.close(CloseMode.CANCEL_PENDING_OPERATIONS).get();
 
+        runningQuery.get();
 
         checkClosed(c1, runningQuery, runningQuery2, c2);
 

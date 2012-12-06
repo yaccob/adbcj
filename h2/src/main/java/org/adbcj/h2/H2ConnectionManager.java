@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -114,30 +115,30 @@ public class H2ConnectionManager extends AbstractConnectionManager {
 
     @Override
     public DbFuture<Void> doClose(CloseMode mode) throws DbException {
-        synchronized (connections) {
-            final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>();
-            closeFuture.addListener(new DbListener<Void>() {
+        ArrayList<H2Connection> connectionsCopy;
+        synchronized (connections){
+            connectionsCopy = new ArrayList<H2Connection>(connections);
+        }
+        final AtomicInteger toCloseCount = new AtomicInteger(connectionsCopy.size());
+        final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>();
+        for (H2Connection connection : connectionsCopy) {
+            connection.close(mode).addListener(new DbListener<Void>() {
                 @Override
                 public void onCompletion(DbFuture<Void> future) {
-                    bossExecutor.shutdown();
+                    final int toCloseConnnectionCount = toCloseCount.decrementAndGet();
+                    if (toCloseConnnectionCount <= 0) {
+                        new Thread("Closing H2 ConnectionManager") {
+                            @Override
+                            public void run() {
+                                bootstrap.releaseExternalResources();
+                                closeFuture.setResult(null);
+                            }
+                        }.start();
+
+                    }
                 }
             });
-            final AtomicInteger latch = new AtomicInteger(connections.size());
-            if(connections.isEmpty()){
-                closeFuture.trySetResult(null);
-            }
-            for (H2Connection connection : connections) {
-                connection.close(mode).addListener(new DbListener<Void>() {
-                    @Override
-                    public void onCompletion(DbFuture<Void> future) {
-                        final int currentCount = latch.decrementAndGet();
-                        if (currentCount <= 0) {
-                            closeFuture.trySetResult(null);
-                        }
-                    }
-                });
-            }
-            return closeFuture;
         }
+        return closeFuture;
     }
 }

@@ -49,6 +49,7 @@ public class H2Connection implements Connection {
 
     @Override
     public void beginTransaction() {
+        checkClosed();
         synchronized (lock){
             if (isInTransaction()) {
                 throw new DbException("Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
@@ -61,6 +62,7 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<Void> commit() {
+        checkClosed();
         synchronized (lock){
             if (!isInTransaction()) {
                 throw new DbException("Not currently in a transaction, cannot commit");
@@ -87,6 +89,7 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<Void> rollback() {
+        checkClosed();
         synchronized (lock){
             if (!isInTransaction()) {
                 throw new DbException("Not currently in a transaction, cannot rollback");
@@ -118,6 +121,7 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
+        checkClosed();
         ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
         return (DbSessionFuture) executeQuery(sql, eventHandler, resultSet);
@@ -125,6 +129,7 @@ public class H2Connection implements Connection {
 
     @Override
     public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
+        checkClosed();
         synchronized (lock){
             final Request request = requestCreator.createQuery(sql, eventHandler, accumulator);
             queResponseHandlerAndSendMessage(request);
@@ -134,6 +139,7 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<Result> executeUpdate(String sql) {
+        checkClosed();
         final Request request = requestCreator.executeUpdate(sql);
         queResponseHandlerAndSendMessage(request);
         return (DbSessionFuture) request.getToComplete();
@@ -141,6 +147,7 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+        checkClosed();
         final Request request = requestCreator.executePrepareQuery(sql);
         queResponseHandlerAndSendMessage(request);
         return (DbSessionFuture<PreparedQuery>) request.getToComplete();
@@ -148,6 +155,7 @@ public class H2Connection implements Connection {
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+        checkClosed();
         final Request request = requestCreator.executePrepareUpdate(sql);
         queResponseHandlerAndSendMessage(request);
         return (DbSessionFuture<PreparedUpdate>) request.getToComplete();
@@ -163,6 +171,9 @@ public class H2Connection implements Connection {
         synchronized (lock){
             if(this.closeFuture!=null){
                 return closeFuture;
+            }
+            if(closeMode==CloseMode.CANCEL_PENDING_OPERATIONS){
+                forceCloseOnPendingRequests();
             }
             Request request = requestCreator.createCloseRequest();
             queResponseHandlerAndSendMessage(request);
@@ -183,6 +194,13 @@ public class H2Connection implements Connection {
 
     public void queResponseHandlerAndSendMessage(Request request) {
         synchronized (lock){
+            int requestsPending = requestQueue.size()
+                    +( (null!=blockingRequest) ? blockingRequest.waitingRequests.size() : 0);
+            if(requestsPending>maxQueueSize){
+                throw new DbException("To many pending requests. The current maximum is "+maxQueueSize+"."+
+                    "Ensure that your not overloading the database with requests. " +
+                    "Also check the "+StandardProperties.MAX_QUEUE_LENGTH+" property");
+            }
             if(blockingRequest==null){
                 requestQueue.add(request);
                 channel.write(request.getRequest());
@@ -216,7 +234,7 @@ public class H2Connection implements Connection {
             if(logger.isDebugEnabled()){
                 logger.debug("Dequeued request: {}",request);
             }
-            if(request.getToComplete().isCancelled()){
+            if(request.getRequest().wasCancelled()){
                 if(logger.isDebugEnabled()){
                     logger.debug("Request has been cancelled: {}",request);
                 }
@@ -249,11 +267,30 @@ public class H2Connection implements Connection {
         return requestCreator;
     }
 
-
-
     private void endTransaction() {
         final Request request = requestCreator.endTransaction();
         queResponseHandlerAndSendMessage(request);
+    }
+
+    private void forceCloseOnPendingRequests() {
+        for (Request request : requestQueue) {
+            if(request.getRequest().tryCancel()){
+                request.getToComplete().trySetException(new DbSessionClosedException("Connection is closed"));
+            }
+        }
+        if(null!=blockingRequest){
+            for (Request waitingRequest : blockingRequest.waitingRequests) {
+                if(waitingRequest.getRequest().tryCancel()){
+                    waitingRequest.getToComplete().trySetException(new DbSessionClosedException("Connection is closed"));
+                }
+            }
+        }
+    }
+
+    void checkClosed(){
+        if(isClosed()){
+            throw new DbSessionClosedException("This connection is closed");
+        }
     }
 
     /**

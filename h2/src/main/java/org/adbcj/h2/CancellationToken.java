@@ -36,6 +36,10 @@ public final class CancellationToken implements CancellationAction {
         return state.compareAndSet(CancelState.NOT_CANCELLED, CancelState.TOO_LATE_TO_CANCEL);
     }
 
+    public boolean isCancelled() {
+        return state.get() == CancelState.CANCELLED;
+    }
+
     enum CancelState{
         NOT_CANCELLED,
         CANCELLED,

@@ -2,6 +2,7 @@ package org.adbcj.h2.decoding;
 
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
+import org.adbcj.h2.Request;
 import org.adbcj.support.DefaultDbFuture;
 import org.jboss.netty.channel.Channel;
 
@@ -29,9 +30,10 @@ public final class AnswerNextRequest extends StatusReadingDecoder {
     }
 
     private ResultAndState handleRequest(DataInputStream stream, Channel channel) throws IOException {
-        final DecoderState request = connection.dequeRequest().getStartState();
+        final Request requestInfo = connection.dequeRequest();
+        final DecoderState requestDecoder = requestInfo.getStartState();
         stream.reset();
         stream.mark(Integer.MAX_VALUE);
-        return request.decode(stream, channel);
+        return requestDecoder.decode(stream, channel);
     }
 }

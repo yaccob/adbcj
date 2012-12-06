@@ -3,7 +3,6 @@ package org.adbcj.h2;
 import org.adbcj.DbSessionFuture;
 import org.adbcj.PreparedUpdate;
 import org.adbcj.Result;
-import org.adbcj.support.DefaultDbSessionFuture;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -15,6 +14,7 @@ public class H2PreparedUpdate extends AbstractStatement implements PreparedUpdat
 
     @Override
     public DbSessionFuture<Result> execute(Object... params) {
+        connection.checkClosed();
         if(paramsCount!=params.length){
             throw new IllegalArgumentException("Expect "+paramsCount+" parameters, but got: "+params.length);
         }

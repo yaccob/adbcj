@@ -18,6 +18,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
 
     @Override
     public DbSessionFuture<ResultSet> execute(Object... params) {
+        connection.checkClosed();
         DefaultResultEventsHandler eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
         return executeWithCallback((ResultHandler) eventHandler,resultSet,params);
@@ -25,6 +26,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
 
     @Override
     public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
+        connection.checkClosed();
         if(paramsCount!=params.length){
             throw new IllegalArgumentException("Expect "+paramsCount+" parameters, but got: "+params.length);
         }
