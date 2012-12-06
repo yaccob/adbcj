@@ -242,6 +242,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         logger.trace("Sending commit");
         synchronized (jdbcConnection) {
             jdbcConnection.commit();
+            jdbcConnection.setAutoCommit(true);
         }
     }
 
