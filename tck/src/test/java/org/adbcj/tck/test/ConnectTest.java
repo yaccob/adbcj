@@ -25,7 +25,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 @Test(invocationCount =5, threadPoolSize = 5, timeOut = 30000)
@@ -96,10 +95,6 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 			throw new AssertionError("finalizeClose future failed to complete");
 		}
 		assertTrue(connection.isClosed(), "Connection should be closed");
-		for (DbSessionFuture<ResultSet> future : futures) {
-			assertTrue(future.isDone(), "Request did not finish before connection was closed: " + future);
-			assertFalse(future.isCancelled(), "Future was cancelled and should have been");
-		}
     }
 
 }

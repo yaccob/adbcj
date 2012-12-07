@@ -184,9 +184,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
             this.result = result;
             state = FutureState.SUCCESS;
-            notifyChanges();
-            return true;
         }
+        notifyChanges();
+        return true;
 
     }
 
