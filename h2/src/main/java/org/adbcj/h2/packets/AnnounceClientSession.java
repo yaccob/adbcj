@@ -2,6 +2,7 @@ package org.adbcj.h2.packets;
 
 import org.adbcj.h2.CancellationToken;
 import org.adbcj.h2.decoding.IoUtils;
+import org.adbcj.h2.protocol.CommandCodes;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -12,7 +13,6 @@ import java.io.IOException;
 public class AnnounceClientSession extends ClientToServerPacket {
 
 
-    public static final int SESSION_SET_ID = 12;
     private final String sessionId;
 
     public AnnounceClientSession(String sessionId) {
@@ -22,7 +22,7 @@ public class AnnounceClientSession extends ClientToServerPacket {
 
     @Override
     public void writeToStream(DataOutputStream stream) throws IOException {
-        stream.writeInt(SESSION_SET_ID);
+        stream.writeInt(CommandCodes.SESSION_SET_ID.getCommandValue());
         IoUtils.writeString(stream, sessionId);
     }
 

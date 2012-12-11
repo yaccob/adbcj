@@ -6,6 +6,7 @@ import org.adbcj.FutureState;
 import org.adbcj.Result;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.H2Result;
+import org.adbcj.h2.protocol.StatusCodes;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
