@@ -50,6 +50,11 @@
             <groupId>${project.groupId}</groupId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <artifactId>h2-async-server</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<artifactId>adbcj-connection-pool</artifactId>
 			<groupId>${project.groupId}</groupId>
