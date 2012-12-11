@@ -6,6 +6,7 @@ import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.packets.AnnounceClientSession;
 import org.adbcj.h2.packets.SizeConstants;
+import org.adbcj.h2.protocol.StatusCodes;
 import org.adbcj.support.DefaultDbFuture;
 import org.jboss.netty.channel.Channel;
 
