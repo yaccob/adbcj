@@ -9,6 +9,7 @@ public final class SizeConstants {
     public static final int BYTE_SIZE = 1;
     public static final int LONG_SIZE = 8;
     public static final int DOUBLE_SIZE = 8;
+    public static final int BOOLEAN_SIZE = 1;
 
     private SizeConstants(){}
 
