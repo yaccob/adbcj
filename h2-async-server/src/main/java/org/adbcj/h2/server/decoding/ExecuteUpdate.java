@@ -27,7 +27,7 @@ class ExecuteUpdate implements DecoderState {
     public ResultAndState decode(DataInputStream stream, Channel channel) throws IOException {
         final ResultOrWait<Integer> id = IoUtils.tryReadNextInt(stream, ResultOrWait.Start);
         final ResultOrWait<Integer> paramsLength = IoUtils.tryReadNextInt(stream, id);
-        final ResultOrWait<List<Value>> paramsData = tryReadParams(stream, paramsLength);
+        final ResultOrWait<List<Value>> paramsData = ReadUtils.tryReadParams(stream, paramsLength);
 
         if (paramsData.couldReadResult) {
             Command command = (Command) acceptCommands.cache().getObject(id.result, false);
@@ -51,24 +51,5 @@ class ExecuteUpdate implements DecoderState {
         }
 
 
-    }
-
-    private ResultOrWait<List<Value>> tryReadParams(DataInputStream stream,
-                                                    ResultOrWait<Integer> paramsSize) throws IOException {
-        if (!paramsSize.couldReadResult) {
-            return ResultOrWait.WaitLonger;
-        }
-        List<Value> result = new ArrayList<Value>(paramsSize.result);
-        ResultOrWait<Value> value = ResultOrWait.Start;
-        for (int i = 0; i < paramsSize.result; i++) {
-            final ResultOrWait<Integer> type = IoUtils.tryReadNextInt(stream, value);
-            value = ReadUtils.tryReadValue(stream, type);
-            if (value.couldReadResult) {
-                result.add(value.result);
-            } else {
-                return ResultOrWait.Start;
-            }
-        }
-        return ResultOrWait.result(result);
     }
 }

@@ -10,13 +10,37 @@ import org.h2.value.*;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
 final class ReadUtils {
 
-    public static ResultOrWait<Value> tryReadValue(DataInputStream stream, ResultOrWait<Integer> maybeType) throws IOException {
+
+
+
+    public static ResultOrWait<List<Value>> tryReadParams(DataInputStream stream,
+                                                    ResultOrWait<Integer> paramsSize) throws IOException {
+        if (!paramsSize.couldReadResult) {
+            return ResultOrWait.WaitLonger;
+        }
+        List<Value> result = new ArrayList<Value>(paramsSize.result);
+        ResultOrWait<Value> value = ResultOrWait.Start;
+        for (int i = 0; i < paramsSize.result; i++) {
+            final ResultOrWait<Integer> type = IoUtils.tryReadNextInt(stream, value);
+            value = ReadUtils.tryReadValue(stream, type);
+            if (value.couldReadResult) {
+                result.add(value.result);
+            } else {
+                return ResultOrWait.Start;
+            }
+        }
+        return ResultOrWait.result(result);
+    }
+    public static ResultOrWait<Value> tryReadValue(DataInputStream stream,
+                                                   ResultOrWait<Integer> maybeType) throws IOException {
         if (!maybeType.couldReadResult) {
             return ResultOrWait.WaitLonger;
         }
