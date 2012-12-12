@@ -23,7 +23,7 @@ public final class SizeConstants {
         return LONG_SIZE;
     }
     public static int sizeOf(String param) {
-        return INT_SIZE + CHAR_SIZE * param.length();
+        return INT_SIZE + (null==param ? 0 : CHAR_SIZE * param.length());
     }
     public static int lengthOfString(String param) {
         return CHAR_SIZE * param.length();
