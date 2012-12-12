@@ -32,21 +32,30 @@ class ExecuteQuery implements DecoderState {
         final ResultOrWait<List<Value>> paramsData = ReadUtils.tryReadParams(stream, paramSize);
 
         if(paramsData.couldReadResult){
-            Command command = (Command) acceptCommands.cache().getObject(id.result, false);
-            ResultInterface result;
-            int old = acceptCommands.session().getModificationId();
-            synchronized (acceptCommands.session()) {
-                result = command.executeQuery(maxRows.result, false);
-            }
-            acceptCommands.cache().addObject(objectId.result, result);
-            int state = acceptCommands.getState(old);
-            int columnCount = result.getVisibleColumnCount();
-            int rowCount = result.getRowCount();
-            int fetch = Math.min(rowCount, fetchSize.result);
-            channel.write(new QueryResponse(state,columnCount,rowCount,result,fetch));
-            return ResultAndState.newState(acceptCommands);
+            return executeQuery(channel, id, objectId, maxRows, fetchSize,paramsData);
         }else {
             return ResultAndState.waitForMoreInput(this);
         }
+    }
+
+    private ResultAndState executeQuery(Channel channel, ResultOrWait<Integer> id,
+                                        ResultOrWait<Integer> objectId,
+                                        ResultOrWait<Integer> maxRows,
+                                        ResultOrWait<Integer> fetchSize,
+                                        ResultOrWait<List<Value>> params) {
+        Command command = (Command) acceptCommands.cache().getObject(id.result, false);
+        ResultInterface result;
+        int old = acceptCommands.session().getModificationId();
+        ExecuteUpdate.bindParameters(params,command);
+        synchronized (acceptCommands.session()) {
+            result = command.executeQuery(maxRows.result, false);
+        }
+        acceptCommands.cache().addObject(objectId.result, result);
+        int state = acceptCommands.getState(old);
+        int columnCount = result.getVisibleColumnCount();
+        int rowCount = result.getRowCount();
+        int fetch = Math.min(rowCount, fetchSize.result);
+        channel.write(new QueryResponse(state,columnCount,rowCount,result,fetch));
+        return ResultAndState.newState(acceptCommands);
     }
 }

@@ -1,5 +1,6 @@
 package org.adbcj.h2.server;
 
+import org.adbcj.h2.server.decoding.AcceptCommands;
 import org.adbcj.h2.server.decoding.DecoderState;
 import org.adbcj.h2.server.decoding.ResultAndState;
 import org.adbcj.h2.server.responses.ErrorResponse;
@@ -20,6 +21,7 @@ import java.io.InputStream;
  */
 public class H2TcpDecoder extends FrameDecoder {
     private DecoderState currentState;
+    private AcceptCommands fallbackState;
     private static Logger logger = LoggerFactory.getLogger(H2TcpDecoder.class);
 
     public H2TcpDecoder(DecoderState currentState) {
@@ -35,6 +37,9 @@ public class H2TcpDecoder extends FrameDecoder {
         try {
             final ResultAndState resultState = currentState.decode(new DataInputStream(in),ctx.getChannel());
             currentState = resultState.getNewState();
+            if(currentState instanceof AcceptCommands){
+                fallbackState = (AcceptCommands) currentState;
+            }
             if(resultState.isWaitingForMoreInput()){
                 in.reset();
                 return null;
@@ -43,6 +48,9 @@ public class H2TcpDecoder extends FrameDecoder {
         } catch (DbException ex){
             logger.error("Error on server ",ex);
             channel.write(new ErrorResponse(ex));
+            if(fallbackState!=null){
+                currentState = fallbackState;
+            }
             throw ex;
         }catch (Exception ex){
             logger.error("Error on server ", ex);
