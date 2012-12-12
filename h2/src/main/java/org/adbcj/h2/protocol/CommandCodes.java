@@ -12,6 +12,7 @@ public enum CommandCodes {
     RESULT_CLOSE(7),
     SESSION_PREPARE_READ_PARAMS(11),
     SESSION_SET_ID(12),
+    SESSION_SET_AUTOCOMMIT(15),
     SESSION_UNDO_LOG_POS(16);
 
     private final int statusValue;
