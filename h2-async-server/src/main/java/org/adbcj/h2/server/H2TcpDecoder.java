@@ -2,11 +2,15 @@ package org.adbcj.h2.server;
 
 import org.adbcj.h2.server.decoding.DecoderState;
 import org.adbcj.h2.server.decoding.ResultAndState;
+import org.adbcj.h2.server.responses.ErrorResponse;
+import org.h2.message.DbException;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
@@ -16,6 +20,7 @@ import java.io.InputStream;
  */
 public class H2TcpDecoder extends FrameDecoder {
     private DecoderState currentState;
+    private static Logger logger = LoggerFactory.getLogger(H2TcpDecoder.class);
 
     public H2TcpDecoder(DecoderState currentState) {
         this.currentState = currentState;
@@ -35,8 +40,12 @@ public class H2TcpDecoder extends FrameDecoder {
                 return null;
             }
             return "Parsed";
-        } catch (Exception ex){
-            ex.printStackTrace();
+        } catch (DbException ex){
+            logger.error("Error on server ",ex);
+            channel.write(new ErrorResponse(ex));
+            throw ex;
+        }catch (Exception ex){
+            logger.error("Error on server ", ex);
             throw ex;
         }finally {
             in.close();

@@ -27,6 +27,7 @@ public class AcceptCommands implements DecoderState {
     private final ChangeSessionId changeSessionIdHandler = new ChangeSessionId(this);
     private final ExecuteQuery executeQueryCommand = new ExecuteQuery(this);
     private final ExecuteUpdate executeCommand = new ExecuteUpdate(this);
+    private final SetAutoCommitCommand changeAutoCommitHandler = new SetAutoCommitCommand(this);
 
     public AcceptCommands(Session session) {
         this.session = session;
@@ -60,6 +61,8 @@ public class AcceptCommands implements DecoderState {
                 return ResultAndState.newState(new PreparedStatement(this, false));
             case SESSION_PREPARE_READ_PARAMS:
                 return ResultAndState.newState(new PreparedStatement(this, true));
+            case SESSION_SET_AUTOCOMMIT:
+                return ResultAndState.newState(changeAutoCommitHandler);
             case SESSION_SET_ID:
                 return ResultAndState.newState(changeSessionIdHandler);
             case SESSION_UNDO_LOG_POS:
