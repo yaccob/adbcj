@@ -28,7 +28,8 @@ class ExecuteQuery implements DecoderState {
         final ResultOrWait<Integer> objectId = IoUtils.tryReadNextInt(stream, id);
         final ResultOrWait<Integer> maxRows = IoUtils.tryReadNextInt(stream, objectId);
         final ResultOrWait<Integer> fetchSize = IoUtils.tryReadNextInt(stream, maxRows);
-        final ResultOrWait<List<Value>> paramsData = ReadUtils.tryReadParams(stream, fetchSize);
+        final ResultOrWait<Integer> paramSize = IoUtils.tryReadNextInt(stream, fetchSize);
+        final ResultOrWait<List<Value>> paramsData = ReadUtils.tryReadParams(stream, paramSize);
 
         if(paramsData.couldReadResult){
             Command command = (Command) acceptCommands.cache().getObject(id.result, false);

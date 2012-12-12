@@ -49,10 +49,10 @@ public class PrepareResponse implements ServerToClientPacket{
 
     @Override
     public int getLength() {
-        return SizeConstants.INT_SIZE +// status code
-               SizeConstants.BOOLEAN_SIZE + // read only
-               SizeConstants.BOOLEAN_SIZE + // query
-               SizeConstants.INT_SIZE + // params size
+        return SizeConstants.sizeOf(stateToReturn) +
+               SizeConstants.sizeOf(readOnly) +
+               SizeConstants.sizeOf(query)+
+               SizeConstants.sizeOf(params.size()) +
                paramsSize() + // params size
                0;
 
