@@ -88,7 +88,7 @@
         </packages>
         <classes>
             <class name="org.adbcj.tck.InitH2Async" />
-            <!--<class name="org.adbcj.tck.test.PreparedStatementsTest"/>-->
+            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
             <!--<class name="org.adbcj.tck.test.TransactionTest"/>-->
             <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
             <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->

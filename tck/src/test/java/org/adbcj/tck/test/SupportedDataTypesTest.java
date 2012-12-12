@@ -21,31 +21,6 @@ public class SupportedDataTypesTest extends AbstractWithConnectionManagerTest {
 
 
     @Test
-    public void supportedInSelect() throws Exception {
-        final Connection connection = connectionManager.connect().get();
-        final ResultSet resultSet = connection.executeQuery("SELECT *, NULL FROM supporteddatatypes").get();
-        final Row row = resultSet.get(0);
-
-        assertValuesOfResult(row);
-
-        connection.close().get();
-
-    }
-
-    @Test
-    public void supportedInPreparedStatement() throws Exception {
-        final Connection connection = connectionManager.connect().get();
-        final PreparedQuery statement = connection.prepareQuery("SELECT *, NULL FROM supporteddatatypes").get();
-        final ResultSet resultSet = statement.execute().get();
-        final Row row = resultSet.get(0);
-
-        assertValuesOfResult(row);
-
-
-        connection.close().get();
-
-    }
-    @Test
     public void canBindDatatypesToParameters() throws Exception {
         final Connection connection = connectionManager.connect().get();
         final PreparedQuery statement = connection.prepareQuery("SELECT *, NULL FROM supporteddatatypes " +
@@ -53,7 +28,7 @@ public class SupportedDataTypesTest extends AbstractWithConnectionManagerTest {
                 "AND varCharColumn LIKE ? " +
                 "AND bigIntColumn = ? " +
                 "AND decimalColumn = ? " +
-                "AND dateColumn < ? " +
+                "AND dateColumn <= ? " +
                 "AND doubleColumn < ? " +
                 "AND textColumn LIKE ? ").get();
         final ResultSet resultSet = statement.execute(42,
