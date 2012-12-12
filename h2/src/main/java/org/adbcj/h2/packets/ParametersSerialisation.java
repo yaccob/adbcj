@@ -32,7 +32,7 @@ final class ParametersSerialisation {
             stream.writeInt(H2Types.LONG.id());
             stream.writeLong(((Long) param).longValue());
         } else if (Double.class.isInstance(param)) {
-            stream.writeInt(H2Types.LONG.id());
+            stream.writeInt(H2Types.DOUBLE.id());
             stream.writeDouble(((Double) param).longValue());
         } else if (Date.class.isInstance(param)) {
             stream.writeInt(H2Types.DATE.id());
