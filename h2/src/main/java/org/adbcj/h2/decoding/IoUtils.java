@@ -26,11 +26,18 @@ public final class IoUtils {
         } else {
             int len = theString.length();
             out.writeInt(len);
-            for (int i = 0; i < len; i++) {
-                out.writeChar(theString.charAt(i));
-            }
+            writeCharsOfString(out, theString);
         }
     }
+
+    public static void writeCharsOfString(DataOutputStream out, String theString) throws IOException {
+
+        int len = theString.length();
+        for (int i = 0; i < len; i++) {
+            out.writeChar(theString.charAt(i));
+        }
+    }
+
     /**
      * Write a byte array.
      *
