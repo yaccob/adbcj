@@ -29,8 +29,7 @@ public class AnnounceClientSession extends ClientToServerPacket {
     @Override
     public int getLength() {
         return SizeConstants.INT_SIZE +  // request type
-                SizeConstants.INT_SIZE + // length field
-                sessionId.toCharArray().length*SizeConstants.CHAR_SIZE + // data of string
+                SizeConstants.sizeOf(sessionId)+
                 0;
     }
 }

@@ -92,13 +92,15 @@ public class H2ConnectionManager extends AbstractConnectionManager {
             public void operationComplete(ChannelFuture future) throws Exception {
                 logger.debug("Connect completed");
 
+
                 Channel channel = future.getChannel();
+                H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
+                channel.getPipeline().addFirst(DECODER, new Decoder(connectFuture,connection));
                 channel.write(
                         new ClientHandshake(credentials.getDatabase(),url,
                                 credentials.getUserName(),
                                 credentials.getPassword(),keys));
-                H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
-                channel.getPipeline().addFirst(DECODER, new Decoder(connectFuture,connection));
+
 
                 if(future.getCause()!=null){
                     connectFuture.setException(future.getCause());

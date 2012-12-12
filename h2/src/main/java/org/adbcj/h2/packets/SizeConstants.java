@@ -13,7 +13,19 @@ public final class SizeConstants {
 
     private SizeConstants(){}
 
-    static int lengthOfString(String param) {
-        return CHAR_SIZE * ((String) param).toCharArray().length;
+    public static int sizeOf(boolean param) {
+        return BOOLEAN_SIZE;
+    }
+    public static int sizeOf(int param) {
+        return INT_SIZE;
+    }
+    public static int sizeOf(long param) {
+        return LONG_SIZE;
+    }
+    public static int sizeOf(String param) {
+        return INT_SIZE + CHAR_SIZE * param.length();
+    }
+    public static int lengthOfString(String param) {
+        return CHAR_SIZE * param.length();
     }
 }
