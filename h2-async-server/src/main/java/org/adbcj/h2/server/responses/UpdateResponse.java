@@ -28,9 +28,9 @@ public class UpdateResponse implements ServerToClientPacket{
 
     @Override
     public int getLength() {
-        return SizeConstants.INT_SIZE +  // status
-               SizeConstants.INT_SIZE +  // update count
-               SizeConstants.BOOLEAN_SIZE +  // autocommit
+        return SizeConstants.sizeOf(status) +  // status
+               SizeConstants.sizeOf(updateCount) +  // update count
+               SizeConstants.sizeOf(autoCommit) +  // autocommit
                0;
 
     }

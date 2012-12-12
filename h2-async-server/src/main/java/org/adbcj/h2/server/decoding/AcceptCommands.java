@@ -20,6 +20,7 @@ public class AcceptCommands implements DecoderState {
     private SmallMap cache = new SmallMap(SysProperties.SERVER_CACHED_OBJECTS);
 
     private final ChangeSessionId changeSessionIdHandler = new ChangeSessionId(this);
+    private final ExecuteQuery executeQueryCommand = new ExecuteQuery(this);
     private final ExecuteUpdate executeCommand = new ExecuteUpdate(this);
 
     public AcceptCommands(Session session) {
@@ -38,10 +39,12 @@ public class AcceptCommands implements DecoderState {
 
     private ResultAndState handleCommand(int command) {
         switch (CommandCodes.commandFor(command)) {
-            case COMMAND_EXECUTE_UPDATE:
-                return ResultAndState.newState(executeCommand);
             case COMMAND_CLOSE:
                 return ResultAndState.newState(new ExecuteClose(this));
+            case COMMAND_EXECUTE_QUERY:
+                return ResultAndState.newState(executeQueryCommand);
+            case COMMAND_EXECUTE_UPDATE:
+                return ResultAndState.newState(executeCommand);
             case SESSION_PREPARE:
                 return ResultAndState.newState(new PreparedStatement(this, false));
             case SESSION_PREPARE_READ_PARAMS:

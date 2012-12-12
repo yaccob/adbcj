@@ -29,15 +29,15 @@ public class H2TcpEncoder implements ChannelDownstreamHandler {
             return;
         }
 
-        ServerToClientPacket  request = (ServerToClientPacket) e.getMessage();
-        ChannelBuffer buffer = ChannelBuffers.buffer(request.getLength());
+        ServerToClientPacket  response = (ServerToClientPacket) e.getMessage();
+        ChannelBuffer buffer = ChannelBuffers.buffer(response.getLength());
         ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
         DataOutputStream dataOutputStream = new DataOutputStream(out);
-        request.writeToStream(dataOutputStream);
+        response.writeToStream(dataOutputStream);
         dataOutputStream.close();
         out.close();
         if(logger.isDebugEnabled()){
-            logger.debug("Sent {} down stream",request);
+            logger.debug("Sent {} down stream",response);
         }
         Channels.write(context, e.getFuture(), buffer);
     }

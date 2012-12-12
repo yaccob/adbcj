@@ -23,7 +23,7 @@ public class SendStatus implements ServerToClientPacket {
 
     @Override
     public int getLength() {
-        return SizeConstants.INT_SIZE;
+        return SizeConstants.sizeOf(status.getStatusValue());
 
     }
 }
