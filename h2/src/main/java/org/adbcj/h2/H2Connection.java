@@ -301,7 +301,7 @@ public class H2Connection implements Connection {
         public void continueWithRequests() {
             H2Connection.this.blockingRequest = null;
             for (Request waitingRequest : waitingRequests) {
-                queRequest(waitingRequest);
+                forceQueRequest(waitingRequest);
             }
         }
     }
