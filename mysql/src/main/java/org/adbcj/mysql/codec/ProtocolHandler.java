@@ -159,8 +159,9 @@ public class ProtocolHandler {
                 warnings.add(response.getMessage());
             }
         }
-
-        logger.warn("Warnings: {}", warnings);
+        if(logger.isWarnEnabled() && warnings.size()>0){
+            logger.warn("Warnings: {}", warnings);
+        }
 
         Request<Result> activeRequest = connection.getActiveRequest();
         if (activeRequest == null) {
