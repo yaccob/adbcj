@@ -82,9 +82,15 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             return false;
         }
         synchronized (optionalCancellation){
+            if(isDone()){
+                return false;
+            }
             boolean cancelled = optionalCancellation.cancel();
             if(cancelled){
-                return tryStateTransition(Cancelled.CANCELLED);
+                return tryStateTransition(Cancelled.CANCELLED)
+                        // Internal transformation may called #trySetCancelled while optionalCancellation.cancel()
+                        // Therefore we also accept if where in the cancel state now
+                        || state.get().getState()==FutureState.CANCELLED;
             } else {
                 return false;
             }
@@ -219,7 +225,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
 
     boolean trySetCancelled() {
-        return tryStateTransition(new Cancelled());
+        return tryStateTransition(Cancelled.CANCELLED);
     }
 
 
