@@ -34,7 +34,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
                 accumulator,
                 sessionId,
                 params);
-        connection.queResponseHandlerAndSendMessage(request);
+        connection.queRequest(request);
         return (DbSessionFuture<T>) request.getToComplete();
     }
 

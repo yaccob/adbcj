@@ -58,7 +58,7 @@ public class H2Connection implements Connection {
             }
             isInTransaction = true;
             final Request request = requestCreator.beginTransaction();
-            queResponseHandlerAndSendMessage(request);
+            queRequest(request);
         }
     }
 
@@ -70,7 +70,7 @@ public class H2Connection implements Connection {
                 throw new DbException("Not currently in a transaction, cannot commit");
             }
             final Request request = requestCreator.commitTransaction();
-            queResponseHandlerAndSendMessage(request);
+            queRequest(request);
             isInTransaction = false;
             return (DbSessionFuture<Void>) request.getToComplete();
         }
@@ -84,7 +84,7 @@ public class H2Connection implements Connection {
                 throw new DbException("Not currently in a transaction, cannot rollback");
             }
             final Request request = requestCreator.rollbackTransaction();
-            queResponseHandlerAndSendMessage(request);
+            queRequest(request);
             isInTransaction = false;
             return (DbSessionFuture<Void>) request.getToComplete();
         }
@@ -108,7 +108,7 @@ public class H2Connection implements Connection {
         checkClosed();
         synchronized (lock){
             final Request request = requestCreator.createQuery(sql, eventHandler, accumulator);
-            queResponseHandlerAndSendMessage(request);
+            queRequest(request);
             return (DbSessionFuture<T>) request.getToComplete();
         }
     }
@@ -117,7 +117,7 @@ public class H2Connection implements Connection {
     public DbSessionFuture<Result> executeUpdate(String sql) {
         checkClosed();
         final Request request = requestCreator.executeUpdate(sql);
-        queResponseHandlerAndSendMessage(request);
+        queRequest(request);
         return (DbSessionFuture) request.getToComplete();
     }
 
@@ -125,7 +125,7 @@ public class H2Connection implements Connection {
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
         checkClosed();
         final Request request = requestCreator.executePrepareQuery(sql);
-        queResponseHandlerAndSendMessage(request);
+        queRequest(request);
         return (DbSessionFuture<PreparedQuery>) request.getToComplete();
     }
 
@@ -133,7 +133,7 @@ public class H2Connection implements Connection {
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
         checkClosed();
         final Request request = requestCreator.executePrepareUpdate(sql);
-        queResponseHandlerAndSendMessage(request);
+        queRequest(request);
         return (DbSessionFuture<PreparedUpdate>) request.getToComplete();
     }
 
@@ -152,7 +152,7 @@ public class H2Connection implements Connection {
                 forceCloseOnPendingRequests();
             }
             Request request = requestCreator.createCloseRequest();
-            queResponseHandlerAndSendMessage(request);
+            forceQueRequest(request);
             closeFuture = (DefaultDbFuture<Void>) request.getToComplete();
             return closeFuture;
         }
@@ -168,7 +168,7 @@ public class H2Connection implements Connection {
         return !isClosed();
     }
 
-    public void queResponseHandlerAndSendMessage(Request request) {
+    void queRequest(Request request) {
         synchronized (lock){
             int requestsPending = requestQueue.size()
                     +( (null!=blockingRequest) ? blockingRequest.waitingRequests.size() : 0);
@@ -177,6 +177,12 @@ public class H2Connection implements Connection {
                     "Ensure that your not overloading the database with requests. " +
                     "Also check the "+StandardProperties.MAX_QUEUE_LENGTH+" property");
             }
+            forceQueRequest(request);
+        }
+    }
+
+    public void forceQueRequest(Request request) {
+        synchronized (lock){
             if(blockingRequest==null){
                 requestQueue.add(request);
                 channel.write(request.getRequest());
@@ -295,7 +301,7 @@ public class H2Connection implements Connection {
         public void continueWithRequests() {
             H2Connection.this.blockingRequest = null;
             for (Request waitingRequest : waitingRequests) {
-                queResponseHandlerAndSendMessage(waitingRequest);
+                queRequest(waitingRequest);
             }
         }
     }

@@ -57,7 +57,7 @@ public abstract class StatementPrepare<T> extends StatusReadingDecoder {
             @Override
             protected void handleCompletion(H2Connection connection, int paramsCount) {
                 if(paramsCount==0){
-                    connection.queResponseHandlerAndSendMessage(followUpRequest);
+                    connection.forceQueRequest(followUpRequest);
                 }else{
                     throw new DbException("Implementation error: Expect 0 parameters, but got: "+paramsCount);
                 }
