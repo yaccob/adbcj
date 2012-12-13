@@ -26,26 +26,15 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DefaultDbFuture<T> implements DbFuture<T> {
 
-    private final Object lock = new Object();
-
     private final List<DbListener<T>> otherListeners = new ArrayList<DbListener<T>>(1);
 
-    /**
-     * The result of this future.
-     */
-    private volatile T result;
-
-    /**
-     * The exception thrown if there was an error.
-     */
-    private volatile Throwable exception;
-
-    private volatile FutureState state = FutureState.NOT_COMPLETED;
-
     private final CancellationAction optionalCancellation;
+
+    private final AtomicReference<MyState> state = new AtomicReference<MyState>(NotCompleted.NOT_COMPLETED);
 
 
     public DefaultDbFuture(CancellationAction cancelAction) {
@@ -67,7 +56,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         if (listener == null) {
             throw new IllegalArgumentException("listener can NOT be null");
         }
-        synchronized (lock) {
+        synchronized (otherListeners) {
             if (isDone()) {
                 notifyListener(listener);
             } else {
@@ -83,25 +72,22 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             throw new IllegalArgumentException("listener can NOT be null");
         }
 
-        synchronized (lock) {
+        synchronized (otherListeners) {
             return otherListeners.remove(listener);
         }
     }
 
     public final boolean cancel(boolean mayInterruptIfRunning) {
-        if (isDone() || optionalCancellation == null) {
+        if (optionalCancellation == null) {
             return false;
         }
-        synchronized (lock) {
-            if (isDone()) {
+        synchronized (optionalCancellation){
+            boolean cancelled = optionalCancellation.cancel();
+            if(cancelled){
+                return tryStateTransition(Cancelled.CANCELLED);
+            } else {
                 return false;
             }
-            boolean cancelled = optionalCancellation.cancel();
-            if (cancelled) {
-                state = FutureState.CANCELLED;
-                notifyChanges();
-            }
-            return cancelled;
         }
     }
 
@@ -110,12 +96,9 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         if (isDone()) {
             return getResult();
         }
-        synchronized (lock) {
-            if (isDone()) {
-                return getResult();
-            }
+        synchronized (this) {
             while (!isDone()) {
-                lock.wait();
+                this.wait();
             }
         }
         return getResult();
@@ -128,10 +111,10 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         if (isDone()) {
             return getResult();
         }
-        synchronized (lock) {
+        synchronized (this) {
             final long startTime = System.nanoTime();
             while (!isDone() && (startTime + timeoutNanos) > System.nanoTime()) {
-                lock.wait(timeoutMillis);
+                this.wait(timeoutMillis);
             }
             if (!isDone()) {
                 throw new TimeoutException();
@@ -142,28 +125,33 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
 
     public final T getResult() throws DbException {
-        if (state == FutureState.SUCCESS) {
-            return result;
-        } else if (state == FutureState.NOT_COMPLETED) {
-            throw new IllegalStateException("Should not be calling this method when future is not done");
-        } else if (state == FutureState.FAILURE) {
-            throw DbException.wrap(exception);
-        } else if (state == FutureState.CANCELLED) {
-            throw new CancellationException();
+        final MyState myState = state.get();
+        final FutureState futureState = myState.getState();
+        switch (futureState) {
+            case SUCCESS:
+                return ((Completed<T>) myState).getData();
+            case NOT_COMPLETED:
+                throw new IllegalStateException("Should not be calling this method when future is not done");
+            case FAILURE:
+                throw DbException.wrap(((Failed) myState).getError());
+            case CANCELLED:
+                throw new CancellationException();
+            default:
+                throw new Error("Implementation error. Should be unreachable");
         }
-        return result;
     }
 
     @Override
     public FutureState getState() {
-        return state;
+        return state.get().getState();
     }
 
     @Override
     public Throwable getException() {
-        if (state == FutureState.FAILURE) {
-            return exception;
-        } else if (state == FutureState.NOT_COMPLETED) {
+        MyState stateOfFuture = state.get();
+        if (stateOfFuture.getState() == FutureState.FAILURE) {
+            return ((Failed)stateOfFuture).getError();
+        } else if (stateOfFuture.getState() == FutureState.NOT_COMPLETED) {
             throw new IllegalStateException("Should not be calling this method when future is not done");
         } else {
             return null;
@@ -177,17 +165,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public boolean trySetResult(T result) {
-        synchronized (lock) {
-            if (isDone()) {
-                return false;
-            }
-
-            this.result = result;
-            state = FutureState.SUCCESS;
-            notifyChanges();
-            return true;
-        }
-
+        return tryStateTransition(new Completed<T>(result));
     }
 
     private void notifyListener(DbListener<T> listener) {
@@ -196,8 +174,10 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     private void notifyChanges() {
         List<DbListener<T>> listenersToCall;
-        synchronized (lock) {
-            lock.notifyAll();
+        synchronized (this){
+            this.notifyAll();
+        }
+        synchronized (otherListeners) {
             listenersToCall = new ArrayList<DbListener<T>>(otherListeners);
             otherListeners.clear();
         }
@@ -207,11 +187,11 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     public boolean isCancelled() {
-        return state == FutureState.CANCELLED;
+        return state.get().getState() == FutureState.CANCELLED;
     }
 
     public boolean isDone() {
-        return state != FutureState.NOT_COMPLETED;
+        return state.get().getState() != FutureState.NOT_COMPLETED;
     }
 
     public void setException(Throwable exception) {
@@ -222,11 +202,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     @Override
     public String toString() {
-        return "DbFuture{" +
-                "state=" + state +
-                ", result=" + result +
-                ", exception=" + exception +
-                '}';
+        return "DbFuture{" + state + '}';
     }
 
     /**
@@ -238,31 +214,97 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
      * @return true when state of future could be changed to a failure. False otherwise
      */
     public boolean trySetException(Throwable exception) {
-        if (isDone()) {
-            return false;
-        }
-        synchronized (lock) {
-            if (isDone()) {
-                return false;
-            }
-            this.exception = exception;
-            state = FutureState.FAILURE;
-            notifyChanges();
-            return true;
-        }
+        return tryStateTransition(new Failed(exception));
     }
 
 
     boolean trySetCancelled() {
-        if (state != FutureState.NOT_COMPLETED) {
-            return false;
-        }
-        synchronized (this.lock) {
-            state = FutureState.CANCELLED;
-            notifyChanges();
-            return true;
-        }
+        return tryStateTransition(new Cancelled());
     }
 
 
+    private boolean tryStateTransition(MyState newState){
+        MyState currentState = state.get();
+        if(currentState.getState()!=FutureState.NOT_COMPLETED){
+            return false;
+        }
+        /**
+         * Remember, the future can only have on state transition
+         * There if it fails, we're too late and don't change the state at all
+         */
+        boolean changedState = state.compareAndSet(currentState, newState);
+        if(changedState){
+            notifyChanges();
+        }
+        return changedState;
+    }
+
+
+    static abstract class MyState {
+
+        private final FutureState state;
+
+        protected MyState(FutureState state) {
+            this.state = state;
+        }
+
+        public FutureState getState() {
+            return state;
+        }
+
+        @Override
+        public String toString(){
+            return state.toString();
+        }
+    }
+
+    static class NotCompleted extends MyState {
+        private static NotCompleted NOT_COMPLETED = new NotCompleted();
+
+        private NotCompleted() {
+            super(FutureState.NOT_COMPLETED);
+        }
+    }
+
+    static class Completed<T> extends MyState {
+        private final T data;
+
+        public Completed(T result) {
+            super(FutureState.SUCCESS);
+            this.data = result;
+        }
+
+        public T getData() {
+            return data;
+        }
+        @Override
+        public String toString(){
+            return super.toString() + " with "+String.valueOf(data);
+        }
+    }
+
+    static class Failed extends MyState {
+        private final Throwable error;
+
+        public Failed(Throwable result) {
+            super(FutureState.FAILURE);
+            this.error = result;
+        }
+
+        public Throwable getError() {
+            return error;
+        }
+        @Override
+        public String toString(){
+            return super.toString() + " with "+String.valueOf(error);
+        }
+    }
+
+    static class Cancelled extends MyState {
+        private static Cancelled CANCELLED = new Cancelled();
+
+        private Cancelled() {
+            super(FutureState.CANCELLED);
+        }
+    }
 }
