@@ -29,9 +29,9 @@ public class QueryPrepareCommand extends ClientToServerPacket {
 
     @Override
     public int getLength() {
-        return SizeConstants.INT_SIZE +  // Command type
-                SizeConstants.INT_SIZE + // Command id
-                SizeConstants.INT_SIZE + sql.toCharArray().length * SizeConstants.CHAR_SIZE + // SQL statement
+        return SizeConstants.sizeOf(SESSION_PREPARE)+
+                SizeConstants.sizeOf(id) +
+                SizeConstants.sizeOf(sql) +
                 0;
     }
 

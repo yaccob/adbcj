@@ -1,6 +1,7 @@
 package org.adbcj.h2.packets;
 
 import org.adbcj.h2.CancellationToken;
+import org.adbcj.h2.protocol.CommandCodes;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,7 +10,6 @@ import java.io.IOException;
  * @author roman.stoffel@gamlor.info
  */
 public class UpdateExecute extends ClientToServerPacket {
-    public static final int COMMAND_EXECUTE_UPDATE = 3;
     private final int id;
     private final Object[] params;
     private static final Object[] NO_PARAMS = new Object[0];
@@ -27,7 +27,7 @@ public class UpdateExecute extends ClientToServerPacket {
 
     @Override
     public void writeToStream(DataOutputStream stream) throws IOException {
-        stream.writeInt(COMMAND_EXECUTE_UPDATE);
+        stream.writeInt(CommandCodes.COMMAND_EXECUTE_UPDATE.getCommandValue());
         stream.writeInt(id);
         ParametersSerialisation.writeParams(stream, params);
     }

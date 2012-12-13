@@ -26,11 +26,18 @@ public final class IoUtils {
         } else {
             int len = theString.length();
             out.writeInt(len);
-            for (int i = 0; i < len; i++) {
-                out.writeChar(theString.charAt(i));
-            }
+            writeCharsOfString(out, theString);
         }
     }
+
+    public static void writeCharsOfString(DataOutputStream out, String theString) throws IOException {
+
+        int len = theString.length();
+        for (int i = 0; i < len; i++) {
+            out.writeChar(theString.charAt(i));
+        }
+    }
+
     /**
      * Write a byte array.
      *
@@ -141,5 +148,28 @@ public final class IoUtils {
         } else {
             return (char) (((x & 0x1f) << 6) + (stream.readByte() & 0x3f));
         }
+    }
+
+    public static ResultOrWait<byte[]> tryReadNextBytes(DataInputStream stream,
+                                                        ResultOrWait<?> previousResult) throws IOException {
+        if(!previousResult.couldReadResult){
+            return ResultOrWait.WaitLonger;
+        }
+        if(stream.available()< SizeConstants.INT_SIZE){
+            return ResultOrWait.WaitLonger;
+        }
+        int byteLength = stream.readInt();
+        if (byteLength == -1) {
+            return ResultOrWait.result(null);
+        }
+        if(stream.available()< byteLength){
+            return ResultOrWait.WaitLonger;
+        }
+        byte[] b = new byte[byteLength];
+        final int readAmount = stream.read(b);
+        if(readAmount!=byteLength){
+            throw new IllegalStateException("Expect to read "+byteLength+" but read "+readAmount);
+        }
+        return ResultOrWait.result(b);
     }
 }

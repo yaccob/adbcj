@@ -10,7 +10,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import static org.adbcj.h2.packets.SizeConstants.CHAR_SIZE;
 import static org.adbcj.h2.packets.SizeConstants.INT_SIZE;
 
 /**
@@ -55,9 +54,9 @@ public class ClientHandshake extends ClientToServerPacket{
     public int getLength() {
        return INT_SIZE + // Low version
                INT_SIZE +  // High version
-               INT_SIZE + database.toCharArray().length* CHAR_SIZE +  // db-name
-               INT_SIZE + originalUrl.toCharArray().length* CHAR_SIZE +  // url
-               INT_SIZE + userName.toCharArray().length* CHAR_SIZE +  // url
+               SizeConstants.sizeOf(database) +
+               SizeConstants.sizeOf(originalUrl) +
+               SizeConstants.sizeOf(userName) +
                INT_SIZE + pwdHash.length +  // password
                INT_SIZE +  // empty file hash
                INT_SIZE + calculateSizeKeys(keys) +

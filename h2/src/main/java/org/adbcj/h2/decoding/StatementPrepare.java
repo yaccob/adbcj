@@ -6,6 +6,7 @@ import org.adbcj.PreparedQuery;
 import org.adbcj.PreparedUpdate;
 import org.adbcj.h2.*;
 import org.adbcj.h2.packets.SizeConstants;
+import org.adbcj.h2.protocol.StatusCodes;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.jboss.netty.channel.Channel;

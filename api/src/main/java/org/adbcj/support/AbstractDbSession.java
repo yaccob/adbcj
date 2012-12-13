@@ -21,6 +21,9 @@ import org.slf4j.Logger;
 
 import java.util.*;
 
+/**
+ * @deprecated To complex. Need to be more like H2 driver. Better not abstract implementation mabye?
+ */
 public abstract class AbstractDbSession implements DbSession {
 
     private final Object lock = this;
