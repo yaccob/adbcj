@@ -8,11 +8,11 @@ import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
  * @since 11.04.12
  */
 public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
-    private final AbstractMySqlConnection connection;
+    private final MySqlConnection connection;
     private final StatementPreparedEOF statementInfo;
     private volatile boolean isOpen = true;
 
-    public MySqlPreparedStatement(AbstractMySqlConnection connection,
+    public MySqlPreparedStatement(MySqlConnection connection,
                                   StatementPreparedEOF statementInfo) {
         this.connection = connection;
         this.statementInfo = statementInfo;

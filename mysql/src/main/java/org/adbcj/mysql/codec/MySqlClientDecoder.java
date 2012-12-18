@@ -39,7 +39,11 @@ public class MySqlClientDecoder {
     private static final Logger logger = LoggerFactory.getLogger(MySqlClientDecoder.class);
 
 
-    private DecoderState state = DecoderState.CONNECTING;
+    private DecoderState state;
+
+    public MySqlClientDecoder(DecoderState state) {
+        this.state = state;
+    }
 
     /**
      * Decodes a message from a MySql server.
@@ -50,7 +54,7 @@ public class MySqlClientDecoder {
      *         to decode the message without blocking
      * @throws IOException thrown if an error occurs reading data from the inputstream
      */
-    public ServerPacket decode(AbstractMySqlConnection connection, InputStream input, boolean block) throws IOException {
+    public ServerPacket decode(InputStream input, boolean block) throws IOException {
         // If mark is not support and we can't block, throw an exception
         if (!input.markSupported() && !block) {
             throw new IllegalArgumentException("Non-blocking decoding requires an InputStream that supports marking");
@@ -59,7 +63,7 @@ public class MySqlClientDecoder {
         input.mark(Integer.MAX_VALUE);
         ServerPacket message = null;
         try {
-            ServerPacket msg = doDecode(connection, input, block);
+            ServerPacket msg = doDecode( input, block);
             if(state==DecoderState.RESPONSE && msg!=null){
                 message =  new ResponseExpected(msg);
             } else{
@@ -73,7 +77,7 @@ public class MySqlClientDecoder {
         return message;
     }
 
-    protected ServerPacket doDecode(AbstractMySqlConnection connection, InputStream input, boolean block) throws IOException {
+    protected ServerPacket doDecode(InputStream input, boolean block) throws IOException {
         // If we can't block, make sure there's enough data available to read
         if (!block) {
             if (input.available() < 3) {
@@ -93,7 +97,7 @@ public class MySqlClientDecoder {
         final int packetNumber = IoUtils.safeRead(input);
         BoundedInputStream in = new BoundedInputStream(input, length);
         logger.trace("Decoding in state {}", state);
-        ResultAndState stateAndResult = state.parse(length, packetNumber, in, connection);
+        ResultAndState stateAndResult = state.parse(length, packetNumber, in);
         state = stateAndResult.getNewState();
         if (in.getRemaining() > 0) {
             final String message = "Didn't read all input. Maybe this input belongs to a failed request. " +

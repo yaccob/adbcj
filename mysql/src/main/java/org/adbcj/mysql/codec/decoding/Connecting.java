@@ -12,7 +12,7 @@ import static org.adbcj.mysql.codec.IoUtils.safeSkip;
 * @author roman.stoffel@gamlor.info
 * @since 12.04.12
 */
-class Connecting extends DecoderState {
+public class Connecting extends DecoderState {
     /**
      * The salt size in a server greeting
      */
@@ -31,8 +31,7 @@ class Connecting extends DecoderState {
     @Override
     public ResultAndState parse(int length,
                               int packetNumber,
-                              BoundedInputStream in,
-                              AbstractMySqlConnection connection) throws IOException {
+                              BoundedInputStream in) throws IOException {
         ServerGreeting serverGreeting = decodeServerGreeting(in, length, packetNumber);
         return result(RESPONSE,serverGreeting);
     }

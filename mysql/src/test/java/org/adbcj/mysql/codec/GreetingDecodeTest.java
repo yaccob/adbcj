@@ -1,5 +1,6 @@
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.packets.ResponseExpected;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
 import org.testng.Assert;
@@ -33,7 +34,7 @@ public class GreetingDecodeTest {
 	@Test
 	public void decodeGreeting1() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING1);
-		MySqlClientDecoder decoder = new MySqlClientDecoder();
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting());
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 64);
@@ -68,7 +69,7 @@ public class GreetingDecodeTest {
 	@Test
 	public void decodeGreeting2() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING2);
-		MySqlClientDecoder decoder = new MySqlClientDecoder();
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting());
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 74);
@@ -83,7 +84,7 @@ public class GreetingDecodeTest {
 	}
 
     private ServerGreeting castToServerGreeting(InputStream in, MySqlClientDecoder decoder) throws IOException {
-        return (ServerGreeting)((ResponseExpected) decoder.decode(null,in, true)).realMessage();
+        return (ServerGreeting)((ResponseExpected) decoder.decode(in, true)).realMessage();
     }
 
 }

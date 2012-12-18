@@ -4,7 +4,12 @@ import org.adbcj.CloseMode;
 import org.adbcj.Connection;
 import org.adbcj.DbException;
 import org.adbcj.DbFuture;
-import org.adbcj.mysql.codec.*;
+import org.adbcj.mysql.codec.ClientRequest;
+import org.adbcj.mysql.codec.MySqlClientDecoder;
+import org.adbcj.mysql.codec.MySqlClientEncoder;
+import org.adbcj.mysql.codec.MySqlConnection;
+import org.adbcj.mysql.codec.decoding.Connecting;
+import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
@@ -28,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class MysqlConnectionManager extends AbstractConnectionManager {
 
@@ -40,7 +44,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
     private final LoginCredentials credentials;
 
 	private final ClientBootstrap bootstrap;
-    private final Set<AbstractMySqlConnection> connections = new HashSet<AbstractMySqlConnection>();
+    private final Set<MySqlConnection> connections = new HashSet<MySqlConnection>();
     private final AtomicInteger idCounter = new AtomicInteger();
 
     public MysqlConnectionManager(String host,
@@ -65,7 +69,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = Channels.pipeline();
 
-				pipeline.addLast(DECODER, new Decoder());
 				pipeline.addLast(ENCODER, new Encoder());
 
 				return pipeline;
@@ -78,12 +81,12 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
     protected DbFuture<Void> doClose(CloseMode closeMode) throws DbException {
         final DefaultDbFuture closeFuture;
-        ArrayList<AbstractMySqlConnection> connectionsCopy;
+        ArrayList<MySqlConnection> connectionsCopy;
         synchronized (connections) {
             closeFuture = new DefaultDbFuture<Void>();
-            connectionsCopy = new ArrayList<AbstractMySqlConnection>(connections);
+            connectionsCopy = new ArrayList<MySqlConnection>(connections);
         }
-        for (AbstractMySqlConnection connection : connectionsCopy) {
+        for (MySqlConnection connection : connectionsCopy) {
             connection.close(closeMode);
         }
         new Thread("Closing MySQL ConnectionManager"){
@@ -116,6 +119,11 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
             public void operationComplete(ChannelFuture future) throws Exception {
                 logger.debug("Connect completed");
 
+
+                Channel channel = future.getChannel();
+                MySqlConnection connection = new MySqlConnection(maxQueueLength(),MysqlConnectionManager.this,channel);
+                channel.getPipeline().addLast(DECODER, new Decoder(new Connecting()));
+
             }
         });
 
@@ -128,13 +136,13 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         return idCounter.incrementAndGet();
     }
 
-    public void addConnection(AbstractMySqlConnection connection) {
+    public void addConnection(MySqlConnection connection) {
         synchronized (connections) {
             connections.add(connection);
         }
     }
 
-    public boolean removeConnection(AbstractMySqlConnection connection) {
+    public boolean removeConnection(MySqlConnection connection) {
         synchronized (connections) {
             return connections.remove(connection);
         }
@@ -144,25 +152,21 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
 class Decoder extends FrameDecoder {
 
-	private final MySqlClientDecoder decoder = new MySqlClientDecoder();
+	private final MySqlClientDecoder decoder;
 
-    private final AtomicReference<AbstractMySqlConnection> connection = new AtomicReference<AbstractMySqlConnection>(null);
+    public Decoder(DecoderState state) {
+        decoder = new MySqlClientDecoder(state);
+    }
 
-	@Override
+    @Override
 	protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
 		 InputStream in = new ChannelBufferInputStream(buffer);
 		 try {
-			 return decoder.decode(connection.get(),in, false);
+			 return decoder.decode(in, false);
 		 } finally {
 			 in.close();
 		 }
 	}
-
-    void initializeWithSession(AbstractMySqlConnection session){
-        if(connection.getAndSet(session)!=null){
-            throw new IllegalStateException("Expect that the initialisation is called only once");
-        }
-    }
 
 }
 

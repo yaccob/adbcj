@@ -1,6 +1,5 @@
 package org.adbcj.mysql.codec.decoding;
 
-import org.adbcj.mysql.codec.AbstractMySqlConnection;
 import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MysqlType;
 import org.adbcj.mysql.codec.packets.EofResponse;
@@ -47,7 +46,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
             int typesCount = statement.getParametersTypes().size();
             MysqlType newType = FieldDecodingState.parseField(in, typesCount).getMysqlType();
             List<MysqlType> types = new ArrayList<MysqlType>(typesCount + 1);
@@ -76,7 +75,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
             if (in.read() == RESPONSE_EOF) {
                 EofResponse eof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.STATEMENT);
                 if (statement.getColumns() == 0) {
@@ -105,7 +104,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
             readAllAndIgnore(in);
             int restOfParams = restOfColumns - 1;
             if (restOfParams > 0) {
@@ -128,7 +127,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
             if (in.read() == RESPONSE_EOF) {
                 EofResponse eof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.STATEMENT);
                 return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));

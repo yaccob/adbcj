@@ -25,7 +25,7 @@ class FieldDecodingState extends DecoderState {
     @Override
     public ResultAndState parse(int length,
                                 int packetNumber,
-                                BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+                                BoundedInputStream in) throws IOException {
         Tuple<ResultSetFieldResponse,List<MysqlField>> resultSetFieldResponse = decodeFieldResponse(in, length, packetNumber);
 
         int restOfExpectedFields = expectedFieldPackets-1;

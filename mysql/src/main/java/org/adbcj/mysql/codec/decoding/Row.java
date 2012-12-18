@@ -25,8 +25,7 @@ class Row extends DecoderState {
 
     @Override
     public ResultAndState parse(int length, int packetNumber,
-                                BoundedInputStream in,
-                                AbstractMySqlConnection connection) throws IOException {
+                                BoundedInputStream in) throws IOException {
         int fieldCount = in.read(); // This is only for checking for EOF
         if (fieldCount == RESPONSE_EOF) {
             EofResponse rowEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.ROW);

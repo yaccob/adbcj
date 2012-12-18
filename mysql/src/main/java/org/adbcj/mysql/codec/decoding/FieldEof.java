@@ -1,6 +1,5 @@
 package org.adbcj.mysql.codec.decoding;
 
-import org.adbcj.mysql.codec.AbstractMySqlConnection;
 import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MysqlField;
 import org.adbcj.mysql.codec.packets.EofResponse;
@@ -20,7 +19,7 @@ class FieldEof extends DecoderState {
     }
 
     @Override
-    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
         int fieldCount = in.read();
 
         if (fieldCount != RESPONSE_EOF) {

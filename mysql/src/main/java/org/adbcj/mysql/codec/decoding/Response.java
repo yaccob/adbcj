@@ -18,7 +18,7 @@ class Response extends DecoderState {
     public static final int RESPONSE_OK = 0x00;
     public static final int RESPONSE_ERROR = 0xff;
     @Override
-    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
+    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
 
         int fieldCount = in.read();
         if (fieldCount == RESPONSE_OK) {
