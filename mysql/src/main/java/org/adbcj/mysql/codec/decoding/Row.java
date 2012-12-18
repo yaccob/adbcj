@@ -35,7 +35,7 @@ class Row extends DecoderState {
         }
 
         Value[] values = new Value[fields.size()];
-        if(connection.getActiveRequest() instanceof MySqlPreparedStatement.ExecutePrepareStatement){
+        if(decideDecodingAccordingToState()){
             binaryDecode(in, values);
         } else{
             try {
@@ -47,6 +47,11 @@ class Row extends DecoderState {
         return result(ROW(fields),new ResultSetRowResponse(length, packetNumber, values));
 
     }
+
+    private boolean decideDecodingAccordingToState() {
+        throw new Error("TODO");
+    }
+
     @Override
     public String toString() {
         return "ROW";

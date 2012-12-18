@@ -65,7 +65,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = Channels.pipeline();
 
-                pipeline.addFirst(MESSAGE_QUEUE,new MessageQueuingHandler());
 				pipeline.addLast(DECODER, new Decoder());
 				pipeline.addLast(ENCODER, new Encoder());
 
@@ -116,28 +115,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 logger.debug("Connect completed");
-
-                Channel channel = future.getChannel();
-                MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, credentials, channel, connectFuture);
-                channel.getPipeline().addLast("handler", new Handler(connection));
-
-                final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
-                //This is a terrible sinchronization hack
-                // Currently needed because: We need the MessageQueuingHandler only as long as
-                // The connection is not established. When it is, we need to remove it.
-                //noinspection SynchronizationOnLocalVariableOrMethodParameter
-                synchronized (queuingHandler) {
-                    queuingHandler.flush();
-                    channel.getPipeline().remove(queuingHandler);
-                }
-
-                Decoder decoder = channel.getPipeline().get(Decoder.class);
-                decoder.initializeWithSession(connection);
-
-
-                if(future.getCause()!=null){
-                    connectFuture.setException(future.getCause());
-                }
 
             }
         });
@@ -214,31 +191,3 @@ class Encoder implements ChannelDownstreamHandler {
 	}
 }
 
-class Handler extends SimpleChannelHandler {
-
-	private final ProtocolHandler handler;
-
-    public Handler(MysqlConnection connection) {
-		this.handler =  new ProtocolHandler(connection);
-	}
-
-	@Override
-	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		handler.messageReceived(e.getMessage());
-	}
-
-	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		Throwable t = handler.handleException(e.getCause());
-		if (t != null) {
-			// TODO: Pass exception on to connectionManager
-			t.printStackTrace();
-		}
-	}
-
-	@Override
-	public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-		handler.connectionClosed();
-	}
-
-}

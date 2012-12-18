@@ -1,6 +1,5 @@
 package org.adbcj.mysql.codec.decoding;
 
-import org.adbcj.PreparedUpdate;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
@@ -23,7 +22,7 @@ class Response extends DecoderState {
 
         int fieldCount = in.read();
         if (fieldCount == RESPONSE_OK) {
-            if (connection!=null && connection.<PreparedUpdate>getActiveRequest() instanceof AbstractMySqlConnection.PreparedStatementRequest) {
+            if (actAccordingToState()) {
                 return processOKMessage(length, packetNumber, in);
             }
             return result(RESPONSE, OkResponse.interpretAsRegularOk(length, packetNumber, in));
@@ -36,6 +35,11 @@ class Response extends DecoderState {
         }
         return parseAsResult(length, packetNumber, in, fieldCount);
     }
+
+    private boolean actAccordingToState() {
+        throw new Error("TODO");
+    }
+
     @Override
     public String toString() {
         return "RESPONSE";
