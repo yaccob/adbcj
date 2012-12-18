@@ -32,7 +32,7 @@ public class AbstractStatement implements PreparedStatement {
             } else{
                 final Request request = connection.requestCreator().executeCloseStatement();
                 this.closeFuture = (DefaultDbFuture<Void>) request.getToComplete();
-                connection.queResponseHandlerAndSendMessage(request);
+                connection.forceQueRequest(request);
                 return closeFuture;
             }
         }
