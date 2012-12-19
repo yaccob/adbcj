@@ -3,6 +3,8 @@ package org.adbcj.mysql.codec;
 import org.adbcj.*;
 import org.adbcj.mysql.netty.MysqlConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.DefaultResultEventsHandler;
+import org.adbcj.support.DefaultResultSet;
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ public class MySqlConnection implements Connection {
 
     private static final Logger logger = LoggerFactory.getLogger(MySqlConnection.class);
 
+    private final int maxQueueSize;
     private final MysqlConnectionManager connectionManager;
     private final Channel channel;
 
@@ -28,13 +31,14 @@ public class MySqlConnection implements Connection {
     private volatile DefaultDbFuture<Void> closeFuture;
 
     public MySqlConnection(int maxQueueSize, MysqlConnectionManager connectionManager, Channel channel) {
+        this.maxQueueSize = maxQueueSize;
         this.connectionManager = connectionManager;
         this.channel = channel;
         this.id = connectionManager.nextId();
         connectionManager.addConnection(this);
 
-        synchronized (lock){
-            requestQueue = new ArrayDeque<MySqlRequest>(maxQueueSize+1);
+        synchronized (lock) {
+            requestQueue = new ArrayDeque<MySqlRequest>(maxQueueSize + 1);
         }
     }
 
@@ -69,12 +73,17 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        DefaultResultSet rs = new DefaultResultSet();
+        DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
+        return (DbSessionFuture) executeQuery(sql, handler, rs);
     }
 
     @Override
     public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return (DbSessionFuture) queRequest(MySqlRequests.executeQuery(sql,
+                eventHandler,
+                accumulator,
+                this)).getFuture();
     }
 
     @Override
@@ -94,13 +103,13 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbFuture<Void> close(CloseMode closeMode) throws DbException {
-        synchronized (lock){
-            if(null==closeFuture){
+        synchronized (lock) {
+            if (null == closeFuture) {
                 final MySqlRequest closeRequest = MySqlRequests.createCloseRequest(this);
                 closeFuture = closeRequest.getFuture();
                 forceQueRequest(closeRequest);
                 return closeFuture;
-            } else{
+            } else {
                 return closeFuture;
             }
         }
@@ -108,7 +117,7 @@ public class MySqlConnection implements Connection {
 
     @Override
     public boolean isClosed() throws DbException {
-        return closeFuture!=null;
+        return closeFuture != null;
     }
 
     @Override
@@ -139,16 +148,30 @@ public class MySqlConnection implements Connection {
         return EXTENDED_CLIENT_CAPABILITIES;
     }
 
-    public void forceQueRequest(MySqlRequest request) {
-        synchronized (lock){
-                requestQueue.add(request);
-                channel.write(request.getRequest());
+    public MySqlRequest queRequest(MySqlRequest request) {
+        synchronized (lock) {
+
+            int requestsPending = requestQueue.size();
+            if (requestsPending > maxQueueSize) {
+                throw new DbException("To many pending requests. The current maximum is " + maxQueueSize + "." +
+                        "Ensure that your not overloading the database with requests. " +
+                        "Also check the " + StandardProperties.MAX_QUEUE_LENGTH + " property");
+            }
+            return forceQueRequest(request);
+        }
+    }
+
+    public MySqlRequest forceQueRequest(MySqlRequest request) {
+        synchronized (lock) {
+            requestQueue.add(request);
+            channel.write(request.getRequest());
+            return request;
         }
     }
 
     public void tryCompleteClose() {
-        synchronized (lock){
-            if(null!=closeFuture){
+        synchronized (lock) {
+            if (null != closeFuture) {
                 closeFuture.trySetResult(null);
             }
         }
