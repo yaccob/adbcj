@@ -2,6 +2,7 @@ package org.adbcj.mysql.codec;
 
 import org.adbcj.*;
 import org.adbcj.mysql.netty.MysqlConnectionManager;
+import org.adbcj.support.DefaultDbFuture;
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public class MySqlConnection implements Connection {
     private final ArrayDeque<MySqlRequest> requestQueue;
 
     private final Object lock = new Object();
+    private volatile DefaultDbFuture<Void> closeFuture;
 
     public MySqlConnection(int maxQueueSize, MysqlConnectionManager connectionManager, Channel channel) {
         this.connectionManager = connectionManager;
@@ -92,12 +94,21 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbFuture<Void> close(CloseMode closeMode) throws DbException {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        synchronized (lock){
+            if(null==closeFuture){
+                final MySqlRequest closeRequest = MySqlRequests.createCloseRequest(this);
+                closeFuture = closeRequest.getFuture();
+                forceQueRequest(closeRequest);
+                return closeFuture;
+            } else{
+                return closeFuture;
+            }
+        }
     }
 
     @Override
     public boolean isClosed() throws DbException {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return closeFuture!=null;
     }
 
     @Override
@@ -135,4 +146,11 @@ public class MySqlConnection implements Connection {
         }
     }
 
+    public void tryCompleteClose() {
+        synchronized (lock){
+            if(null!=closeFuture){
+                closeFuture.trySetResult(null);
+            }
+        }
+    }
 }

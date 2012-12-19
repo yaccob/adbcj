@@ -124,6 +124,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                 Channel channel = future.getChannel();
                 MySqlConnection connection = new MySqlConnection(maxQueueLength(), MysqlConnectionManager.this, channel);
                 channel.getPipeline().addLast(DECODER, new Decoder(new Connecting(connectFuture, connection, credentials)));
+                channel.getPipeline().addLast("end-handler", new Handler(connection));
 
                 final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
                 //This is a terrible sinchronization hack
@@ -183,6 +184,31 @@ class Decoder extends FrameDecoder {
 		 }
 	}
 
+}
+
+
+class Handler extends SimpleChannelHandler {
+    private final MySqlConnection connection;
+    private static final Logger logger = LoggerFactory.getLogger(Handler.class);
+
+    Handler(MySqlConnection connection) {
+        this.connection = connection;
+    }
+
+
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        logger.error("Unhandled exception",e.getCause());
+    }
+
+
+
+
+    @Override
+    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        connection.tryCompleteClose();
+    }
 }
 
 @ChannelHandler.Sharable

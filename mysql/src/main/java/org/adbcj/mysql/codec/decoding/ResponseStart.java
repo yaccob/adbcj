@@ -45,7 +45,7 @@ public abstract class ResponseStart extends DecoderState {
 
     @Override
     public String toString() {
-        return "RESPONSE";
+        return this.getClass().getSimpleName();
     }
 
     private ResultAndState parseAsResult(int length, int packetNumber, BoundedInputStream in, int fieldCount) throws IOException {
