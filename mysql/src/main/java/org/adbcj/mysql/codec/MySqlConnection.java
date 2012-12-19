@@ -88,7 +88,8 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbSessionFuture<Result> executeUpdate(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return (DbSessionFuture) queRequest(MySqlRequests.executeUpdate(sql,
+                this)).getFuture();
     }
 
     @Override

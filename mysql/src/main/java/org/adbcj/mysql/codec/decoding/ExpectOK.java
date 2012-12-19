@@ -10,7 +10,7 @@ import org.adbcj.support.DefaultDbFuture;
  */
 public class ExpectOK<T> extends ResponseStart {
 
-    private final DefaultDbFuture<T> futureToComplete;
+    protected final DefaultDbFuture<T> futureToComplete;
 
     public ExpectOK(DefaultDbFuture<T> futureToComplete,MySqlConnection connection) {
         super(connection);

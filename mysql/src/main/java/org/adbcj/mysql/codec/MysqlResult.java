@@ -14,7 +14,7 @@ import java.util.List;
  * @author roman.stoffel@gamlor.info
  * @since 10.05.12
  */
-class MysqlResult extends DefaultResult {
+public class MysqlResult extends DefaultResult {
     private final ResultSet generatedKeys;
 
     public MysqlResult(Long affectedRows, List<String> warnings, long autoKey) {

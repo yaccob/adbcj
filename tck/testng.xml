@@ -13,7 +13,7 @@
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <class name="org.adbcj.tck.test.SelectTest" />
+            <class name="org.adbcj.tck.test.InsertTest" />
             <!--<class name="org.adbcj.tck.test.PreparedUpdateTest"/>-->
         </classes>
     </test>
