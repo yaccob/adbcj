@@ -3,6 +3,7 @@ package org.adbcj.mysql.codec.decoding;
 import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MysqlField;
 import org.adbcj.mysql.codec.packets.EofResponse;
+import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,7 +20,7 @@ class FieldEof extends DecoderState {
     }
 
     @Override
-    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
+    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, Channel channel) throws IOException {
         int fieldCount = in.read();
 
         if (fieldCount != RESPONSE_EOF) {

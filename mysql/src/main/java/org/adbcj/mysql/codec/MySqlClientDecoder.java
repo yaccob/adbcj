@@ -21,8 +21,8 @@ package org.adbcj.mysql.codec;
 import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.decoding.ResultAndState;
 import org.adbcj.mysql.codec.packets.FailedToParseInput;
-import org.adbcj.mysql.codec.packets.ResponseExpected;
 import org.adbcj.mysql.codec.packets.ServerPacket;
+import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,13 +48,14 @@ public class MySqlClientDecoder {
     /**
      * Decodes a message from a MySql server.
      *
+     *
      * @param input the {@code InputStream} from which to decode the message
-     * @param block true if the decoder can block, false otherwise
-     * @return the decode message, null if the {@code block} is {@code} false and there is not enough data available
+     * @param channel
+     *@param block true if the decoder can block, false otherwise  @return the decode message, null if the {@code block} is {@code} false and there is not enough data available
      *         to decode the message without blocking
      * @throws IOException thrown if an error occurs reading data from the inputstream
      */
-    public ServerPacket decode(InputStream input, boolean block) throws IOException {
+    public ServerPacket decode(InputStream input, Channel channel, boolean block) throws IOException {
         // If mark is not support and we can't block, throw an exception
         if (!input.markSupported() && !block) {
             throw new IllegalArgumentException("Non-blocking decoding requires an InputStream that supports marking");
@@ -63,12 +64,7 @@ public class MySqlClientDecoder {
         input.mark(Integer.MAX_VALUE);
         ServerPacket message = null;
         try {
-            ServerPacket msg = doDecode( input, block);
-            if(state==DecoderState.RESPONSE && msg!=null){
-                message =  new ResponseExpected(msg);
-            } else{
-                message = msg;
-            }
+            message = doDecode( input,channel, block);
         } finally {
             if (message == null) {
                 input.reset();
@@ -77,7 +73,7 @@ public class MySqlClientDecoder {
         return message;
     }
 
-    protected ServerPacket doDecode(InputStream input, boolean block) throws IOException {
+    protected ServerPacket doDecode(InputStream input, Channel channel, boolean block) throws IOException {
         // If we can't block, make sure there's enough data available to read
         if (!block) {
             if (input.available() < 3) {
@@ -97,7 +93,7 @@ public class MySqlClientDecoder {
         final int packetNumber = IoUtils.safeRead(input);
         BoundedInputStream in = new BoundedInputStream(input, length);
         logger.trace("Decoding in state {}", state);
-        ResultAndState stateAndResult = state.parse(length, packetNumber, in);
+        ResultAndState stateAndResult = state.parse(length, packetNumber, in, channel);
         state = stateAndResult.getNewState();
         if (in.getRemaining() > 0) {
             final String message = "Didn't read all input. Maybe this input belongs to a failed request. " +

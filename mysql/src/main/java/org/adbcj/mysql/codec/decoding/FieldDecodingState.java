@@ -2,6 +2,7 @@ package org.adbcj.mysql.codec.decoding;
 
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ResultSetFieldResponse;
+import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +26,7 @@ class FieldDecodingState extends DecoderState {
     @Override
     public ResultAndState parse(int length,
                                 int packetNumber,
-                                BoundedInputStream in) throws IOException {
+                                BoundedInputStream in, Channel channel) throws IOException {
         Tuple<ResultSetFieldResponse,List<MysqlField>> resultSetFieldResponse = decodeFieldResponse(in, length, packetNumber);
 
         int restOfExpectedFields = expectedFieldPackets-1;

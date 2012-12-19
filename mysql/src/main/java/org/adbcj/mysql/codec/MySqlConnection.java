@@ -6,20 +6,34 @@ import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayDeque;
+import java.util.EnumSet;
+import java.util.Set;
+
 public class MySqlConnection implements Connection {
 
     private static final Logger logger = LoggerFactory.getLogger(MySqlConnection.class);
 
     private final MysqlConnectionManager connectionManager;
+    private final Channel channel;
 
     protected final int id;
 
     private final MysqlCharacterSet charset = MysqlCharacterSet.UTF8_UNICODE_CI;
 
-    public MySqlConnection(int i, MysqlConnectionManager connectionManager, Channel channel) {
+    private final ArrayDeque<MySqlRequest> requestQueue;
+
+    private final Object lock = new Object();
+
+    public MySqlConnection(int maxQueueSize, MysqlConnectionManager connectionManager, Channel channel) {
         this.connectionManager = connectionManager;
+        this.channel = channel;
         this.id = connectionManager.nextId();
         connectionManager.addConnection(this);
+
+        synchronized (lock){
+            requestQueue = new ArrayDeque<MySqlRequest>(maxQueueSize+1);
+        }
     }
 
     public ConnectionManager getConnectionManager() {
@@ -90,4 +104,35 @@ public class MySqlConnection implements Connection {
     public boolean isOpen() throws DbException {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
     }
+
+
+    private static final Set<ClientCapabilities> CLIENT_CAPABILITIES = EnumSet.of(
+            ClientCapabilities.LONG_PASSWORD,
+            ClientCapabilities.FOUND_ROWS,
+            ClientCapabilities.LONG_COLUMN_FLAG,
+            ClientCapabilities.CONNECT_WITH_DB,
+            ClientCapabilities.LOCAL_FILES,
+            ClientCapabilities.PROTOCOL_4_1,
+            ClientCapabilities.TRANSACTIONS,
+            ClientCapabilities.SECURE_AUTHENTICATION);
+
+    public Set<ClientCapabilities> getClientCapabilities() {
+        return CLIENT_CAPABILITIES;
+    }
+
+    private static final Set<ExtendedClientCapabilities> EXTENDED_CLIENT_CAPABILITIES = EnumSet.of(
+            ExtendedClientCapabilities.MULTI_RESULTS
+    );
+
+    public Set<ExtendedClientCapabilities> getExtendedClientCapabilities() {
+        return EXTENDED_CLIENT_CAPABILITIES;
+    }
+
+    public void forceQueRequest(MySqlRequest request) {
+        synchronized (lock){
+                requestQueue.add(request);
+                channel.write(request.getRequest());
+        }
+    }
+
 }

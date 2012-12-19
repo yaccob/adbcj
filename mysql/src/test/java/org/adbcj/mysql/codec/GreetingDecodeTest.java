@@ -34,7 +34,7 @@ public class GreetingDecodeTest {
 	@Test
 	public void decodeGreeting1() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING1);
-		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting());
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null,null,null));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 64);
@@ -69,7 +69,7 @@ public class GreetingDecodeTest {
 	@Test
 	public void decodeGreeting2() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING2);
-		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting());
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null,null,null));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 74);
@@ -84,7 +84,7 @@ public class GreetingDecodeTest {
 	}
 
     private ServerGreeting castToServerGreeting(InputStream in, MySqlClientDecoder decoder) throws IOException {
-        return (ServerGreeting)((ResponseExpected) decoder.decode(in, true)).realMessage();
+        return (ServerGreeting)((ResponseExpected) decoder.decode(in, null, true)).realMessage();
     }
 
 }

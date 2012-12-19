@@ -4,6 +4,7 @@ import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
 import org.adbcj.mysql.codec.packets.ServerPacket;
+import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +22,6 @@ public abstract class DecoderState {
     protected static final String CHARSET = "UTF8";
     public static final int RESPONSE_EOF = 0xfe;
 
-    public static final DecoderState RESPONSE = new Response();
-
     protected static DecoderState FIELD(int expectedAmountOfFields, List<MysqlField> fields){
         return new FieldDecodingState(expectedAmountOfFields,fields);
 
@@ -39,8 +38,8 @@ public abstract class DecoderState {
 
 
     public abstract ResultAndState parse(int length,
-                                       int packetNumber,
-                                       BoundedInputStream in) throws IOException;
+                                         int packetNumber,
+                                         BoundedInputStream in, Channel channel) throws IOException;
 
 
     public ResultAndState result( DecoderState newState,ServerPacket result){

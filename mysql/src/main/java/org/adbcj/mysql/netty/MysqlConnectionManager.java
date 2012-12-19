@@ -69,6 +69,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = Channels.pipeline();
 
+				pipeline.addFirst(MESSAGE_QUEUE, new MessageQueuingHandler());
 				pipeline.addLast(ENCODER, new Encoder());
 
 				return pipeline;
@@ -121,9 +122,23 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
 
                 Channel channel = future.getChannel();
-                MySqlConnection connection = new MySqlConnection(maxQueueLength(),MysqlConnectionManager.this,channel);
-                channel.getPipeline().addLast(DECODER, new Decoder(new Connecting()));
+                MySqlConnection connection = new MySqlConnection(maxQueueLength(), MysqlConnectionManager.this, channel);
+                channel.getPipeline().addLast(DECODER, new Decoder(new Connecting(connectFuture, connection, credentials)));
 
+                final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
+                //This is a terrible sinchronization hack
+                // Currently needed because: We need the MessageQueuingHandler only as long as
+                // The connection is not established. When it is, we need to remove it.
+                //noinspection SynchronizationOnLocalVariableOrMethodParameter
+                synchronized (queuingHandler) {
+                    queuingHandler.flush();
+                    channel.getPipeline().remove(queuingHandler);
+                }
+
+                if (future.getCause() != null) {
+                    connectFuture.setException(future.getCause());
+                }
+                addConnection(connection);
             }
         });
 
@@ -162,7 +177,7 @@ class Decoder extends FrameDecoder {
 	protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
 		 InputStream in = new ChannelBufferInputStream(buffer);
 		 try {
-			 return decoder.decode(in, false);
+			 return decoder.decode(in,channel, false);
 		 } finally {
 			 in.close();
 		 }

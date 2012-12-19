@@ -1,7 +1,12 @@
 package org.adbcj.mysql.codec.decoding;
 
+import org.adbcj.Connection;
 import org.adbcj.mysql.codec.*;
+import org.adbcj.mysql.codec.packets.LoginRequest;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
+import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.LoginCredentials;
+import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
 import java.util.Set;
@@ -28,12 +33,29 @@ public class Connecting extends DecoderState {
      */
     public static final int GREETING_UNUSED_SIZE = 13;
 
+    private final DefaultDbFuture<Connection> connectFuture;
+    private final MySqlConnection connection;
+    private final LoginCredentials loginWith;
+
+    public Connecting(DefaultDbFuture<Connection> connectFuture,
+                      MySqlConnection connection, LoginCredentials loginWith) {
+        this.connectFuture = connectFuture;
+        this.connection = connection;
+        this.loginWith = loginWith;
+    }
+
     @Override
     public ResultAndState parse(int length,
-                              int packetNumber,
-                              BoundedInputStream in) throws IOException {
+                                int packetNumber,
+                                BoundedInputStream in,
+                                Channel channel) throws IOException {
         ServerGreeting serverGreeting = decodeServerGreeting(in, length, packetNumber);
-        return result(RESPONSE,serverGreeting);
+        LoginRequest loginRequest = new LoginRequest(loginWith,
+                connection.getClientCapabilities(),
+                connection.getExtendedClientCapabilities(),
+                MysqlCharacterSet.UTF8_UNICODE_CI,serverGreeting.getSalt());
+        channel.write(loginRequest);
+        return result(new FinishLogin(connectFuture, connection),serverGreeting);
     }
 
     protected ServerGreeting decodeServerGreeting(BoundedInputStream in, int length, int packetNumber) throws IOException {
@@ -55,7 +77,14 @@ public class Connecting extends DecoderState {
         in.read(new byte[in.getRemaining()-1]);
         in.read(); // Throw away 0 byte
 
-        return new ServerGreeting(length, packetNumber, protocol, version, threadId, salt, serverCapabilities, charSet,
+        return new ServerGreeting(length,
+                packetNumber,
+                protocol,
+                version,
+                threadId,
+                salt,
+                serverCapabilities,
+                charSet,
                 serverStatus);
     }
 

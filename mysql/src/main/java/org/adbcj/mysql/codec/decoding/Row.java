@@ -6,6 +6,7 @@ import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.ResultSetRowResponse;
 import org.adbcj.support.DefaultValue;
+import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -25,12 +26,12 @@ class Row extends DecoderState {
 
     @Override
     public ResultAndState parse(int length, int packetNumber,
-                                BoundedInputStream in) throws IOException {
+                                BoundedInputStream in, Channel channel) throws IOException {
         int fieldCount = in.read(); // This is only for checking for EOF
         if (fieldCount == RESPONSE_EOF) {
             EofResponse rowEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.ROW);
-
-            return result(RESPONSE,rowEof);
+             throw new Error("TODO Accept next request");
+//            return result(RESPONSE,rowEof);
         }
 
         Value[] values = new Value[fields.size()];

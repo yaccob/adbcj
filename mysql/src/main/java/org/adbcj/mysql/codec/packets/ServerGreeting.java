@@ -34,7 +34,15 @@ public class ServerGreeting extends ServerPacket{
 	private final MysqlCharacterSet characterSet;
 	private final Set<ServerStatus> serverStatus;
 
-	public ServerGreeting (int length, int packetNumber, int protocol, String version, int threadId, byte[] salt, Set<ClientCapabilities> serverCapabilities, MysqlCharacterSet characterSet, Set<ServerStatus> serverStatus) {
+	public ServerGreeting (int length,
+                           int packetNumber,
+                           int protocol,
+                           String version,
+                           int threadId,
+                           byte[] salt,
+                           Set<ClientCapabilities> serverCapabilities,
+                           MysqlCharacterSet characterSet,
+                           Set<ServerStatus> serverStatus) {
 		super(length, packetNumber);
 		this.protocol = protocol;
 		this.version = version;

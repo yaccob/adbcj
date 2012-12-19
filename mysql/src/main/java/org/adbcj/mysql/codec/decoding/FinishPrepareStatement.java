@@ -4,7 +4,7 @@ import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MysqlType;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
-import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
+import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         } else if (statement.getColumns() > 0) {
             return new ReadColumns(statement.getColumns(), statement);
         } else {
-            return RESPONSE;
+            throw new Error("TODO Accept Next Request?");
         }
     }
 
@@ -46,7 +46,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, Channel channel) throws IOException {
             int typesCount = statement.getParametersTypes().size();
             MysqlType newType = FieldDecodingState.parseField(in, typesCount).getMysqlType();
             List<MysqlType> types = new ArrayList<MysqlType>(typesCount + 1);
@@ -75,11 +75,13 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, Channel channel) throws IOException {
             if (in.read() == RESPONSE_EOF) {
                 EofResponse eof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.STATEMENT);
                 if (statement.getColumns() == 0) {
-                    return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));
+
+                    throw new Error("TODO Accept Next Request?");
+//                    return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));
                 } else {
                     return result(new ReadColumns(statement.getColumns(), statement), statement);
                 }
@@ -104,7 +106,7 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, Channel channel) throws IOException {
             readAllAndIgnore(in);
             int restOfParams = restOfColumns - 1;
             if (restOfParams > 0) {
@@ -127,10 +129,12 @@ abstract class FinishPrepareStatement extends DecoderState {
         }
 
         @Override
-        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in) throws IOException {
+        public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, Channel channel) throws IOException {
             if (in.read() == RESPONSE_EOF) {
                 EofResponse eof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.STATEMENT);
-                return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));
+
+                throw new Error("TODO Accept Next Request?");
+//  return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));
             } else {
                 throw new IllegalStateException("Did not expect a EOF from the server");
             }
