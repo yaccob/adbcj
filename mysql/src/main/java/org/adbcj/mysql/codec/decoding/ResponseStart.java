@@ -48,19 +48,12 @@ public abstract class ResponseStart extends DecoderState {
         return this.getClass().getSimpleName();
     }
 
-    private ResultAndState parseAsResult(int length, int packetNumber, BoundedInputStream in, int fieldCount) throws IOException {
-        throw new Error("TODO");
-//        // Get the number of fields. The largest this can be is a 24-bit
-//        // integer so cast to int is ok
-//        int expectedFieldPackets = (int) IoUtils.readBinaryLengthEncoding(in, fieldCount);
-//        logger.trace("Field count {}", expectedFieldPackets);
-//
-//        Long extra = null;
-//        if (in.getRemaining() > 0) {
-//            extra = IoUtils.readBinaryLengthEncoding(in);
-//        }
-//
-//        return result(FIELD(expectedFieldPackets,new ArrayList<MysqlField>()),new ResultSetResponse(length, packetNumber, expectedFieldPackets, extra));
+    protected ResultAndState parseAsResult(int length,
+                                         int packetNumber,
+                                         BoundedInputStream in,
+                                         int fieldCount) throws IOException {
+        throw new IllegalStateException("This state: "+this+" does not expect a result which can be interpreted as " +
+                "query result");
     }
 
 

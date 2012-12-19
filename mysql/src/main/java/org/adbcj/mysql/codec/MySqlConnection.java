@@ -176,4 +176,20 @@ public class MySqlConnection implements Connection {
             }
         }
     }
+
+    public MySqlRequest dequeRequest() {
+            synchronized (lock){
+                final MySqlRequest request = requestQueue.poll();
+                if(logger.isDebugEnabled()){
+                    logger.debug("Dequeued request: {}",request);
+                }
+                if(request.getRequest().wasCancelled()){
+                    if(logger.isDebugEnabled()){
+                        logger.debug("Request has been cancelled: {}",request);
+                    }
+                    return dequeRequest();
+                }
+                return request;
+        }
+    }
 }

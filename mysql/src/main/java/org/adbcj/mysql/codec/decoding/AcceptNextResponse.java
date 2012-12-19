@@ -1,24 +1,25 @@
 package org.adbcj.mysql.codec.decoding;
 
+import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MySqlConnection;
-import org.adbcj.mysql.codec.packets.ErrorResponse;
-import org.adbcj.mysql.codec.packets.OkResponse;
+import org.adbcj.mysql.codec.MySqlRequest;
+import org.jboss.netty.channel.Channel;
+
+import java.io.IOException;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class AcceptNextResponse extends ResponseStart {
+public class AcceptNextResponse extends DecoderState {
+    private final MySqlConnection connection;
+
     public AcceptNextResponse(MySqlConnection connection) {
-        super(connection);
+        this.connection = connection;
     }
 
     @Override
-    protected ResultAndState handleError(ErrorResponse errorResponse) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
-    }
-
-    @Override
-    protected ResultAndState handleOk(OkResponse.RegularOK regularOK) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+    public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, Channel channel) throws IOException {
+        final MySqlRequest request = connection.dequeRequest();
+        return request.getDecoderState().parse(length, packetNumber, in, channel);
     }
 }

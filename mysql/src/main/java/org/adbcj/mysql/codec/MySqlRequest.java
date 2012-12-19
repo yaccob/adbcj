@@ -31,6 +31,10 @@ public class MySqlRequest {
         return request;
     }
 
+    public DecoderState getDecoderState() {
+        return startState;
+    }
+
     public DefaultDbFuture getFuture() {
         return toComplete;
     }

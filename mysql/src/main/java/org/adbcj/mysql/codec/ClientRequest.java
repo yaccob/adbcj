@@ -40,4 +40,7 @@ public abstract class ClientRequest {
 
     public abstract void writeToOutputStream(OutputStream out, String charset) throws IOException;
 
+    public boolean wasCancelled() {
+        return false;
+    }
 }

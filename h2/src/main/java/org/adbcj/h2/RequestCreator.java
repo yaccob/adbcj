@@ -5,6 +5,7 @@ import org.adbcj.h2.decoding.*;
 import org.adbcj.h2.packets.*;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.SafeResultHandlerDecorator;
 
 /**
  * @author roman.stoffel@gamlor.info
