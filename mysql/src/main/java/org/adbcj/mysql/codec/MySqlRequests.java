@@ -31,7 +31,7 @@ public final class MySqlRequests {
                                                         T accumulator, MySqlConnection connection) {
         DefaultDbSessionFuture<T> future = new DefaultDbSessionFuture<T>(connection);
         ResultHandler<T> handleFailures = SafeResultHandlerDecorator.wrap(eventHandler, future);
-        return new MySqlRequest("Execute Stmt",future,
+        return new MySqlRequest("Execute-Statement",future,
                 new ExpectStatementResult(Row.RowDecodingType.BINARY, future, handleFailures,accumulator),
                 new PreparedStatementRequest(stmp.getHandlerId(),stmp.getParametersTypes(),data));
     }
@@ -57,5 +57,25 @@ public final class MySqlRequests {
         return new MySqlRequest("Close-Statement: ",future,
                 new AcceptNextResponse(connection),
                 new ClosePreparedStatementRequest(statementInfo.getHandlerId()));
+    }
+
+    public static MySqlRequest beginTransaction(MySqlConnection connection) {
+        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
+        return new MySqlRequest("Begin-Transaction: ",future,
+                new ExpectUpdateResult(future),
+                new StringCommandRequest(Command.QUERY, "begin"));
+    }
+
+    public static MySqlRequest commitTransaction(MySqlConnection connection) {
+        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
+        return new MySqlRequest("Commit-Transaction: ",future,
+                new ExpectUpdateResult(future),
+                new StringCommandRequest(Command.QUERY, "commit"));
+    }
+    public static MySqlRequest rollbackTransaction(MySqlConnection connection) {
+        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
+        return new MySqlRequest("Rollback-Transaction: ",future,
+                new ExpectUpdateResult(future),
+                new StringCommandRequest(Command.QUERY, "rollback"));
     }
 }

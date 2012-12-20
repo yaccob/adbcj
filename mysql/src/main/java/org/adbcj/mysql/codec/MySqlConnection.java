@@ -29,6 +29,7 @@ public class MySqlConnection implements Connection {
 
     private final Object lock = new Object();
     private volatile DefaultDbFuture<Void> closeFuture;
+    private volatile boolean isInTransaction = false;
 
     public MySqlConnection(int maxQueueSize, MysqlConnectionManager connectionManager, Channel channel) {
         this.maxQueueSize = maxQueueSize;
@@ -53,22 +54,42 @@ public class MySqlConnection implements Connection {
 
     @Override
     public void beginTransaction() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        if(isInTransaction()){
+            throw new DbException("This connection is already in a transaction");
+        }
+        synchronized (lock){
+            forceQueRequest(MySqlRequests.beginTransaction(this));
+            isInTransaction = true;
+        }
     }
 
     @Override
     public DbSessionFuture<Void> commit() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        if(!isInTransaction()){
+            throw new DbException("No transaction has been started to commit");
+        }
+        synchronized (lock){
+            final MySqlRequest request = queRequest(MySqlRequests.commitTransaction(this));
+            isInTransaction = false;
+            return (DbSessionFuture<Void>) request.getFuture();
+        }
     }
 
     @Override
     public DbSessionFuture<Void> rollback() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        if(!isInTransaction()){
+            throw new DbException("No transaction has been started to rollback");
+        }
+        synchronized (lock){
+            final MySqlRequest request = queRequest(MySqlRequests.rollbackTransaction(this));
+            isInTransaction = false;
+            return (DbSessionFuture<Void>) request.getFuture();
+        }
     }
 
     @Override
     public boolean isInTransaction() {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return isInTransaction;
     }
 
     @Override
@@ -100,7 +121,8 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return (DbSessionFuture) queRequest(MySqlRequests.prepareQuery(sql,
+                this)).getFuture();
     }
 
     @Override

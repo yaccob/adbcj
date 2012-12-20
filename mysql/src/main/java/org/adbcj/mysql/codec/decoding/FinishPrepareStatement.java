@@ -85,9 +85,9 @@ abstract class FinishPrepareStatement extends DecoderState {
             if (in.read() == RESPONSE_EOF) {
                 EofResponse eof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.STATEMENT);
                 if (statement.getColumns() == 0) {
-
-                    throw new Error("TODO Accept Next Request?");
-//                    return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));
+                    final StatementPreparedEOF preparedEOF = new StatementPreparedEOF(packetNumber, packetNumber, statement);
+                    toComplete.trySetResult(new MySqlPreparedStatement((MySqlConnection) toComplete.getSession(), preparedEOF));
+                    return result(new AcceptNextResponse((MySqlConnection) toComplete.getSession()), preparedEOF);
                 } else {
                     return result(new ReadColumns(statement.getColumns(), statement, toComplete), statement);
                 }
