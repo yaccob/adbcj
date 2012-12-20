@@ -57,7 +57,7 @@ public abstract class ResponseStart extends DecoderState {
     }
 
 
-    protected ErrorResponse decodeErrorResponse(InputStream in, int length, int packetNumber) throws IOException {
+    public static ErrorResponse decodeErrorResponse(InputStream in, int length, int packetNumber) throws IOException {
         int errorNumber = IoUtils.readUnsignedShort(in);
         in.read(); // Throw away sqlstate marker
         String sqlState = IoUtils.readNullTerminatedString(in, CHARSET);

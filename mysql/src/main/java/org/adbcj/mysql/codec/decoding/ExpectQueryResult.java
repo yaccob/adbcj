@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class ExpectQueryResult<T> extends ResponseStart {
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
-    private final DefaultDbSessionFuture<T> future;
+    protected final DefaultDbSessionFuture<T> future;
     private Row.RowDecodingType decodingType;
 
     public ExpectQueryResult(Row.RowDecodingType decodingType, DefaultDbSessionFuture<T> future, ResultHandler<T> eventHandler, T accumulator) {

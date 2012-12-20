@@ -1,9 +1,10 @@
 package org.adbcj.mysql.codec.decoding;
 
-import org.adbcj.mysql.codec.BoundedInputStream;
-import org.adbcj.mysql.codec.MysqlType;
+import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
+import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
+import org.adbcj.support.DefaultDbSessionFuture;
 import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
@@ -17,30 +18,35 @@ import java.util.List;
 abstract class FinishPrepareStatement extends DecoderState {
 
     protected final PreparedStatementToBuild statement;
+    protected final DefaultDbSessionFuture<MySqlPreparedStatement> toComplete;
 
-    FinishPrepareStatement(PreparedStatementToBuild statement) {
+    FinishPrepareStatement(PreparedStatementToBuild statement,DefaultDbSessionFuture<MySqlPreparedStatement> toComplete) {
         this.statement = statement;
+        this.toComplete = toComplete;
     }
 
     protected void readAllAndIgnore(BoundedInputStream in) throws IOException {
         in.read(new byte[in.getRemaining()]);
     }
 
-    public static DecoderState create(PreparedStatementToBuild statement) {
+    public static DecoderState create(PreparedStatementToBuild statement,
+                                      DefaultDbSessionFuture<MySqlPreparedStatement> toComplete) {
         if (statement.getParams() > 0) {
-            return new ReadParameters(statement.getParams(), statement);
+            return new ReadParameters(statement.getParams(), statement, toComplete);
         } else if (statement.getColumns() > 0) {
-            return new ReadColumns(statement.getColumns(), statement);
+            return new ReadColumns(statement.getColumns(), statement, toComplete);
         } else {
-            throw new Error("TODO Accept Next Request?");
+            return new AcceptNextResponse((MySqlConnection) toComplete.getSession());
         }
     }
 
     private static class ReadParameters extends FinishPrepareStatement {
         private final int parametersToParse;
 
-        public ReadParameters(int parametersToParse, PreparedStatementToBuild statement) {
-            super(statement);
+        public ReadParameters(int parametersToParse,
+                              PreparedStatementToBuild statement,
+                              DefaultDbSessionFuture<MySqlPreparedStatement> toComplete) {
+            super(statement,toComplete);
 
             this.parametersToParse = parametersToParse;
         }
@@ -56,9 +62,9 @@ abstract class FinishPrepareStatement extends DecoderState {
                     statement.getPreparedStatement(), types);
             int restOfParams = parametersToParse - 1;
             if (restOfParams > 0) {
-                return result(new ReadParameters(restOfParams, newStatement), statement);
+                return result(new ReadParameters(restOfParams, newStatement,toComplete), statement);
             } else {
-                return result(new EofAndColumns(newStatement), statement);
+                return result(new EofAndColumns(newStatement,toComplete), statement);
             }
         }
 
@@ -70,8 +76,8 @@ abstract class FinishPrepareStatement extends DecoderState {
 
     private static class EofAndColumns extends FinishPrepareStatement {
 
-        public EofAndColumns(PreparedStatementToBuild statement) {
-            super(statement);
+        public EofAndColumns(PreparedStatementToBuild statement, DefaultDbSessionFuture toComplete) {
+            super(statement,toComplete);
         }
 
         @Override
@@ -83,7 +89,7 @@ abstract class FinishPrepareStatement extends DecoderState {
                     throw new Error("TODO Accept Next Request?");
 //                    return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));
                 } else {
-                    return result(new ReadColumns(statement.getColumns(), statement), statement);
+                    return result(new ReadColumns(statement.getColumns(), statement, toComplete), statement);
                 }
             } else {
                 throw new IllegalStateException("Did not expect a EOF from the server");
@@ -97,11 +103,10 @@ abstract class FinishPrepareStatement extends DecoderState {
     }
 
     private static class ReadColumns extends FinishPrepareStatement {
-
         private final int restOfColumns;
 
-        public ReadColumns(int restOfColumns, PreparedStatementToBuild statement) {
-            super(statement);
+        public ReadColumns(int restOfColumns, PreparedStatementToBuild statement, DefaultDbSessionFuture<MySqlPreparedStatement> toComplete) {
+            super(statement,toComplete);
             this.restOfColumns = restOfColumns;
         }
 
@@ -110,9 +115,9 @@ abstract class FinishPrepareStatement extends DecoderState {
             readAllAndIgnore(in);
             int restOfParams = restOfColumns - 1;
             if (restOfParams > 0) {
-                return result(new ReadColumns(restOfParams, statement), statement);
+                return result(new ReadColumns(restOfParams, statement, toComplete), statement);
             } else {
-                return result(new EofStatement(statement), statement);
+                return result(new EofStatement(statement,toComplete), statement);
             }
         }
 
@@ -124,8 +129,8 @@ abstract class FinishPrepareStatement extends DecoderState {
 
     private static class EofStatement extends FinishPrepareStatement {
 
-        public EofStatement(PreparedStatementToBuild statement) {
-            super(statement);
+        public EofStatement(PreparedStatementToBuild statement, DefaultDbSessionFuture toComplete) {
+            super(statement,toComplete);
         }
 
         @Override
@@ -133,16 +138,13 @@ abstract class FinishPrepareStatement extends DecoderState {
             if (in.read() == RESPONSE_EOF) {
                 EofResponse eof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.STATEMENT);
 
-                throw new Error("TODO Accept Next Request?");
-//  return result(RESPONSE, new StatementPreparedEOF(packetNumber, packetNumber, statement));
+
+                final StatementPreparedEOF preparedEOF = new StatementPreparedEOF(packetNumber, packetNumber, statement);
+                toComplete.trySetResult(new MySqlPreparedStatement((MySqlConnection) toComplete.getSession(), preparedEOF));
+                return result(new AcceptNextResponse((MySqlConnection) toComplete.getSession()), preparedEOF);
             } else {
                 throw new IllegalStateException("Did not expect a EOF from the server");
             }
-        }
-
-        @Override
-        public String toString() {
-            return "PREPARED-STATEMENT-EOF";
         }
     }
 }

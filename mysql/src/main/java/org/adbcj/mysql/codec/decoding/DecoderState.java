@@ -4,7 +4,6 @@ import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.IoUtils;
 import org.adbcj.mysql.codec.ServerStatus;
 import org.adbcj.mysql.codec.packets.EofResponse;
-import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
 import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
@@ -23,9 +22,6 @@ public abstract class DecoderState {
     protected static final String CHARSET = "UTF8";
     public static final int RESPONSE_EOF = 0xfe;
 
-    protected static DecoderState FINISH_PREPARE_STATEMENT_OK(PreparedStatementToBuild statement){
-        return FinishPrepareStatement.create(statement);
-    }
 
 
     public abstract ResultAndState parse(int length,

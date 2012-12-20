@@ -94,7 +94,8 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
+        return (DbSessionFuture) queRequest(MySqlRequests.prepareQuery(sql,
+                this)).getFuture();
     }
 
     @Override
@@ -192,5 +193,9 @@ public class MySqlConnection implements Connection {
                 }
                 return request;
         }
+    }
+
+    public Object lock() {
+        return lock;
     }
 }
