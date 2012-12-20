@@ -3,6 +3,7 @@ package org.adbcj.h2;
 import org.adbcj.*;
 import org.adbcj.h2.decoding.*;
 import org.adbcj.h2.packets.*;
+import org.adbcj.support.CancellationToken;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.SafeResultHandlerDecorator;

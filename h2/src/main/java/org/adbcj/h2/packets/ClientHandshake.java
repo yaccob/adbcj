@@ -1,7 +1,7 @@
 package org.adbcj.h2.packets;
 
 import org.adbcj.DbException;
-import org.adbcj.h2.CancellationToken;
+import org.adbcj.support.CancellationToken;
 import org.adbcj.h2.decoding.Constants;
 import org.adbcj.h2.decoding.IoUtils;
 import org.adbcj.h2.h2.SHA256;

@@ -1,6 +1,6 @@
 package org.adbcj.h2.packets;
 
-import org.adbcj.h2.CancellationToken;
+import org.adbcj.support.CancellationToken;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
