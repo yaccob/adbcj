@@ -56,8 +56,9 @@ public class CloseConnectionsTest {
 
         checkClosed(c1, runningQuery, runningQuery2, c2);
 
-        Assert.assertTrue(runningQuery2.getState()==FutureState.SUCCESS
-                || runningQuery2.getState()==FutureState.CANCELLED);
+
+        Assert.assertTrue("Why is state: "+runningQuery2.getState(),runningQuery2.getState()==FutureState.SUCCESS
+                || runningQuery2.getState()==FutureState.FAILURE);
     }
 
 
