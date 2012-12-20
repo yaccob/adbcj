@@ -17,7 +17,6 @@
 package org.adbcj.jdbc;
 
 import org.adbcj.*;
-import org.adbcj.support.AbstractDbSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
