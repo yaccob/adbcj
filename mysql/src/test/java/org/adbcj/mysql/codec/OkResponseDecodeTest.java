@@ -1,13 +1,16 @@
 package org.adbcj.mysql.codec;
 
-import org.adbcj.mysql.codec.decoding.Connecting;
+import org.adbcj.mysql.codec.decoding.ExpectOK;
 import org.adbcj.mysql.codec.packets.OkResponse;
-import org.adbcj.mysql.codec.packets.ResponseExpected;
+import org.adbcj.support.DefaultDbFuture;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.EnumSet;
+
+import static org.testng.Assert.assertEquals;
 
 public class OkResponseDecodeTest {
 
@@ -27,16 +30,16 @@ public class OkResponseDecodeTest {
 	@Test
 	public void okRepsonseWithMessage() throws Exception {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_WITH_MESSAGE);
-		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null,null,null));
-        throw new Error("TODO Anser next request");
-//		decoder.setState(DecoderState.RESPONSE);
-//		OkResponse.RegularOK response = castToOk(in, decoder);
-//
-//		assertEquals(response.getPacketLength(), 48);
-//		assertEquals(response.getPacketNumber(), 1);
-//		assertEquals(response.getAffectedRows(), 0);
-//		assertEquals(response.getServerStatus(), EnumSet.of(ServerStatus.AUTO_COMMIT, ServerStatus.NO_INDEX));
-//		assertEquals(response.getMessage(), "(Rows matched: 0  Changed: 0  Warnings: 0");
+        MySqlClientDecoder decoder = new MySqlClientDecoder(new ExpectOK<Void>(
+                new DefaultDbFuture<Void>(), null));
+        OkResponse.RegularOK response = castToOk(in, decoder);
+
+
+		assertEquals(response.getPacketLength(), 48);
+		assertEquals(response.getPacketNumber(), 1);
+		assertEquals(response.getAffectedRows(), 0);
+		assertEquals(response.getServerStatus(), EnumSet.of(ServerStatus.AUTO_COMMIT, ServerStatus.NO_INDEX));
+		assertEquals(response.getMessage(), "(Rows matched: 0  Changed: 0  Warnings: 0");
 	}
 
 	// Packet length: 7
@@ -52,21 +55,19 @@ public class OkResponseDecodeTest {
 	@Test
 	public void okResponseOneAffectedRow() throws Exception {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_ONE_AFFECTED_ROW);
-		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null,null,null));
-        throw new Error("TODO answer next request state");
-//		decoder.setState(DecoderState.RESPONSE);
-//        OkResponse.RegularOK response = castToOk(in, decoder);
-//
-//		assertEquals(response.getPacketLength(), 7);
-//		assertEquals(response.getPacketNumber(), 1);
-//		assertEquals(response.getAffectedRows(), 1);
-//		assertEquals(response.getServerStatus(), EnumSet.of(ServerStatus.AUTO_COMMIT));
-//		assertEquals(response.getMessage(), "");
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new ExpectOK<Void>(
+                new DefaultDbFuture<Void>(), null));
+        OkResponse.RegularOK response = castToOk(in, decoder);
+
+		assertEquals(response.getPacketLength(), 7);
+		assertEquals(response.getPacketNumber(), 1);
+		assertEquals(response.getAffectedRows(), 1);
+		assertEquals(response.getServerStatus(), EnumSet.of(ServerStatus.AUTO_COMMIT));
+		assertEquals(response.getMessage(), "");
 	}
 
     private OkResponse.RegularOK castToOk(InputStream in, MySqlClientDecoder decoder) throws IOException {
-        final ResponseExpected decode = (ResponseExpected)decoder.decode(in, null, true);
-        return ((OkResponse.RegularOK) decode.realMessage());
+        return (OkResponse.RegularOK)decoder.decode(in, null, true);
     }
 
 }

@@ -2,6 +2,9 @@ package org.adbcj.support;
 
 import org.adbcj.DbException;
 
+/**
+ * @deprecated
+ */
 public class ActiveRequestIncomplete extends DbException {
 	private static final long serialVersionUID = 1L;
 
