@@ -5,6 +5,7 @@ import org.adbcj.Result;
 import org.adbcj.ResultHandler;
 import org.adbcj.mysql.codec.decoding.*;
 import org.adbcj.mysql.codec.packets.*;
+import org.adbcj.support.CancellationToken;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.SafeResultHandlerDecorator;
@@ -19,11 +20,12 @@ public final class MySqlRequests {
         return new MySqlRequest("Close",future, new ExpectOK<Void>(future, connection),new CommandRequest(Command.QUIT));
     }
     public static <T> MySqlRequest executeQuery(String query, ResultHandler<T> eventHandler, T accumulator, MySqlConnection connection) {
-        DefaultDbSessionFuture<T> future = new DefaultDbSessionFuture<T>(connection);
+        CancellationToken cancelSupport = new CancellationToken();
+        DefaultDbSessionFuture<T> future = new DefaultDbSessionFuture<T>(connection,cancelSupport);
         ResultHandler<T> handleFailures = SafeResultHandlerDecorator.wrap(eventHandler, future);
         return new MySqlRequest("Query: "+query,future,
                 new ExpectQueryResult<T>(Row.RowDecodingType.STRING_BASED, future, handleFailures,accumulator),
-                new StringCommandRequest(Command.QUERY,query));
+                new StringCommandRequest(Command.QUERY,query,cancelSupport));
     }
     public static <T> MySqlRequest executePreparedQuery(StatementPreparedEOF stmp,
                                                         Object[] data,
@@ -37,18 +39,20 @@ public final class MySqlRequests {
     }
 
     public static MySqlRequest executeUpdate(String sql, MySqlConnection connection) {
-        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
+        CancellationToken cancelSupport = new CancellationToken();
+        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection,cancelSupport);
         return new MySqlRequest("Update: "+sql,future,
                 new ExpectUpdateResult(future),
-                new StringCommandRequest(Command.QUERY,sql));
+                new StringCommandRequest(Command.QUERY,sql,cancelSupport));
     }
 
     public static MySqlRequest prepareQuery(String sql, MySqlConnection connection) {
-        DefaultDbSessionFuture<PreparedQuery> future = new DefaultDbSessionFuture<PreparedQuery>(connection);
+        CancellationToken cancelSupport = new CancellationToken();
+        DefaultDbSessionFuture<PreparedQuery> future = new DefaultDbSessionFuture<PreparedQuery>(connection,cancelSupport);
 
         return new MySqlRequest("Prepare-Query: "+sql,future,
                 new ExpectPreparQuery(future),
-                new StringCommandRequest(Command.STATEMENT_PREPARE,sql));
+                new StringCommandRequest(Command.STATEMENT_PREPARE,sql,cancelSupport));
     }
 
     public static MySqlRequest closeStatemeent(StatementPreparedEOF statementInfo, MySqlConnection connection) {
@@ -63,19 +67,19 @@ public final class MySqlRequests {
         DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
         return new MySqlRequest("Begin-Transaction: ",future,
                 new ExpectUpdateResult(future),
-                new StringCommandRequest(Command.QUERY, "begin"));
+                new StringCommandRequest(Command.QUERY, "begin",CancellationToken.NO_CANCELLATION));
     }
 
     public static MySqlRequest commitTransaction(MySqlConnection connection) {
         DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
         return new MySqlRequest("Commit-Transaction: ",future,
                 new ExpectUpdateResult(future),
-                new StringCommandRequest(Command.QUERY, "commit"));
+                new StringCommandRequest(Command.QUERY, "commit",CancellationToken.NO_CANCELLATION));
     }
     public static MySqlRequest rollbackTransaction(MySqlConnection connection) {
         DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
         return new MySqlRequest("Rollback-Transaction: ",future,
                 new ExpectUpdateResult(future),
-                new StringCommandRequest(Command.QUERY, "rollback"));
+                new StringCommandRequest(Command.QUERY, "rollback",CancellationToken.NO_CANCELLATION));
     }
 }

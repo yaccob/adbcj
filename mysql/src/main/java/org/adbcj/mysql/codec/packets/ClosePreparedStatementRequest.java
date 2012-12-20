@@ -23,11 +23,11 @@ public class ClosePreparedStatementRequest extends CommandRequest {
         return true;
     }
     @Override
-    public int getLength(String charset) {
+    public int getLength() {
         return 1+4;
     }
     @Override
-    protected void writePayLoad(OutputStream out, String charset) throws IOException {
+    protected void writePayLoad(OutputStream out) throws IOException {
         IoUtils.writeInt(out, statementId);
     }
 }

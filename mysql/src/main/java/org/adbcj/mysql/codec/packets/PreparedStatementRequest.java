@@ -34,12 +34,12 @@ public class PreparedStatementRequest extends CommandRequest {
      * Protocol see http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#Execute_Packet_.28Tentative_Description.29
      */
     @Override
-    protected void writePayLoad(OutputStream out, String charset) throws IOException {
+    protected void writePayLoad(OutputStream out) throws IOException {
         out.write(writtenBytes());
     }
 
     @Override
-    public int getLength(String charset)  {
+    public int getLength()  {
         return 1 + writtenBytes().length;
     }
 

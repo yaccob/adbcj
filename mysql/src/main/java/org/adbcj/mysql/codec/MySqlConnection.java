@@ -23,8 +23,6 @@ public class MySqlConnection implements Connection {
 
     protected final int id;
 
-    private final MysqlCharacterSet charset = MysqlCharacterSet.UTF8_UNICODE_CI;
-
     private final ArrayDeque<MySqlRequest> requestQueue;
 
     private final Object lock = new Object();
@@ -57,6 +55,7 @@ public class MySqlConnection implements Connection {
         if(isInTransaction()){
             throw new DbException("This connection is already in a transaction");
         }
+        checkClosed();
         synchronized (lock){
             forceQueRequest(MySqlRequests.beginTransaction(this));
             isInTransaction = true;
@@ -68,6 +67,7 @@ public class MySqlConnection implements Connection {
         if(!isInTransaction()){
             throw new DbException("No transaction has been started to commit");
         }
+        checkClosed();
         synchronized (lock){
             final MySqlRequest request = queRequest(MySqlRequests.commitTransaction(this));
             isInTransaction = false;
@@ -80,6 +80,7 @@ public class MySqlConnection implements Connection {
         if(!isInTransaction()){
             throw new DbException("No transaction has been started to rollback");
         }
+        checkClosed();
         synchronized (lock){
             final MySqlRequest request = queRequest(MySqlRequests.rollbackTransaction(this));
             isInTransaction = false;
@@ -94,6 +95,7 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbSessionFuture<ResultSet> executeQuery(String sql) {
+        checkClosed();
         DefaultResultSet rs = new DefaultResultSet();
         DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
         return (DbSessionFuture) executeQuery(sql, handler, rs);
@@ -101,6 +103,7 @@ public class MySqlConnection implements Connection {
 
     @Override
     public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
+        checkClosed();
         return (DbSessionFuture) queRequest(MySqlRequests.executeQuery(sql,
                 eventHandler,
                 accumulator,
@@ -109,18 +112,21 @@ public class MySqlConnection implements Connection {
 
     @Override
     public DbSessionFuture<Result> executeUpdate(String sql) {
+        checkClosed();
         return (DbSessionFuture) queRequest(MySqlRequests.executeUpdate(sql,
                 this)).getFuture();
     }
 
     @Override
     public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+        checkClosed();
         return (DbSessionFuture) queRequest(MySqlRequests.prepareQuery(sql,
                 this)).getFuture();
     }
 
     @Override
     public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+        checkClosed();
         return (DbSessionFuture) queRequest(MySqlRequests.prepareQuery(sql,
                 this)).getFuture();
     }
@@ -131,6 +137,9 @@ public class MySqlConnection implements Connection {
             if (null == closeFuture) {
                 final MySqlRequest closeRequest = MySqlRequests.createCloseRequest(this);
                 closeFuture = closeRequest.getFuture();
+                if(closeMode==CloseMode.CANCEL_PENDING_OPERATIONS){
+                    forceCloseOnPendingRequests();
+                }
                 forceQueRequest(closeRequest);
                 return closeFuture;
             } else {
@@ -149,6 +158,12 @@ public class MySqlConnection implements Connection {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
     }
 
+
+    void checkClosed() {
+        if(isClosed()){
+            throw new DbSessionClosedException("This connection is closed");
+        }
+    }
 
     private static final Set<ClientCapabilities> CLIENT_CAPABILITIES = EnumSet.of(
             ClientCapabilities.LONG_PASSWORD,
@@ -219,5 +234,15 @@ public class MySqlConnection implements Connection {
 
     public Object lock() {
         return lock;
+    }
+
+
+
+    private void forceCloseOnPendingRequests() {
+        for (MySqlRequest request : requestQueue) {
+            if(request.getRequest().tryCancel()){
+                request.getFuture().trySetException(new DbSessionClosedException("Connection is closed"));
+            }
+        }
     }
 }

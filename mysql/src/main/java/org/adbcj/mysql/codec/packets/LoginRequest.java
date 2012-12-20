@@ -19,6 +19,7 @@
 package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.mysql.codec.*;
+import org.adbcj.support.CancellationToken;
 import org.adbcj.support.LoginCredentials;
 
 import java.io.IOException;
@@ -46,7 +47,8 @@ public class LoginRequest extends ClientRequest {
                         Set<ExtendedClientCapabilities> extendedCapabilities,
                         MysqlCharacterSet charset,
                         byte[] salt) {
-		this.credentials = credentials;
+        super(CancellationToken.NO_CANCELLATION);
+        this.credentials = credentials;
 		this.capabilities = capabilities;
 		this.extendedCapabilities = extendedCapabilities;
 		this.charset = charset;
@@ -54,16 +56,16 @@ public class LoginRequest extends ClientRequest {
 	}
 
 	@Override
-	public int getLength(String charset) throws UnsupportedEncodingException {
+	public int getLength() throws UnsupportedEncodingException {
 		return 2 // Client Capabilities field
 				+ 2 // Extended Client Capabilities field
 				+ 4 // Max packet size field
 				+ 1 // Char set
 				+ FILLER_LENGTH
-				+ credentials.getUserName().getBytes(charset).length + 1
+				+ credentials.getUserName().getBytes(MysqlCharacterSet.UTF8_UNICODE_CI.getCharsetName()).length + 1
 				+ ((credentials.getPassword() == null || credentials.getPassword().length() == 0) ? 0 : PASSWORD_LENGTH)
 				+ 1 // Filler after password
-				+ credentials.getDatabase().getBytes(charset).length + 1;
+				+ credentials.getDatabase().getBytes(MysqlCharacterSet.UTF8_UNICODE_CI.getCharsetName()).length + 1;
 	}
 
     @Override
@@ -72,7 +74,7 @@ public class LoginRequest extends ClientRequest {
     }
 
     @Override
-    public void writeToOutputStream(OutputStream out, String charset) throws IOException{
+    public void writeToOutputStream(OutputStream out) throws IOException{
         // Encode initial part of authentication request
         IoUtils.writeEnumSetShort(out, getCapabilities());
         IoUtils.writeEnumSetShort(out, getExtendedCapabilities());
@@ -80,7 +82,7 @@ public class LoginRequest extends ClientRequest {
         out.write(getCharSet().getId());
         out.write(new byte[LoginRequest.FILLER_LENGTH]);
 
-        out.write(getCredentials().getUserName().getBytes(charset));
+        out.write(getCredentials().getUserName().getBytes(MysqlCharacterSet.UTF8_UNICODE_CI.getCharsetName()));
         out.write(0); // null-terminate username
 
         // Encode password
@@ -97,7 +99,7 @@ public class LoginRequest extends ClientRequest {
         // Encode desired database/schema
         final String database = getCredentials().getDatabase();
         if (database != null) {
-            out.write(database.getBytes(charset));
+            out.write(database.getBytes(MysqlCharacterSet.UTF8_UNICODE_CI.getCharsetName()));
         }
         out.write(0);
     }

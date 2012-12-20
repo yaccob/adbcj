@@ -1,9 +1,6 @@
 package org.adbcj.mysql.netty;
 
-import org.adbcj.CloseMode;
-import org.adbcj.Connection;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
+import org.adbcj.*;
 import org.adbcj.mysql.codec.ClientRequest;
 import org.adbcj.mysql.codec.MySqlClientDecoder;
 import org.adbcj.mysql.codec.MySqlClientEncoder;
@@ -87,16 +84,23 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
             closeFuture = new DefaultDbFuture<Void>();
             connectionsCopy = new ArrayList<MySqlConnection>(connections);
         }
+        final AtomicInteger toCloseCount = new AtomicInteger(connectionsCopy.size());
         for (MySqlConnection connection : connectionsCopy) {
-            connection.close(closeMode);
+            connection.close(closeMode).addListener(new DbListener<Void>() {
+                @Override
+                public void onCompletion(DbFuture<Void> future) {
+                    if(0==toCloseCount.decrementAndGet()){
+                        new Thread("Closing MySQL ConnectionManager"){
+                            @Override
+                            public void run() {
+                                bootstrap.releaseExternalResources();
+                                closeFuture.setResult(null);
+                            }
+                        }.start();
+                    }
+                }
+            });
         }
-        new Thread("Closing MySQL ConnectionManager"){
-            @Override
-            public void run() {
-                bootstrap.releaseExternalResources();
-                closeFuture.setResult(null);
-            }
-        }.start();
         return closeFuture;
     }
 
@@ -229,7 +233,7 @@ class Encoder implements ChannelDownstreamHandler {
         }
 
         ClientRequest  request = (ClientRequest) e.getMessage();
-        ChannelBuffer buffer = ChannelBuffers.buffer(4+request.getLength(MySqlClientEncoder.CHARSET));
+        ChannelBuffer buffer = ChannelBuffers.buffer(4+request.getLength());
         ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
     	encoder.encode((ClientRequest) e.getMessage(), out);
     	Channels.write(context, e.getFuture(), buffer);
