@@ -33,6 +33,7 @@ public abstract class AbstractDbSession implements DbSession {
     private Request<?> activeRequest; // Access must by synchronized on lock
 
     private Transaction transaction; // Access must by synchronized on lock
+    private boolean isInTransaction; // Access must by synchronized on lock
 
     private boolean pipelining = false; // Access must be synchronized on lock
 
@@ -185,7 +186,7 @@ public abstract class AbstractDbSession implements DbSession {
     public boolean isInTransaction() {
         checkClosed();
         synchronized (lock) {
-            return transaction != null;
+            return isInTransaction;
         }
     }
 
@@ -196,6 +197,7 @@ public abstract class AbstractDbSession implements DbSession {
                 throw new DbException("Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
             }
             transaction = new Transaction();
+            isInTransaction = true;
         }
     }
 
@@ -206,6 +208,7 @@ public abstract class AbstractDbSession implements DbSession {
         }
         DbSessionFuture<Void> future;
         synchronized (lock) {
+            isInTransaction = false;
             if (transaction.isBeginScheduled()) {
                 future = enqueueCommit(transaction).getFuture();
                 markTransactionAsCompleteWhenDone(future);
@@ -227,6 +230,7 @@ public abstract class AbstractDbSession implements DbSession {
         }
         DbSessionFuture<Void> future;
         synchronized (lock) {
+            isInTransaction = false;
             if (transaction.isBeginScheduled()) {
                 transaction.cancelPendingRequests();
                 future = enqueueRollback(transaction).getFuture();
