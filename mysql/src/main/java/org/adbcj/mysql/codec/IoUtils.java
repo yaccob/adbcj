@@ -270,11 +270,11 @@ public final class IoUtils {
 
     public static String readDate(BoundedInputStream in) throws IOException {
         int length = in.read();
+        if(length<4){
+            return String.format("%04d-%02d-%02d %02d:%02d:%02d",0,0,0,0,0,0);
+        }
         byte[] data = new byte[length];
         in.read(data);
-        if(length<4){
-            throw new UnsupportedOperationException("This date format is not yet implemented");
-        }
 
         int year =  ((data[1] & 0xFF) << 8)+ (data[0] & 0xFF);
         int month = (data[2] & 0xFF);
