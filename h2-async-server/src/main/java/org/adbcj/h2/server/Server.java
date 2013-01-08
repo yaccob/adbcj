@@ -32,4 +32,8 @@ public class Server {
         final Channel bind = server.bind(new InetSocketAddress("0.0.0.0", port));
 
     }
+
+    public static void main(String[] args) {
+        new Server(Integer.parseInt(args[0])).start();
+    }
 }
