@@ -1,7 +1,10 @@
 package org.adbcj.mysql.codec.decoding;
 
+import org.adbcj.ResultHandler;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ResultSetFieldResponse;
+import org.adbcj.support.DefaultDbSessionFuture;
+import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,49 +13,68 @@ import java.util.List;
 import java.util.Set;
 
 /**
-* @author roman.stoffel@gamlor.info
 * @since 12.04.12
 */
-class FieldDecodingState extends DecoderState {
-    private final int expectedFieldPackets;
+public class FieldDecodingState<T> extends DecoderState {
+    private final int expectedAmountOfFields;
     private final List<MysqlField> fields;
+    private final DefaultDbSessionFuture<T> future;
+    private final ResultHandler<T> eventHandler;
+    private final T accumulator;
+    private Row.RowDecodingType decodingType;
 
-    FieldDecodingState(int expectedFieldPackets, List<MysqlField> fields) {
-        this.expectedFieldPackets = expectedFieldPackets;
+    public FieldDecodingState(Row.RowDecodingType decodingType,
+                              int expectedAmountOfFields,
+                              List<MysqlField> fields,
+                              DefaultDbSessionFuture<T> future,
+                              ResultHandler<T> eventHandler,
+                              T accumulator) {
+        this.decodingType = decodingType;
+
+        this.expectedAmountOfFields = expectedAmountOfFields;
         this.fields = fields;
+        this.future = future;
+        this.eventHandler = eventHandler;
+        this.accumulator = accumulator;
     }
 
     @Override
     public ResultAndState parse(int length,
                                 int packetNumber,
-                                BoundedInputStream in, AbstractMySqlConnection connection) throws IOException {
-        Tuple<ResultSetFieldResponse,List<MysqlField>> resultSetFieldResponse = decodeFieldResponse(in, length, packetNumber);
+                                BoundedInputStream in, Channel channel) throws IOException {
 
-        int restOfExpectedFields = expectedFieldPackets-1;
-        logger.trace("fieldPacketCount: {}", expectedFieldPackets);
-        if (restOfExpectedFields == 0) {
-            return result(FIELD_EOF(resultSetFieldResponse.getSecond()),resultSetFieldResponse.getFirst());
+        int fieldNo = fields.size();
+
+        if(logger.isTraceEnabled()){
+            logger.trace("expectedAmountOfFields: {} current field {}", expectedAmountOfFields,fieldNo);
+
+        }
+        ResultSetFieldResponse resultSetFieldResponse = decodeFieldResponse(in, length, packetNumber,fieldNo);
+
+
+        ArrayList<MysqlField> newFields = new ArrayList<MysqlField>(fieldNo+1);
+        newFields.addAll(fields);
+        newFields.add(resultSetFieldResponse.getField());
+        eventHandler.field(resultSetFieldResponse.getField(), accumulator);
+
+
+        if (expectedAmountOfFields > (fieldNo+1)) {
+            return result(new FieldDecodingState<T>(decodingType, expectedAmountOfFields,newFields,future,eventHandler, accumulator),resultSetFieldResponse);
         } else{
-            return result(FIELD(restOfExpectedFields,resultSetFieldResponse.getSecond()),resultSetFieldResponse.getFirst());
+            return result(new FieldEof<T>(decodingType, newFields,future,eventHandler, accumulator),resultSetFieldResponse);
         }
     }
 
-    @Override
-    public String toString() {
-        return "FIELD-DECODING";
+
+    private ResultSetFieldResponse decodeFieldResponse(InputStream in,
+                                                       int packetLength,
+                                                       int packetNumber,
+                                                       int fieldNo) throws IOException {
+        MysqlField field = parseField(in,fieldNo);
+        return new ResultSetFieldResponse(packetLength, packetNumber, field);
     }
 
-
-    private Tuple<ResultSetFieldResponse,List<MysqlField>> decodeFieldResponse(InputStream in,
-                                                       int packetLength, int packetNumber) throws IOException {
-        MysqlField field = parseField(in, fields.size());
-        List<MysqlField> accumulatedFields = new ArrayList<MysqlField>(fields.size()+1);
-        accumulatedFields.addAll(fields);
-        accumulatedFields.add(field);
-        return Tuple.create(new ResultSetFieldResponse(packetLength, packetNumber, field),accumulatedFields);
-    }
-
-    public static MysqlField parseField(InputStream in, int fieldIndex) throws IOException {
+    public static MysqlField parseField(InputStream in, int fieldNo) throws IOException {
         String catalogName = IoUtils.readLengthCodedString(in, CHARSET);
         String schemaName = IoUtils.readLengthCodedString(in, CHARSET);
         String tableLabel = IoUtils.readLengthCodedString(in, CHARSET);
@@ -69,7 +91,7 @@ class FieldDecodingState extends DecoderState {
         int decimals = in.read();
         IoUtils.safeSkip(in, 2); // Skip filler
         long fieldDefault = IoUtils.readBinaryLengthEncoding(in);
-        return new MysqlField(fieldIndex, catalogName, schemaName, tableLabel, tableName, fieldType, columnLabel,
+        return new MysqlField(fieldNo, catalogName, schemaName, tableLabel, tableName, fieldType, columnLabel,
                 columnName, 0, // Figure out precision
                 decimals, charSet, length, flags, fieldDefault);
     }

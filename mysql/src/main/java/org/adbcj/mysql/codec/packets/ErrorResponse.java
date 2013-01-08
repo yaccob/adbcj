@@ -18,6 +18,8 @@
  */
 package org.adbcj.mysql.codec.packets;
 
+import org.adbcj.mysql.codec.MysqlException;
+
 public class ErrorResponse extends ServerPacket {
 
 	private final int errorNumber;
@@ -42,5 +44,9 @@ public class ErrorResponse extends ServerPacket {
 	public String getMessage() {
 		return message;
 	}
+
+    public MysqlException toException(){
+        return new MysqlException(getSqlState() + " " + getMessage());
+    }
 
 }

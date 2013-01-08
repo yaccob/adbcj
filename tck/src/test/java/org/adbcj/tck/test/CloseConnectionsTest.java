@@ -56,12 +56,9 @@ public class CloseConnectionsTest {
 
         checkClosed(c1, runningQuery, runningQuery2, c2);
 
-        try{
-            runningQuery2.get();
-            Assert.fail("Should have been failed due to closing");
-        }catch (DbException e){
-            Assert.assertTrue(e.getMessage().contains("closed"));
-        }
+
+        Assert.assertTrue("Why is state: "+runningQuery2.getState(),runningQuery2.getState()==FutureState.SUCCESS
+                || runningQuery2.getState()==FutureState.FAILURE);
     }
 
 

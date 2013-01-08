@@ -1,6 +1,4 @@
-package org.adbcj.h2;
-
-import org.adbcj.support.CancellationAction;
+package org.adbcj.support;
 
 import java.util.concurrent.atomic.AtomicReference;
 

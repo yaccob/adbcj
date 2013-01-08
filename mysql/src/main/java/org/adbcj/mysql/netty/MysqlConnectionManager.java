@@ -1,10 +1,12 @@
 package org.adbcj.mysql.netty;
 
-import org.adbcj.CloseMode;
-import org.adbcj.Connection;
-import org.adbcj.DbException;
-import org.adbcj.DbFuture;
-import org.adbcj.mysql.codec.*;
+import org.adbcj.*;
+import org.adbcj.mysql.codec.ClientRequest;
+import org.adbcj.mysql.codec.MySqlClientDecoder;
+import org.adbcj.mysql.codec.MySqlClientEncoder;
+import org.adbcj.mysql.codec.MySqlConnection;
+import org.adbcj.mysql.codec.decoding.Connecting;
+import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
@@ -28,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class MysqlConnectionManager extends AbstractConnectionManager {
 
@@ -40,7 +41,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
     private final LoginCredentials credentials;
 
 	private final ClientBootstrap bootstrap;
-    private final Set<AbstractMySqlConnection> connections = new HashSet<AbstractMySqlConnection>();
+    private final Set<MySqlConnection> connections = new HashSet<MySqlConnection>();
     private final AtomicInteger idCounter = new AtomicInteger();
 
     public MysqlConnectionManager(String host,
@@ -65,8 +66,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = Channels.pipeline();
 
-                pipeline.addFirst(MESSAGE_QUEUE,new MessageQueuingHandler());
-				pipeline.addLast(DECODER, new Decoder());
+				pipeline.addFirst(MESSAGE_QUEUE, new MessageQueuingHandler());
 				pipeline.addLast(ENCODER, new Encoder());
 
 				return pipeline;
@@ -79,21 +79,28 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
     protected DbFuture<Void> doClose(CloseMode closeMode) throws DbException {
         final DefaultDbFuture closeFuture;
-        ArrayList<AbstractMySqlConnection> connectionsCopy;
+        ArrayList<MySqlConnection> connectionsCopy;
         synchronized (connections) {
             closeFuture = new DefaultDbFuture<Void>();
-            connectionsCopy = new ArrayList<AbstractMySqlConnection>(connections);
+            connectionsCopy = new ArrayList<MySqlConnection>(connections);
         }
-        for (AbstractMySqlConnection connection : connectionsCopy) {
-            connection.close(closeMode);
+        final AtomicInteger toCloseCount = new AtomicInteger(connectionsCopy.size());
+        for (MySqlConnection connection : connectionsCopy) {
+            connection.close(closeMode).addListener(new DbListener<Void>() {
+                @Override
+                public void onCompletion(DbFuture<Void> future) {
+                    if(0==toCloseCount.decrementAndGet()){
+                        new Thread("Closing MySQL ConnectionManager"){
+                            @Override
+                            public void run() {
+                                bootstrap.releaseExternalResources();
+                                closeFuture.setResult(null);
+                            }
+                        }.start();
+                    }
+                }
+            });
         }
-        new Thread("Closing MySQL ConnectionManager"){
-            @Override
-            public void run() {
-                bootstrap.releaseExternalResources();
-                closeFuture.setResult(null);
-            }
-        }.start();
         return closeFuture;
     }
 
@@ -117,9 +124,11 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
             public void operationComplete(ChannelFuture future) throws Exception {
                 logger.debug("Connect completed");
 
+
                 Channel channel = future.getChannel();
-                MysqlConnection connection = new MysqlConnection(MysqlConnectionManager.this, credentials, channel, connectFuture);
-                channel.getPipeline().addLast("handler", new Handler(connection));
+                MySqlConnection connection = new MySqlConnection(maxQueueLength(), MysqlConnectionManager.this, channel);
+                channel.getPipeline().addLast(DECODER, new Decoder(new Connecting(connectFuture, connection, credentials)));
+                channel.getPipeline().addLast("end-handler", new Handler(connection));
 
                 final MessageQueuingHandler queuingHandler = channel.getPipeline().get(MessageQueuingHandler.class);
                 //This is a terrible sinchronization hack
@@ -131,14 +140,10 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                     channel.getPipeline().remove(queuingHandler);
                 }
 
-                Decoder decoder = channel.getPipeline().get(Decoder.class);
-                decoder.initializeWithSession(connection);
-
-
-                if(future.getCause()!=null){
+                if (future.getCause() != null) {
                     connectFuture.setException(future.getCause());
                 }
-
+                addConnection(connection);
             }
         });
 
@@ -151,13 +156,13 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         return idCounter.incrementAndGet();
     }
 
-    public void addConnection(AbstractMySqlConnection connection) {
+    public void addConnection(MySqlConnection connection) {
         synchronized (connections) {
             connections.add(connection);
         }
     }
 
-    public boolean removeConnection(AbstractMySqlConnection connection) {
+    public boolean removeConnection(MySqlConnection connection) {
         synchronized (connections) {
             return connections.remove(connection);
         }
@@ -167,26 +172,47 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
 class Decoder extends FrameDecoder {
 
-	private final MySqlClientDecoder decoder = new MySqlClientDecoder();
+	private final MySqlClientDecoder decoder;
 
-    private final AtomicReference<AbstractMySqlConnection> connection = new AtomicReference<AbstractMySqlConnection>(null);
+    public Decoder(DecoderState state) {
+        decoder = new MySqlClientDecoder(state);
+    }
 
-	@Override
+    @Override
 	protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
 		 InputStream in = new ChannelBufferInputStream(buffer);
 		 try {
-			 return decoder.decode(connection.get(),in, false);
+			 return decoder.decode(in,channel, false);
 		 } finally {
 			 in.close();
 		 }
 	}
 
-    void initializeWithSession(AbstractMySqlConnection session){
-        if(connection.getAndSet(session)!=null){
-            throw new IllegalStateException("Expect that the initialisation is called only once");
-        }
+}
+
+
+class Handler extends SimpleChannelHandler {
+    private final MySqlConnection connection;
+    private static final Logger logger = LoggerFactory.getLogger(Handler.class);
+
+    Handler(MySqlConnection connection) {
+        this.connection = connection;
     }
 
+
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        logger.error("Unhandled exception",e.getCause());
+    }
+
+
+
+
+    @Override
+    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        connection.tryCompleteClose();
+    }
 }
 
 @ChannelHandler.Sharable
@@ -207,38 +233,10 @@ class Encoder implements ChannelDownstreamHandler {
         }
 
         ClientRequest  request = (ClientRequest) e.getMessage();
-        ChannelBuffer buffer = ChannelBuffers.buffer(4+request.getLength(MySqlClientEncoder.CHARSET));
+        ChannelBuffer buffer = ChannelBuffers.buffer(4+request.getLength());
         ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
     	encoder.encode((ClientRequest) e.getMessage(), out);
     	Channels.write(context, e.getFuture(), buffer);
 	}
 }
 
-class Handler extends SimpleChannelHandler {
-
-	private final ProtocolHandler handler;
-
-    public Handler(MysqlConnection connection) {
-		this.handler =  new ProtocolHandler(connection);
-	}
-
-	@Override
-	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-		handler.messageReceived(e.getMessage());
-	}
-
-	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-		Throwable t = handler.handleException(e.getCause());
-		if (t != null) {
-			// TODO: Pass exception on to connectionManager
-			t.printStackTrace();
-		}
-	}
-
-	@Override
-	public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-		handler.connectionClosed();
-	}
-
-}

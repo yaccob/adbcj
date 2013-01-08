@@ -180,15 +180,15 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     private void notifyChanges() {
         List<DbListener<T>> listenersToCall;
-        synchronized (this){
-            this.notifyAll();
-        }
         synchronized (otherListeners) {
             listenersToCall = new ArrayList<DbListener<T>>(otherListeners);
             otherListeners.clear();
         }
         for (DbListener<T> l : listenersToCall) {
             notifyListener(l);
+        }
+        synchronized (this){
+            this.notifyAll();
         }
     }
 

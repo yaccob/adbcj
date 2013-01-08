@@ -1,45 +1,27 @@
 package org.adbcj.mysql.codec;
 
 import org.adbcj.*;
-import org.adbcj.mysql.codec.packets.ClosePreparedStatementRequest;
-import org.adbcj.mysql.codec.packets.PreparedStatementRequest;
 import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
-import org.adbcj.support.AbstractDbSession;
+import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
-import org.adbcj.support.ExpectResultRequest;
 
 /**
  * @author roman.stoffel@gamlor.info
  * @since 11.04.12
  */
 public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
-    private final AbstractMySqlConnection connection;
+    private final MySqlConnection connection;
     private final StatementPreparedEOF statementInfo;
-    private volatile boolean isOpen = true;
+    private volatile DefaultDbFuture<Void> closeFuture = null;
 
-    public MySqlPreparedStatement(AbstractMySqlConnection connection,
+    public MySqlPreparedStatement(MySqlConnection connection,
                                   StatementPreparedEOF statementInfo) {
         this.connection = connection;
         this.statementInfo = statementInfo;
     }
 
-    @Override
-    public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
-        return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, accumulator, params));
-    }
-
-    @Override
-    public DbSessionFuture execute(final Object... params) {
-        validateParameters(params);
-        ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
-        DefaultResultSet resultSet = new DefaultResultSet();
-
-
-        return connection.enqueueTransactionalRequest(new ExecutePrepareStatement(eventHandler, resultSet, params));
-    }
-
-    private void validateParameters(Object[] params) {
+    protected void validateParameters(Object[] params) {
         if(isClosed()){
             throw new IllegalStateException("Cannot execute closed statement");
         }
@@ -49,44 +31,39 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
         }
     }
 
+
+    @Override
+    public DbSessionFuture execute(Object... params) {
+        connection.checkClosed();
+        return (DbSessionFuture)executeWithCallback(new DefaultResultEventsHandler(),new DefaultResultSet(),params);
+    }
+
+    @Override
+    public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
+        connection.checkClosed();
+        validateParameters(params);
+        return (DbSessionFuture<T>) connection.queRequest(
+                MySqlRequests.executePreparedQuery(
+                        statementInfo, params, eventHandler, accumulator, connection
+                )).getFuture();
+    }
+
     @Override
     public boolean isClosed() {
-        return connection.isClosed() || !isOpen;
+        return closeFuture!=null || connection.isClosed();
     }
+
 
     @Override
     public DbFuture<Void> close() {
-        isOpen  = false;
-        DbSessionFuture<Void> future = connection.enqueueTransactionalRequest(new AbstractDbSession.Request<Void>(connection) {
-            @Override
-            protected void execute() throws Exception {
-                ClosePreparedStatementRequest request = new ClosePreparedStatementRequest(statementInfo.getHandlerId());
-                connection.write(request);
-                complete(null);
+        synchronized (connection.lock()){
+            if(closeFuture==null){
+                closeFuture = (DefaultDbFuture<Void>) connection.queRequest(
+                        MySqlRequests.closeStatemeent(
+                                statementInfo, connection
+                        )).getFuture();
             }
-
-        });
-        return future;
-    }
-
-    public class ExecutePrepareStatement<T> extends ExpectResultRequest {
-        private final Object[] params;
-
-        public ExecutePrepareStatement(ResultHandler<T> eventHandler, T resultSet, Object... params) {
-            super(MySqlPreparedStatement.this.connection, eventHandler, resultSet);
-            this.params = params;
-        }
-
-        @Override
-        public void execute() throws Exception {
-            PreparedStatementRequest request = new PreparedStatementRequest(statementInfo.getHandlerId(),
-                    statementInfo.getParametersTypes(), params);
-            connection.write(request);
-        }
-
-        @Override
-        public String toString() {
-            return "Prepared statement execute";
+            return closeFuture;
         }
     }
 }

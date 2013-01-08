@@ -19,6 +19,7 @@
 package org.adbcj.mysql.codec.packets;
 
 import org.adbcj.mysql.codec.ClientRequest;
+import org.adbcj.support.CancellationToken;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,7 +29,13 @@ public class CommandRequest extends ClientRequest {
 
     private final Command command;
 
+
     public CommandRequest(Command command) {
+        this(command,CancellationToken.NO_CANCELLATION);
+    }
+
+    public CommandRequest(Command command, CancellationToken cancelSupport) {
+        super(cancelSupport);
         this.command = command;
     }
 
@@ -37,24 +44,24 @@ public class CommandRequest extends ClientRequest {
     }
 
     @Override
-    public int getLength(String charset) {
+    public int getLength() {
         return 1;
     }
 
     @Override
-    public boolean hasPayload() {
+    protected boolean hasPayload() {
         return false;
     }
 
     @Override
-    public final void writeToOutputStream(OutputStream out, String charset) throws IOException {
+    public final void writeToOutputStream(OutputStream out) throws IOException {
         out.write(command.getCommandCode());
         if(hasPayload()){
-            writePayLoad(out,charset);
+            writePayLoad(out);
         }
     }
 
-    protected void writePayLoad(OutputStream out, String charset) throws IOException{
+    protected void writePayLoad(OutputStream out) throws IOException{
 
     }
 

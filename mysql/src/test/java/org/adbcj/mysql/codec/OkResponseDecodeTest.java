@@ -1,8 +1,8 @@
 package org.adbcj.mysql.codec;
 
-import org.adbcj.mysql.codec.decoding.DecoderState;
+import org.adbcj.mysql.codec.decoding.ExpectOK;
 import org.adbcj.mysql.codec.packets.OkResponse;
-import org.adbcj.mysql.codec.packets.ResponseExpected;
+import org.adbcj.support.DefaultDbFuture;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
@@ -30,9 +30,10 @@ public class OkResponseDecodeTest {
 	@Test
 	public void okRepsonseWithMessage() throws Exception {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_WITH_MESSAGE);
-		MySqlClientDecoder decoder = new MySqlClientDecoder();
-		decoder.setState(DecoderState.RESPONSE);
-		OkResponse.RegularOK response = castToOk(in, decoder);
+        MySqlClientDecoder decoder = new MySqlClientDecoder(new ExpectOK<Void>(
+                new DefaultDbFuture<Void>(), null));
+        OkResponse.RegularOK response = castToOk(in, decoder);
+
 
 		assertEquals(response.getPacketLength(), 48);
 		assertEquals(response.getPacketNumber(), 1);
@@ -54,8 +55,8 @@ public class OkResponseDecodeTest {
 	@Test
 	public void okResponseOneAffectedRow() throws Exception {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_ONE_AFFECTED_ROW);
-		MySqlClientDecoder decoder = new MySqlClientDecoder();
-		decoder.setState(DecoderState.RESPONSE);
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new ExpectOK<Void>(
+                new DefaultDbFuture<Void>(), null));
         OkResponse.RegularOK response = castToOk(in, decoder);
 
 		assertEquals(response.getPacketLength(), 7);
@@ -66,8 +67,7 @@ public class OkResponseDecodeTest {
 	}
 
     private OkResponse.RegularOK castToOk(InputStream in, MySqlClientDecoder decoder) throws IOException {
-        final ResponseExpected decode = (ResponseExpected)decoder.decode(null, in, true);
-        return ((OkResponse.RegularOK) decode.realMessage());
+        return (OkResponse.RegularOK)decoder.decode(in, null, true);
     }
 
 }

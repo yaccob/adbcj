@@ -1,7 +1,10 @@
 package org.adbcj.mysql.codec;
 
-import org.adbcj.mysql.codec.packets.ResponseExpected;
+import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
+import org.adbcj.mysql.netty.MysqlConnectionManager;
+import org.adbcj.support.LoginCredentials;
+import org.jboss.netty.channel.Channel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -9,6 +12,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.EnumSet;
+import java.util.HashMap;
+
+import static org.mockito.Mockito.mock;
 
 public class GreetingDecodeTest {
 
@@ -30,10 +36,13 @@ public class GreetingDecodeTest {
 			(byte)0x31, (byte)0x7c, (byte)0x41, (byte)0x00
 	};
 
+    private final LoginCredentials login = new LoginCredentials("sa","sa","test");
+
 	@Test
 	public void decodeGreeting1() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING1);
-		MySqlClientDecoder decoder = new MySqlClientDecoder();
+		MySqlClientDecoder decoder = new MySqlClientDecoder(
+                new Connecting(null, createMockConnection(), login));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 64);
@@ -47,7 +56,7 @@ public class GreetingDecodeTest {
 		Assert.assertEquals(greeting.getServerStatus(), EnumSet.of(ServerStatus.AUTO_COMMIT));
 	}
 
-	// Length 74
+    // Length 74
 	// Packet Number 0
 	// Protocol 10
 	// Version: 5.0.38-Ubuntu_0ubuntu1.4-log
@@ -68,7 +77,7 @@ public class GreetingDecodeTest {
 	@Test
 	public void decodeGreeting2() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING2);
-		MySqlClientDecoder decoder = new MySqlClientDecoder();
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null,createMockConnection(), login));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 74);
@@ -83,7 +92,13 @@ public class GreetingDecodeTest {
 	}
 
     private ServerGreeting castToServerGreeting(InputStream in, MySqlClientDecoder decoder) throws IOException {
-        return (ServerGreeting)((ResponseExpected) decoder.decode(null,in, true)).realMessage();
+        return (ServerGreeting) decoder.decode(in, mock(Channel.class), true);
+    }
+
+    private MySqlConnection createMockConnection() {
+        return new MySqlConnection(64,
+                new MysqlConnectionManager("localhost",42,"sa","sa","test",new HashMap<String, String>()),
+                mock(Channel.class));
     }
 
 }

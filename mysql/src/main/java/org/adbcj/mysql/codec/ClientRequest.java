@@ -18,14 +18,22 @@
 */
 package org.adbcj.mysql.codec;
 
+import org.adbcj.support.CancellationToken;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 
 public abstract class ClientRequest {
+    private final CancellationToken cancelSupport;
 
-	public abstract int getLength(String charset) throws UnsupportedEncodingException;
+    protected ClientRequest(CancellationToken cancelSupport) {
+        this.cancelSupport = cancelSupport;
+    }
+
+
+    public abstract int getLength() throws UnsupportedEncodingException;
 
 	/**
 	 * The packet number is sent as a byte so only the least significant byte will be used.
@@ -36,8 +44,20 @@ public abstract class ClientRequest {
 		return 0;
 	}
 
-    public abstract boolean hasPayload();
+    protected abstract boolean hasPayload();
 
-    public abstract void writeToOutputStream(OutputStream out, String charset) throws IOException;
+    public abstract void writeToOutputStream(OutputStream out) throws IOException;
 
+
+    public boolean startWriteOrCancel(){
+        return cancelSupport.tryStartOrIsCancel();
+    }
+
+    public boolean wasCancelled(){
+        return cancelSupport.isCancelled();
+    }
+
+    public boolean tryCancel(){
+        return cancelSupport.cancel();
+    }
 }
