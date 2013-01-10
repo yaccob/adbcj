@@ -137,6 +137,7 @@ public final class PooledConnection implements Connection, PooledResource {
                 }
             }
         }
+        closeStatements();
         mayFinallyCloseConnection();
         return closingFuture;
     }
@@ -156,20 +157,24 @@ public final class PooledConnection implements Connection, PooledResource {
             openStatements.add(statement);
         }
     }
-
-    private void mayFinallyCloseConnection() {
-        boolean isOperationsRunning;
+    private void closeStatements(){
         ArrayList<AbstractPooledPreparedStatement> stmts;
         synchronized (collectionsLock){
-            isOperationsRunning = runningOperations.isEmpty();
             stmts= new ArrayList<AbstractPooledPreparedStatement>(openStatements);
             openStatements.clear();
         }
-        if(isOperationsRunning && !stmts.isEmpty()){
-            for (AbstractPooledPreparedStatement openStatement : stmts) {
-                openStatement.close();
-            }
-        } else if(isOperationsRunning && stmts.isEmpty()){
+        for (AbstractPooledPreparedStatement openStatement : stmts) {
+            openStatement.close();
+        }
+
+    }
+
+    private void mayFinallyCloseConnection() {
+        boolean noOperationRunning;
+        synchronized (collectionsLock){
+            noOperationRunning = runningOperations.isEmpty();
+        }
+        if(noOperationRunning){
             finallyClose();
         }
     }
