@@ -28,6 +28,7 @@ public final class PooledConnection implements Connection, PooledResource {
             synchronized (collectionsLock) {
                 runningOperations.remove(future);
                 if (isClosed()) {
+                    closeStatements();
                     mayFinallyCloseConnection();
                 }
                 if(future.getState()==FutureState.FAILURE){
