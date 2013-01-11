@@ -234,6 +234,22 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
         }
     }
 
+
+
+    public void testCanUseProjectedNames() throws Exception {
+        Connection connection = connectionManager.connect().get();
+
+        DbSessionFuture<ResultSet> future = connection.executeQuery("SELECT int_val AS number, str_val AS otherName FROM simple_values " +
+                " WHERE str_val LIKE 'Two'");
+        try {
+            final ResultSet values = future.get(5, TimeUnit.SECONDS);
+            Assert.assertEquals(2,values.get(0).get("number").getInt());
+            Assert.assertEquals("Two",values.get(0).get("otherName").getString());
+        } finally {
+            connection.close().get();
+        }
+    }
+
     static String expectedStringFromCallback() {
         return "startFields-field(str_val)-endFields-startResults-startRow-value(Zero)-endRow-endResults".toLowerCase();
     }

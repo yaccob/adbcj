@@ -23,7 +23,7 @@
         <parameter name="user" value="adbcjtck" />
         <parameter name="password" value="adbcjtck" />
         <packages>
-            <package name="org.adbcj.tck.test" />
+            <!--<package name="org.adbcj.tck.test" />-->
         </packages>
 
         <classes>
