@@ -46,20 +46,27 @@ public class ReadUtils {
             case CLOB:
                 final ResultOrWait<Long> length = IoUtils.tryReadNextLong(stream, ResultOrWait.Start);
                 if(length.couldReadResult){
-                    final ResultOrWait<Value> value
-                            = convertToValue(IoUtils.readEncodedString(stream, length.result.intValue()));
-                    final ResultOrWait<Integer> lobMagicBits = IoUtils.tryReadNextInt(stream, value);
-                    if(lobMagicBits.couldReadResult){
-                        return value;
-                    }else{
-                        return ResultOrWait.WaitLonger;
+                    if(length.result==-1)  {
+                        throw new DbException("Cannot handle this CLOB, we only support inlined CLOBs");
+                    }  else{
+                        return directReadClob(stream, length);
                     }
-
                 } else{
                     return ResultOrWait.WaitLonger;
                 }
             default:
                 throw new DbException("Cannot handle type: " + type);
+        }
+    }
+
+    private static ResultOrWait<Value> directReadClob(DataInputStream stream, ResultOrWait<Long> length) throws IOException {
+        final ResultOrWait<Value> value
+                = convertToValue(IoUtils.readEncodedString(stream, length.result.intValue()));
+        final ResultOrWait<Integer> lobMagicBits = IoUtils.tryReadNextInt(stream, value);
+        if(lobMagicBits.couldReadResult){
+            return value;
+        } else{
+            return ResultOrWait.WaitLonger;
         }
     }
 
