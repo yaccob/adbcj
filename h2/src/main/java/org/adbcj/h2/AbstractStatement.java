@@ -30,7 +30,7 @@ public class AbstractStatement implements PreparedStatement {
             if(null!=closeFuture){
                 return closeFuture;
             } else{
-                final Request request = connection.requestCreator().executeCloseStatement();
+                final Request request = connection.requestCreator().executeCloseStatement(sessionId);
                 this.closeFuture = (DefaultDbFuture<Void>) request.getToComplete();
                 connection.forceQueRequest(request);
                 return closeFuture;

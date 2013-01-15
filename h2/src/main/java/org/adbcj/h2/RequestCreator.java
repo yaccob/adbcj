@@ -95,9 +95,8 @@ public class RequestCreator {
                         new UpdateExecute(sessionId,cancelSupport,params),
                         new QueryExecute(connection.idForAutoId(), connection.nextId(),cancelSupport)));
     }
-    public Request executeCloseStatement() {
+    public Request executeCloseStatement(int sessionId) {
         DefaultDbSessionFuture<Void> resultFuture = new DefaultDbSessionFuture<Void>(connection);
-        final int sessionId = connection.nextId();
         return new Request("ExecuteCloseStatement: ", resultFuture,
                 new AnswerNextRequest(connection), new CommandClose(sessionId, resultFuture));
     }
