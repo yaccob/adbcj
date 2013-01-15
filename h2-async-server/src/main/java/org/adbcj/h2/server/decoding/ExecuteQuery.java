@@ -7,6 +7,8 @@ import org.h2.command.Command;
 import org.h2.result.ResultInterface;
 import org.h2.value.Value;
 import org.jboss.netty.channel.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.List;
  * @author roman.stoffel@gamlor.info
  */
 class ExecuteQuery implements DecoderState {
+    private static final Logger log = LoggerFactory.getLogger(ExecuteQuery.class);
     private final AcceptCommands acceptCommands;
 
     public ExecuteQuery(AcceptCommands acceptCommands) {
@@ -44,6 +47,11 @@ class ExecuteQuery implements DecoderState {
                                         ResultOrWait<Integer> fetchSize,
                                         ResultOrWait<List<Value>> params) {
         Command command = (Command) acceptCommands.cache().getObject(id.result, false);
+
+        if(log.isDebugEnabled()){
+            log.debug("Executing query statement: {} with id: {}",command,id.result);
+        }
+
         ResultInterface result;
         int old = acceptCommands.session().getModificationId();
         ExecuteUpdate.bindParameters(params,command);

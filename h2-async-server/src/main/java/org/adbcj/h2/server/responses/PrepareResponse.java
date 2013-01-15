@@ -63,7 +63,7 @@ public class PrepareResponse implements ServerToClientPacket{
             return  (SizeConstants.INT_SIZE +
                         SizeConstants.LONG_SIZE +
                         SizeConstants.INT_SIZE +
-                        SizeConstants.INT_SIZE) + params.size();
+                        SizeConstants.INT_SIZE) * params.size();
         }
         return 0;
     }
