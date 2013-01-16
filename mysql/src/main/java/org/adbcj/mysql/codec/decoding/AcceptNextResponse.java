@@ -20,6 +20,9 @@ public class AcceptNextResponse extends DecoderState {
     @Override
     public ResultAndState parse(int length, int packetNumber, BoundedInputStream in, Channel channel) throws IOException {
         final MySqlRequest request = connection.dequeRequest();
+        if(logger.isDebugEnabled()){
+            logger.debug("Start parsing request: {}",request);
+        }
         return request.getDecoderState().parse(length, packetNumber, in, channel);
     }
 }
