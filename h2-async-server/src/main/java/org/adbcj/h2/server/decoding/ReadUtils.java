@@ -34,7 +34,7 @@ final class ReadUtils {
             if (value.couldReadResult) {
                 result.add(value.result);
             } else {
-                return ResultOrWait.Start;
+                return ResultOrWait.WaitLonger;
             }
         }
         return ResultOrWait.result(result);
