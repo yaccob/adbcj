@@ -109,7 +109,14 @@ public class LoginRequest extends ClientRequest {
 		return 1;
 	}
 
-	public Set<ClientCapabilities> getCapabilities() {
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+                "credentials=" + credentials +
+                '}';
+    }
+
+    public Set<ClientCapabilities> getCapabilities() {
 		return capabilities;
 	}
 

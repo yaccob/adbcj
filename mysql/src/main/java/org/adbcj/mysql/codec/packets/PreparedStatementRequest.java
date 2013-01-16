@@ -43,6 +43,13 @@ public class PreparedStatementRequest extends CommandRequest {
         return 1 + writtenBytes().length;
     }
 
+    @Override
+    public String toString() {
+        return "PreparedStatementRequest{" +
+                "statementId=" + statementId +
+                '}';
+    }
+
     byte[] writtenBytes() {
         if (writtenForm == null) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();

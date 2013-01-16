@@ -30,4 +30,11 @@ public class ClosePreparedStatementRequest extends CommandRequest {
     protected void writePayLoad(OutputStream out) throws IOException {
         IoUtils.writeInt(out, statementId);
     }
+
+    @Override
+    public String toString() {
+        return "ClosePreparedStatementRequest{" +
+                "statementId=" + statementId +
+                '}';
+    }
 }
