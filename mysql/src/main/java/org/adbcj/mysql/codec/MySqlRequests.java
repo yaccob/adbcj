@@ -5,15 +5,19 @@ import org.adbcj.Result;
 import org.adbcj.ResultHandler;
 import org.adbcj.mysql.codec.decoding.*;
 import org.adbcj.mysql.codec.packets.*;
-import org.adbcj.support.CancellationToken;
-import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultDbSessionFuture;
-import org.adbcj.support.SafeResultHandlerDecorator;
+import org.adbcj.support.*;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
 public final class MySqlRequests {
+    private static final OneArgFunction<MysqlResult,Void> TO_VOID = new OneArgFunction<MysqlResult,Void>() {
+        @Override
+        public Void apply(MysqlResult arg) {
+            return null;
+        }
+    };
+
     public static MySqlRequest createCloseRequest(MySqlConnection connection) {
         DefaultDbFuture<Void> future = new DefaultDbFuture<Void>();
 
@@ -73,13 +77,13 @@ public final class MySqlRequests {
     public static MySqlRequest commitTransaction(MySqlConnection connection) {
         DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
         return new MySqlRequest("Commit-Transaction: ",future,
-                new ExpectUpdateResult(future),
+                new ExpectUpdateResult(future,TO_VOID),
                 new StringCommandRequest(Command.QUERY, "commit",CancellationToken.NO_CANCELLATION));
     }
     public static MySqlRequest rollbackTransaction(MySqlConnection connection) {
         DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection);
         return new MySqlRequest("Rollback-Transaction: ",future,
-                new ExpectUpdateResult(future),
+                new ExpectUpdateResult(future,TO_VOID),
                 new StringCommandRequest(Command.QUERY, "rollback",CancellationToken.NO_CANCELLATION));
     }
 }
