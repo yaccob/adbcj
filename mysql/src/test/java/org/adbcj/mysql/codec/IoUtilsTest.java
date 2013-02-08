@@ -61,7 +61,8 @@ public class IoUtilsTest {
 		byte[] newBytes = new byte[firstBytes.length + secondBytes.length + 1];
 		System.arraycopy(firstBytes, 0, newBytes, 0, firstBytes.length);
 		System.arraycopy(secondBytes, 0, newBytes, firstBytes.length + 1, secondBytes.length);
-		InputStream in = new ByteArrayInputStream(newBytes);
+        InputStream nativeInputStream = new ByteArrayInputStream(newBytes);
+        BoundedInputStream in = new BoundedInputStream(nativeInputStream,newBytes.length);
 
 		Assert.assertEquals(IoUtils.readNullTerminatedString(in, "UTF-8"), first);
 		Assert.assertEquals(IoUtils.readNullTerminatedString(in, "UTF-8"), second);

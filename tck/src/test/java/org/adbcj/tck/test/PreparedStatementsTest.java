@@ -65,6 +65,34 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
         }
         connection.close();
     }
+    public void testMultiErrorReported() throws DbException, InterruptedException {
+        Connection connection = connectionManager.connect().get();
+        DbSessionFuture<PreparedUpdate> insert = connection.prepareUpdate("INSERT INTO this:is:an:invalid:query(name)" +
+                " VALUES(42)");
+        DbSessionFuture<PreparedUpdate> update = connection.prepareUpdate("UPDATE this:is:an:invalid:query SET name=42 WHERE name =1" +
+                " VALUES(42)");
+        DbSessionFuture<PreparedQuery> select = connection.prepareQuery("SELECT * FROM this:is:an:invalid:query ");
+
+        try{
+            Result result = insert.get().execute().get();
+            Assert.fail("Expected a failure, and not "+ result);
+        } catch (DbException ex){
+            // expected
+        }
+        try{
+            Result result = insert.get().execute().get();
+            Assert.fail("Expected a failure, and not "+ result);
+        } catch (DbException ex){
+            // expected
+        }
+        try{
+            ResultSet result = select.get().execute().get();
+            Assert.fail("Expected a failure, and not "+ select);
+        } catch (DbException ex){
+            // expected
+        }
+        connection.close();
+    }
     public void testCanReuseStatement() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
         PreparedQuery statement = connection.prepareQuery("SELECT * FROM simple_values" +

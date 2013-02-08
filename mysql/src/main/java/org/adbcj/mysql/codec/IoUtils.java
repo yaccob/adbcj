@@ -191,11 +191,15 @@ public final class IoUtils {
     }
 
 
-    public static String readNullTerminatedString(InputStream in, String charset) throws IOException {
+    public static String readNullTerminatedString(BoundedInputStream in, String charset) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int c;
-        while ((c = in.read()) > 0) {
+        if(in.getRemaining()<=0){
+            return "";
+        }
+        int c = in.read();
+        while (c > 0 && in.getRemaining()>0) {
             out.write(c);
+            c = in.read();
         }
         return new String(out.toByteArray(), charset);
 
