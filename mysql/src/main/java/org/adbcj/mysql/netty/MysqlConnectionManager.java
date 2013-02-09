@@ -5,6 +5,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.*;
+import io.netty.channel.socket.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.adbcj.*;
@@ -22,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,7 +37,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
 	private static final String ENCODER = MysqlConnectionManager.class.getName() + ".encoder";
 	private static final String DECODER = MysqlConnectionManager.class.getName() + ".decoder";
-	private static final String MESSAGE_QUEUE = MysqlConnectionManager.class.getName() + ".queue";
     private final LoginCredentials credentials;
 
 	private final Bootstrap bootstrap;
@@ -51,10 +53,12 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         credentials = new LoginCredentials(username, password, schema);
 
 		bootstrap = new Bootstrap()
-                .option(ChannelOption.TCP_NODELAY,true)
+                .group(new NioEventLoopGroup())
+                .channel(NioSocketChannel.class)
+                .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_KEEPALIVE,true)
-                .option(ChannelOption.SO_KEEPALIVE,true)
-                .handler(new ChannelInitializer(){
+                .remoteAddress(new InetSocketAddress(host,port))
+                .handler(new ChannelInitializer() {
 
                     @Override
                     public void initChannel(Channel ch) throws Exception {
@@ -117,18 +121,9 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
                 Channel channel = future.channel();
                 MySqlConnection connection = new MySqlConnection(maxQueueLength(), MysqlConnectionManager.this, channel);
-                channel.pipeline().addLast(DECODER, new Decoder(new Connecting(connectFuture, connection, credentials)));
+                channel.pipeline().addLast(DECODER, new Decoder(
+                        new Connecting(connectFuture, connection, credentials),connection));
                 channel.pipeline().addLast("end-handler", new Handler(connection));
-
-//                final MessageQueuingHandler queuingHandler = channel.pipeline().get(MessageQueuingHandler.class);
-//                //This is a terrible sinchronization hack
-//                // Currently needed because: We need the MessageQueuingHandler only as long as
-//                // The connection is not established. When it is, we need to remove it.
-//                //noinspection SynchronizationOnLocalVariableOrMethodParameter
-//                synchronized (queuingHandler) {
-//                    queuingHandler.flush();
-//                    channel.pipeline().remove(queuingHandler);
-//                }
 
                 if (future.cause() != null) {
                     connectFuture.setException(future.cause());
@@ -161,21 +156,34 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 }
 
 class Decoder extends ByteToMessageDecoder {
-
+    private final static Logger log = LoggerFactory.getLogger(Decoder.class);
 	private final MySqlClientDecoder decoder;
+    private final MySqlConnection connection;
 
-    public Decoder(DecoderState state) {
+    public Decoder(DecoderState state,MySqlConnection connection) {
         decoder = new MySqlClientDecoder(state);
+        this.connection = connection;
     }
 
     @Override
     public Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
         InputStream in = new ByteBufInputStream(buffer);
         try {
-            return decoder.decode(in,ctx.channel(), false);
+            Object obj= decoder.decode(in,ctx.channel(), false);
+            if(log.isDebugEnabled()&&null!=obj){
+                log.debug("Decoded message: {}",obj);
+            }
+            return null;
         } finally {
             in.close();
         }
+    }
+
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        connection.tryCompleteClose();
     }
 }
 
@@ -213,8 +221,8 @@ class Handler implements ChannelHandler {
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        logger.error("Unhandled exception",evt);
     }
+
 
 
 }

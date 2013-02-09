@@ -94,6 +94,9 @@ public class MySqlClientDecoder {
         BoundedInputStream in = new BoundedInputStream(input, length);
         logger.trace("Decoding in state {}", state);
         ResultAndState stateAndResult = state.parse(length, packetNumber, in, channel);
+        if(logger.isDebugEnabled() && (state!=stateAndResult.getNewState())){
+            logger.debug("New state of the decoding is: {}",stateAndResult.getNewState());
+        }
         state = stateAndResult.getNewState();
         if (in.getRemaining() > 0) {
             final String message = "Didn't read all input. Maybe this input belongs to a failed request. " +
