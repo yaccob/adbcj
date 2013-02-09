@@ -7,7 +7,7 @@ import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.protocol.ReadUtils;
 import org.adbcj.support.DefaultDbSessionFuture;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;

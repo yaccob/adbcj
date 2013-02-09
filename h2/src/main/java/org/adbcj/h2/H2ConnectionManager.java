@@ -1,5 +1,7 @@
 package org.adbcj.h2;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.*;
 import org.adbcj.*;
 import org.adbcj.h2.decoding.Decoder;
 import org.adbcj.h2.packets.ClientHandshake;
@@ -7,9 +9,6 @@ import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.LoginCredentials;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.*;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -27,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class H2ConnectionManager extends AbstractConnectionManager {
     private final static Logger logger = LoggerFactory.getLogger(H2ConnectionManager.class);
 
-    private final ClientBootstrap bootstrap;
+    private final Bootstrap bootstrap;
     private static final String ENCODER = H2ConnectionManager.class.getName() + ".encoder";
     private static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
     private final String url;
@@ -45,27 +43,19 @@ public class H2ConnectionManager extends AbstractConnectionManager {
         this.credentials = credentials;
         this.keys = keys;
 
-        ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
-                Executors.newCachedThreadPool());
-        bootstrap = new ClientBootstrap(factory);
-        init(host, port);
-    }
+        bootstrap = new Bootstrap()
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .remoteAddress(new InetSocketAddress(host, port))
+                .handler(new ChannelInitializer(){
 
+                    @Override
+                    public void initChannel(Channel ch) throws Exception {
+                        ch.pipeline().addLast(ENCODER, new Encoder());
+                        ch.pipeline().addLast("handler", new Handler());
 
-    private void init(String host, int port) {
-        bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-            @Override
-            public ChannelPipeline getPipeline() throws Exception {
-                ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast(ENCODER, new Encoder());
-                pipeline.addLast("handler", new Handler());
-
-                return pipeline;
-            }
-        });
-        bootstrap.setOption("tcpNoDelay", true);
-        bootstrap.setOption("keepAlive", true);
-        bootstrap.setOption("remoteAddress", new InetSocketAddress(host, port));
+                    }
+                });
     }
 
     @Override
@@ -90,17 +80,17 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                 logger.debug("Connect completed");
 
 
-                Channel channel = future.getChannel();
+                Channel channel = future.channel();
                 H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
-                channel.getPipeline().addFirst(DECODER, new Decoder(connectFuture,connection));
+                channel.pipeline().addFirst(DECODER, new Decoder(connectFuture,connection));
                 channel.write(
                         new ClientHandshake(credentials.getDatabase(),url,
                                 credentials.getUserName(),
                                 credentials.getPassword(),keys));
 
 
-                if(future.getCause()!=null){
-                    connectFuture.setException(future.getCause());
+                if(future.cause()!=null){
+                    connectFuture.setException(future.cause());
                 }
                 synchronized (connections){
                     connections.add(connection);
@@ -129,7 +119,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                         new Thread("Closing H2 ConnectionManager") {
                             @Override
                             public void run() {
-                                bootstrap.releaseExternalResources();
+                                bootstrap.shutdown();
                                 closeFuture.setResult(null);
                             }
                         }.start();

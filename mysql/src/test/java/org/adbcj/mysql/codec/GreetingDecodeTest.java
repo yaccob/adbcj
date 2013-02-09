@@ -4,7 +4,7 @@ import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
 import org.adbcj.mysql.netty.MysqlConnectionManager;
 import org.adbcj.support.LoginCredentials;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

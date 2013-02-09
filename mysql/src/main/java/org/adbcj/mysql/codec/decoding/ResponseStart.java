@@ -5,7 +5,7 @@ import org.adbcj.mysql.codec.IoUtils;
 import org.adbcj.mysql.codec.MySqlConnection;
 import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.IOException;
 

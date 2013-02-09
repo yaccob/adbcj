@@ -1,10 +1,10 @@
 package org.adbcj.h2;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
 import org.adbcj.h2.packets.ClientToServerPacket;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,34 +13,23 @@ import java.io.DataOutputStream;
 /**
  * @author roman.stoffel@gamlor.info
  */
-class Encoder implements ChannelDownstreamHandler {
+class Encoder extends MessageToByteEncoder<ClientToServerPacket> {
     private final static Logger logger = LoggerFactory.getLogger(Encoder.class);
 
+
     @Override
-    public void handleDownstream(ChannelHandlerContext context, ChannelEvent event) throws Exception {
-        if (!(event instanceof MessageEvent)) {
-            context.sendDownstream(event);
-            return;
-        }
+    public void encode(ChannelHandlerContext ctx, ClientToServerPacket request, ByteBuf buffer) throws Exception {
 
-        MessageEvent e = (MessageEvent) event;
-        if (!(e.getMessage() instanceof ClientToServerPacket)) {
-            context.sendDownstream(event);
-            return;
-        }
-
-        ClientToServerPacket  request = (ClientToServerPacket) e.getMessage();
         if(request.startWriteOrCancel()){
-            ChannelBuffer buffer = ChannelBuffers.buffer(request.getLength());
-            ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
+            ByteBufOutputStream out = new ByteBufOutputStream(buffer);
             DataOutputStream dataOutputStream = new DataOutputStream(out);
             request.writeToStream(dataOutputStream);
             dataOutputStream.close();
+            out.flush();
             out.close();
             if(logger.isDebugEnabled()){
                 logger.debug("Sent {} down stream",request);
             }
-            Channels.write(context, e.getFuture(), buffer);
         } else{
             // was cancelled
             logger.debug("Message has been cancelled {}",request);

@@ -1,14 +1,12 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
 import org.adbcj.Connection;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.support.DefaultDbFuture;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferInputStream;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
@@ -16,7 +14,7 @@ import java.io.InputStream;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class Decoder extends FrameDecoder {
+public class Decoder extends ByteToMessageDecoder<String> {
     private DecoderState currentState;
     private H2Connection connection;
 
@@ -26,11 +24,11 @@ public class Decoder extends FrameDecoder {
     }
 
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-        InputStream in = new ChannelBufferInputStream(buffer);
+    public String decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+        InputStream in = new ByteBufInputStream(buffer);
         in.mark(Integer.MAX_VALUE);
         try {
-            final ResultAndState resultState = currentState.decode(new DataInputStream(in),ctx.getChannel());
+            final ResultAndState resultState = currentState.decode(new DataInputStream(in),ctx.channel());
             currentState = resultState.getNewState();
             if(resultState.isWaitingForMoreInput()){
                 in.reset();
@@ -45,10 +43,9 @@ public class Decoder extends FrameDecoder {
         }
     }
 
-
     @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        super.channelClosed(ctx, e);
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
         connection.tryCompleteClose();
     }
 }

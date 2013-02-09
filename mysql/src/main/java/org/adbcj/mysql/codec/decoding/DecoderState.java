@@ -5,7 +5,7 @@ import org.adbcj.mysql.codec.IoUtils;
 import org.adbcj.mysql.codec.ServerStatus;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.ServerPacket;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -3,7 +3,7 @@ package org.adbcj.mysql.codec.decoding;
 import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MySqlConnection;
 import org.adbcj.mysql.codec.MySqlRequest;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.IOException;
 

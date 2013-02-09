@@ -5,7 +5,7 @@ import org.adbcj.mysql.netty.MysqlConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -2,7 +2,7 @@ package org.adbcj.h2;
 
 import org.adbcj.*;
 import org.adbcj.support.*;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

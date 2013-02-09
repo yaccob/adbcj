@@ -10,7 +10,7 @@ import org.adbcj.h2.protocol.StatusCodes;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;

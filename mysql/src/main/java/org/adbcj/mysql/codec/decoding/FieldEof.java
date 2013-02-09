@@ -5,7 +5,7 @@ import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.MysqlField;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.support.DefaultDbSessionFuture;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.IOException;
 import java.util.List;

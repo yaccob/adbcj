@@ -9,7 +9,7 @@ import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
 import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
 import org.adbcj.support.DefaultDbSessionFuture;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.IOException;
 

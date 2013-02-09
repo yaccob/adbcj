@@ -4,7 +4,7 @@ import org.adbcj.ResultHandler;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ResultSetFieldResponse;
 import org.adbcj.support.DefaultDbSessionFuture;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.IOException;
 import java.io.InputStream;

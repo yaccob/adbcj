@@ -6,7 +6,7 @@ import org.adbcj.mysql.codec.packets.LoginRequest;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.LoginCredentials;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.IOException;
 import java.util.Set;

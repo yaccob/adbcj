@@ -11,7 +11,7 @@ import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.ResultSetRowResponse;
 import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.DefaultValue;
-import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 
 import java.io.IOException;
 import java.math.BigDecimal;
