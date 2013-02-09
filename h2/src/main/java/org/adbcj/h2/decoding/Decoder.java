@@ -14,7 +14,7 @@ import java.io.InputStream;
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class Decoder extends ByteToMessageDecoder<String> {
+public class Decoder extends ByteToMessageDecoder {
     private DecoderState currentState;
     private H2Connection connection;
 
@@ -34,7 +34,7 @@ public class Decoder extends ByteToMessageDecoder<String> {
                 in.reset();
                 return null;
             }
-            return "Parsed";
+            return null;
         } catch (Exception ex){
             ex.printStackTrace();
             throw ex;

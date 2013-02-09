@@ -2,6 +2,8 @@ package org.adbcj.h2;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
+import io.netty.channel.socket.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.adbcj.*;
 import org.adbcj.h2.decoding.Decoder;
 import org.adbcj.h2.packets.ClientHandshake;
@@ -44,6 +46,8 @@ public class H2ConnectionManager extends AbstractConnectionManager {
         this.keys = keys;
 
         bootstrap = new Bootstrap()
+                .group(new NioEventLoopGroup())
+                .channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .remoteAddress(new InetSocketAddress(host, port))
@@ -53,7 +57,6 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                     public void initChannel(Channel ch) throws Exception {
                         ch.pipeline().addLast(ENCODER, new Encoder());
                         ch.pipeline().addLast("handler", new Handler());
-
                     }
                 });
     }
