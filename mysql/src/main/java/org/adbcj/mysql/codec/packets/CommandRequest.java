@@ -65,5 +65,11 @@ public class CommandRequest extends ClientRequest {
 
     }
 
+    @Override
+    public String toString() {
+        return "CommandRequest{" +
+                "command=" + command +
+                '}';
+    }
 }
 

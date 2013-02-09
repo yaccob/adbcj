@@ -37,6 +37,13 @@ public class StringCommandRequest extends CommandRequest {
         out.write(payloadAsBinary());
     }
 
+    @Override
+    public String toString() {
+        return "StringCommandRequest{" +
+                "payload='" + payload + '\'' +
+                ", dataAsBytes=" + payloadAsBinary() +
+                '}';
+    }
 
     private byte[] payloadAsBinary() {
         if(null!=dataAsBytes){

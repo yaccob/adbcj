@@ -8,7 +8,6 @@ import org.adbcj.mysql.codec.packets.OkResponse;
 import org.jboss.netty.channel.Channel;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
 * @author roman.stoffel@gamlor.info
@@ -57,7 +56,7 @@ public abstract class ResponseStart extends DecoderState {
     }
 
 
-    public static ErrorResponse decodeErrorResponse(InputStream in, int length, int packetNumber) throws IOException {
+    public static ErrorResponse decodeErrorResponse(BoundedInputStream in, int length, int packetNumber) throws IOException {
         int errorNumber = IoUtils.readUnsignedShort(in);
         in.read(); // Throw away sqlstate marker
         String sqlState = IoUtils.readNullTerminatedString(in, CHARSET);

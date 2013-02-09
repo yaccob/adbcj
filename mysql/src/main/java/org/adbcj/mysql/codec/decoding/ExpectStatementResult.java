@@ -3,6 +3,7 @@ package org.adbcj.mysql.codec.decoding;
 import org.adbcj.ResultHandler;
 import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.OneArgFunction;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -18,6 +19,6 @@ public class ExpectStatementResult extends ExpectQueryResult {
 
     @Override
     protected ResultAndState handleOk(OkResponse.RegularOK regularOK) {
-        return ExpectUpdateResult.handleUpdateResult(regularOK, future);
+        return ExpectUpdateResult.handleUpdateResult(regularOK, future, OneArgFunction.ID_FUNCTION);
     }
 }

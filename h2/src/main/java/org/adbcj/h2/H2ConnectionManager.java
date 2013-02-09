@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class H2ConnectionManager extends AbstractConnectionManager {
     private final static Logger logger = LoggerFactory.getLogger(H2ConnectionManager.class);
 
-    private final ExecutorService bossExecutor;
     private final ClientBootstrap bootstrap;
     private static final String ENCODER = H2ConnectionManager.class.getName() + ".encoder";
     private static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
@@ -47,8 +45,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
         this.credentials = credentials;
         this.keys = keys;
 
-        this.bossExecutor = Executors.newCachedThreadPool();
-        ChannelFactory factory = new NioClientSocketChannelFactory(bossExecutor,
+        ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
                 Executors.newCachedThreadPool());
         bootstrap = new ClientBootstrap(factory);
         init(host, port);

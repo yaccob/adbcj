@@ -217,6 +217,7 @@ class Handler extends SimpleChannelHandler {
 
 @ChannelHandler.Sharable
 class Encoder implements ChannelDownstreamHandler {
+    private final static Logger log = LoggerFactory.getLogger(Encoder.class);
 
 	private final MySqlClientEncoder encoder = new MySqlClientEncoder();
 
@@ -230,6 +231,10 @@ class Encoder implements ChannelDownstreamHandler {
         if (!(e.getMessage() instanceof ClientRequest)) {
             context.sendDownstream(event);
             return;
+        }
+
+        if(log.isDebugEnabled()){
+            log.debug("Sending request: {}",(ClientRequest) e.getMessage());
         }
 
         ClientRequest  request = (ClientRequest) e.getMessage();
