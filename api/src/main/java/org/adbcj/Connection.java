@@ -19,7 +19,9 @@ package org.adbcj;
 /**
  * A connection to a specific database.  <code>Connection</code> objects are obtained using
  * {@link ConnectionManager#connect()}.
- * 
+ *
+ * Remember to close a connection after using it with {@link #close()}
+ *
  * @author Mike Heath
  * @see DbSession
  * @see ConnectionManager

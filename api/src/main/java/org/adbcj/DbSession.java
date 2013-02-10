@@ -20,21 +20,35 @@ public interface DbSession {
 
     /**
      * Begin's a transaction using the default transaction isolation level.
+     *
+     * The transaction is started immediately and all subsequent operations are executed
+     * in a transaction, until {@link #commit()} or {@link #rollback()} is called. This call
+     * also doesn't block: The communication to establish the transaction are executed in the background
+     * before the next call on the connection object.
      */
     void beginTransaction();
 
-    /**
-     * Begin's a transaction with the specific transaction isolation level.
-     *
-     * @param isolationLevel  the transaction isolation level to use in the new transaction
-     */
-    //void beginTransaction(TransactionIsolationLevel isolationLevel);
 
-    // Canceling a commit will cause the transaction to rollback
+    /**
+     * Commits this transaction.
+     * The future returned will complete if the transaction has been committed successfully,
+     * or contain the error when the commit failed.
+     *
+     * After calling commit, the connection is again in auto-commit mode.
+    * @return future which signals the success, or contains the error
+    */
 	DbSessionFuture<Void> commit();
 
-	// A rollback cannot be canceled
-	// Rolling back a transaction may cancel pending requests
+    /**
+     * Commits this transaction.
+     * The future returned will complete if the transaction has been rolled back successfully.
+     * Rollbacks should not fail, however it it does the future will contain the error.
+     *
+     * Rolling back a transaction might cancel all requests which have been made for this transaction.
+     *
+     * After calling rollback, the connection is again in auto-commit mode.
+     * @return future which signals the success, or contains the error
+     */
 	DbSessionFuture<Void> rollback();
 	
 	/**
@@ -44,13 +58,6 @@ public interface DbSession {
 	 */
 	boolean isInTransaction();
 
-    /**
-     * Returns the isolation level of the current transaction, returns null if the DbSession is not
-     * currently in a transaction.
-     *
-     * @return  the current transaction isolation level
-     */
-    //TransactionIsolationLevel getTransactionIsolationLevel();
 
 	DbSessionFuture<ResultSet> executeQuery(String sql);
 	
