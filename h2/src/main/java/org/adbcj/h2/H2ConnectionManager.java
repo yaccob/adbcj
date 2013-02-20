@@ -8,7 +8,6 @@ import org.adbcj.*;
 import org.adbcj.h2.decoding.Decoder;
 import org.adbcj.h2.packets.ClientHandshake;
 import org.adbcj.support.AbstractConnectionManager;
-import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.LoginCredentials;
 import org.slf4j.Logger;
@@ -70,18 +69,12 @@ public class H2ConnectionManager extends AbstractConnectionManager {
 
         final ChannelFuture channelFuture = bootstrap.connect();
 
-        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>(new CancellationAction() {
-            @Override
-            public boolean cancel() {
-                return channelFuture.cancel();
-            }
-        });
+        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>();
 
         channelFuture.addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 logger.debug("Connect completed");
-
 
                 Channel channel = future.channel();
                 H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
@@ -105,6 +98,12 @@ public class H2ConnectionManager extends AbstractConnectionManager {
         return connectFuture;
     }
 
+    public void removeConnection(H2Connection connection) {
+        synchronized (connections){
+            connections.remove(connection);
+        }
+    }
+
     @Override
     public DbFuture<Void> doClose(CloseMode mode) throws DbException {
         ArrayList<H2Connection> connectionsCopy;
@@ -119,18 +118,24 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                 public void onCompletion(DbFuture<Void> future) {
                     final int toCloseConnnectionCount = toCloseCount.decrementAndGet();
                     if (toCloseConnnectionCount <= 0) {
-                        new Thread("Closing H2 ConnectionManager") {
-                            @Override
-                            public void run() {
-                                bootstrap.shutdown();
-                                closeFuture.setResult(null);
-                            }
-                        }.start();
-
+                        shutdownBootstrapper(closeFuture);
                     }
                 }
             });
         }
+        if(connectionsCopy.isEmpty()){
+            shutdownBootstrapper(closeFuture);
+        }
         return closeFuture;
+    }
+
+    private void shutdownBootstrapper(final DefaultDbFuture closeFuture) {
+        new Thread("Closing H2 ConnectionManager") {
+            @Override
+            public void run() {
+                bootstrap.shutdown();
+                closeFuture.setResult(null);
+            }
+        }.start();
     }
 }

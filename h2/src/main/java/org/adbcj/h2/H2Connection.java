@@ -18,7 +18,7 @@ public class H2Connection implements Connection {
     private final String sessionId = StringUtils.convertBytesToHex(MathUtils.secureRandomBytes(32));
     private final ArrayDeque<Request> requestQueue;
     private final int maxQueueSize;
-    private final ConnectionManager manager;
+    private final H2ConnectionManager manager;
     private final Channel channel;
     private final Object lock = new Object();
     private volatile DefaultDbFuture<Void> closeFuture;
@@ -29,12 +29,10 @@ public class H2Connection implements Connection {
     private BlockingRequestInProgress blockingRequest;
 
     private volatile boolean isInTransaction = false;
-    private DbSessionFuture<PreparedUpdate> commit = null;
-    private DbSessionFuture<PreparedUpdate> rollback;
 
     private final RequestCreator requestCreator = new RequestCreator(this);
 
-    public H2Connection(int maxQueueSize, ConnectionManager manager, Channel channel) {
+    public H2Connection(int maxQueueSize, H2ConnectionManager manager, Channel channel) {
         this.maxQueueSize = maxQueueSize;
         this.manager = manager;
         this.channel = channel;
@@ -154,6 +152,12 @@ public class H2Connection implements Connection {
             Request request = requestCreator.createCloseRequest();
             forceQueRequest(request);
             closeFuture = (DefaultDbFuture<Void>) request.getToComplete();
+            closeFuture.addListener(new DbListener<Void>() {
+                @Override
+                public void onCompletion(DbFuture<Void> future) {
+                    H2Connection.this.manager.removeConnection(H2Connection.this);
+                }
+            });
             return closeFuture;
         }
     }

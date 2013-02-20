@@ -137,6 +137,12 @@ public class MySqlConnection implements Connection {
             if (null == closeFuture) {
                 final MySqlRequest closeRequest = MySqlRequests.createCloseRequest(this);
                 closeFuture = closeRequest.getFuture();
+                closeFuture.addListener(new DbListener<Void>() {
+                    @Override
+                    public void onCompletion(DbFuture<Void> future) {
+                        MySqlConnection.this.connectionManager.removeConnection(MySqlConnection.this);
+                    }
+                });
                 if(closeMode==CloseMode.CANCEL_PENDING_OPERATIONS){
                     forceCloseOnPendingRequests();
                 }

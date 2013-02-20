@@ -17,7 +17,6 @@ import org.adbcj.mysql.codec.MySqlConnection;
 import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.support.AbstractConnectionManager;
-import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.LoginCredentials;
 import org.slf4j.Logger;
@@ -62,8 +61,9 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
                     @Override
                     public void initChannel(Channel ch) throws Exception {
-
+                        ch.read();
                         ch.pipeline().addLast(ENCODER, new Encoder());
+//                        ch.pipeline().addLast(INBOUND_BUFFER, new MessageQueuingHandler());
 
                     }
                 });
@@ -84,18 +84,25 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                 @Override
                 public void onCompletion(DbFuture<Void> future) {
                     if(0==toCloseCount.decrementAndGet()){
-                        new Thread("Closing MySQL ConnectionManager"){
-                            @Override
-                            public void run() {
-                                bootstrap.shutdown();
-                                closeFuture.setResult(null);
-                            }
-                        }.start();
+                        shutdownBootraper(closeFuture);
                     }
                 }
             });
         }
+        if(connectionsCopy.isEmpty()){
+            shutdownBootraper(closeFuture);
+        }
         return closeFuture;
+    }
+
+    private void shutdownBootraper(final DefaultDbFuture closeFuture) {
+        new Thread("Closing MySQL ConnectionManager"){
+            @Override
+            public void run() {
+                bootstrap.shutdown();
+                closeFuture.setResult(null);
+            }
+        }.start();
     }
 
     public DbFuture<Connection> connect() {
@@ -106,17 +113,12 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
         final ChannelFuture channelFuture = bootstrap.connect();
 
-        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>(new CancellationAction() {
-            @Override
-            public boolean cancel() {
-                return channelFuture.cancel();
-            }
-        });
+        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>();
 
         channelFuture.addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                logger.debug("Connect completed");
+                logger.debug("Physical connect completed");
 
 
                 Channel channel = future.channel();
@@ -129,11 +131,13 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                     connectFuture.setException(future.cause());
                 }
                 addConnection(connection);
+
+                channel.config().setAutoRead(true);
+                channel.read();
             }
         });
 
-        return connectFuture;
-    }
+        return connectFuture;                          }
 
 
 
