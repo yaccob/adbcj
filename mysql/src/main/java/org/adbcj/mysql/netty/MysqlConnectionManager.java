@@ -61,7 +61,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
                     @Override
                     public void initChannel(Channel ch) throws Exception {
-                        ch.read();
+                        ch.config().setAutoRead(false);
                         ch.pipeline().addLast(ENCODER, new Encoder());
 //                        ch.pipeline().addLast(INBOUND_BUFFER, new MessageQueuingHandler());
 
