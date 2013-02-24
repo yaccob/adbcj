@@ -4,4 +4,4 @@ ADBCJ allows you to access a relational database in a asynchronous, non-blocking
 The asynchronous access prevents any blocked threads, which just wait for the result of the database. It also allows to pipeline operations, which are independent. Depending on the application, this can give a significat performance gain.
 
 ## Documentation:
-Upcoming, corrently check these minimal blog-posts out: http://www.gamlor.info/wordpress/tag/adbcj/
+I'm working on it: https://github.com/gamlerhart/adbcj/wiki
