@@ -111,6 +111,6 @@ public interface DbFuture<T> extends Future<T> {
      * Otherwise a {@link IllegalStateException} if it is not completed. Or returns null if it is cancelled or successfull
      * @return the result
      */
-    public Throwable getException();
+    public DbException getException();
 	
 }

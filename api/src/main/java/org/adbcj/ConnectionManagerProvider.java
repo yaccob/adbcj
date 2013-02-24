@@ -23,16 +23,38 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+/**
+ * The connection manager provider is the entry point for ADBCJ.
+ * It looks up the driver in the classpath and returns you the connection manager.
+ *
+ */
 public class ConnectionManagerProvider {
 
 	public static final String ADBCJ_PROTOCOL = "adbcj";
 
 	private ConnectionManagerProvider () {}
-	
+
+    /**
+     * See {@link ConnectionManagerProvider#createConnectionManager(String, String, String, java.util.Map)}
+     * @param url The url to the database. It has the usual format: adbcj:your-database-type://host:port/database. Example adbcj:mysql:localhost:3306/database
+     * @param username username
+     * @param password password
+     * @return the connection manager, which creates new connections to your database.
+     * @throws DbException if it cannot find the driver in the classpath, or one of the connection parameters is wrong
+     */
 	public static ConnectionManager createConnectionManager(String url, String username, String password) throws DbException {
 		return createConnectionManager(url, username, password, Collections.<String,String>emptyMap());
 	}
 
+    /**
+     * Creates a new connection manager.
+     * @param url The url to the database. It has the usual format: adbcj:your-database-type://host:port/database. Example adbcj:mysql:localhost:3306/database
+     * @param username username
+     * @param password password
+     * @param properties additional properties for the driver and connection
+     * @return the connection manager, which creates new connections to your database.
+     * @throws DbException if it cannot find the driver in the classpath, or one of the connection parameters is wrong
+     */
 	public static ConnectionManager createConnectionManager(String url,
                                                             String username,
                                                             String password,

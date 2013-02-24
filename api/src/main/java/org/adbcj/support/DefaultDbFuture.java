@@ -153,10 +153,10 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     }
 
     @Override
-    public Throwable getException() {
+    public DbException getException() {
         MyState stateOfFuture = state.get();
         if (stateOfFuture.getState() == FutureState.FAILURE) {
-            return ((Failed)stateOfFuture).getError();
+            return DbException.wrap(((Failed)stateOfFuture).getError());
         } else if (stateOfFuture.getState() == FutureState.NOT_COMPLETED) {
             throw new IllegalStateException("Should not be calling this method when future is not done");
         } else {
