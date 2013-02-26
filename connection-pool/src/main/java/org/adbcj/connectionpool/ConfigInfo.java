@@ -44,7 +44,7 @@ public final class ConfigInfo {
     static long longProperty(Map<String, String> properties, String property, long defaultValue) {
         final String maxConnections = properties.get(property);
         try{
-            return Integer.parseInt(maxConnections);
+            return Long.parseLong(maxConnections);
         }catch (NumberFormatException e){
             return defaultValue;
         }

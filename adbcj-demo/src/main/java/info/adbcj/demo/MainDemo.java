@@ -18,7 +18,7 @@ public class MainDemo {
         // Usually you have one instance in your system.
         // when you close the connection-manager, all associated connections are closed to.
         final ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(
-                "adbcj:mysql://localhost/adbcj-demo",
+                "adbcj:pooled:mysql://localhost/adbcj-demo",
                 "adbcj",
                 "adbc-pwd"
         );
