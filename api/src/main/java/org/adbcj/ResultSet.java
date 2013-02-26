@@ -18,6 +18,9 @@ package org.adbcj;
 
 import java.util.List;
 
+/**
+ * A immutable list of results.
+ */
 public interface ResultSet extends List<Row> {
 
 	List<? extends Field> getFields();
