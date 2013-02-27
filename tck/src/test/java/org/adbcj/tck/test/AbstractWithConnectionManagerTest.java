@@ -26,7 +26,7 @@ public abstract class AbstractWithConnectionManagerTest {
     }
 
     protected Map<String,String> properties(){
-        return new HashMap<>();
+        return new HashMap<String,String>();
     }
 
     @AfterClass
