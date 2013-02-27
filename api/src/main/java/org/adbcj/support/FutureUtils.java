@@ -58,47 +58,4 @@ public final class FutureUtils {
         originalFuture.addListener(createTransformationListener(tranformation,completion));
         return completion;
     }
-    public static <TArgument,TResult> DefaultDbSessionFuture<TResult> flatMap(final DbSessionFuture<TArgument> originalFuture,
-                                                                          DbSession session,
-                                                             final OneArgFunction<TArgument, DbFuture<TResult>> tranformation) {
-        final DefaultDbSessionFuture<TResult> completion = new DefaultDbSessionFuture<TResult>(session,new CancellationAction() {
-            @Override
-            public boolean cancel() {
-                return originalFuture.cancel(true);
-            }
-        });
-        originalFuture.addListener(new DbListener<TArgument>() {
-            @Override
-            public void onCompletion(DbFuture<TArgument> future) {
-                switch (future.getState()){
-                case SUCCESS:
-                    tranformation.apply(future.getResult()).addListener(new DbListener<TResult>() {
-                        @Override
-                        public void onCompletion(DbFuture<TResult> future) {
-                            switch (future.getState()){
-                                case SUCCESS:
-                                    completion.trySetResult(future.getResult());
-                                    break;
-                                case FAILURE:
-                                    completion.trySetException(future.getException());
-                                    break;
-                                case CANCELLED:
-                                    completion.trySetCancelled();
-                                    break;
-                            }
-                        }
-                    });
-                    break;
-                case FAILURE:
-                    completion.trySetException(future.getException());
-                    break;
-                case CANCELLED:
-                    completion.trySetCancelled();
-                    break;
-            }
-
-            }
-        });
-        return completion;
-    }
 }
