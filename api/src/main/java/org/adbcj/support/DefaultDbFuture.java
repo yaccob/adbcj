@@ -20,6 +20,8 @@ import org.adbcj.DbException;
 import org.adbcj.DbFuture;
 import org.adbcj.DbListener;
 import org.adbcj.FutureState;
+import org.adbcj.support.stacktracing.MarkEntryPointToAdbcjException;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,18 +38,37 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     private final AtomicReference<MyState> state = new AtomicReference<MyState>(NotCompleted.NOT_COMPLETED);
 
+    private final MarkEntryPointToAdbcjException entryPointMarking;
 
-    public DefaultDbFuture(CancellationAction cancelAction) {
+
+    public DefaultDbFuture(StackTracingOptions stackTraceOption,CancellationAction cancelAction) {
+        this.entryPointMarking = stackTraceOption.capture();
         this.optionalCancellation = cancelAction;
     }
 
-    public DefaultDbFuture() {
+    public DefaultDbFuture(StackTracingOptions stackTraceOption) {
+        this.entryPointMarking = stackTraceOption.capture();
         this.optionalCancellation = null;
+    }
+
+    /**
+     * Intended for internal use, for example for transformation adaptors
+     */
+    protected DefaultDbFuture() {
+        this.entryPointMarking = null;
+        this.optionalCancellation = null;
+    }
+    /**
+     * Intended for internal use, for example for transformation adaptors
+     */
+    protected DefaultDbFuture(CancellationAction cancelAction) {
+        this.entryPointMarking = null;
+        this.optionalCancellation = cancelAction;
     }
 
 
     public static <T> DbFuture<T> completed(T result) {
-        DefaultDbFuture f = new DefaultDbFuture();
+        DefaultDbFuture f = new DefaultDbFuture(StackTracingOptions.GLOBAL_DEFAULT);
         f.setResult(result);
         return f;
     }
@@ -139,7 +160,7 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
             case NOT_COMPLETED:
                 throw new IllegalStateException("Should not be calling this method when future is not done");
             case FAILURE:
-                throw DbException.wrap(((Failed) myState).getError());
+                throw exceptionToReturn((Failed) myState);
             case CANCELLED:
                 throw new CancellationException();
             default:
@@ -156,12 +177,17 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
     public DbException getException() {
         MyState stateOfFuture = state.get();
         if (stateOfFuture.getState() == FutureState.FAILURE) {
-            return DbException.wrap(((Failed)stateOfFuture).getError());
+            return exceptionToReturn((Failed) stateOfFuture);
         } else if (stateOfFuture.getState() == FutureState.NOT_COMPLETED) {
             throw new IllegalStateException("Should not be calling this method when future is not done");
         } else {
             return null;
         }
+    }
+
+    private DbException exceptionToReturn(Failed myState) {
+        final Throwable theError = ((Failed) myState).getError();
+        return DbException.wrap(theError);
     }
 
     public final void setResult(T result) {

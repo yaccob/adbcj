@@ -1,6 +1,7 @@
 package org.adbcj.support;
 
 import org.adbcj.*;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 
 import java.util.Collections;
 import java.util.Map;
@@ -14,10 +15,12 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
 
 
     protected final Map<String, String> properties;
+    protected final StackTracingOptions stackTracingOption;
     private volatile DbFuture<Void> closeFuture = null;
 
     public AbstractConnectionManager(Map<String, String> properties) {
         this.properties = Collections.unmodifiableMap(properties);
+        this.stackTracingOption = readStackTracingOption(properties);
     }
 
     public DbFuture<Void> close() {
@@ -47,6 +50,15 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
             return maxConnections;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("The property " + StandardProperties.MAX_QUEUE_LENGTH + " has to be positive number");
+        }
+    }
+
+    private static StackTracingOptions readStackTracingOption(Map<String, String> properties) {
+        final String callStackEnabled = properties.get(StandardProperties.CAPTURE_CALL_STACK);
+        if(null!= callStackEnabled && callStackEnabled.equalsIgnoreCase("true")){
+            return StackTracingOptions.FORCED_BY_INSTANCE;
+        } else{
+            return StackTracingOptions.GLOBAL_DEFAULT;
         }
     }
 

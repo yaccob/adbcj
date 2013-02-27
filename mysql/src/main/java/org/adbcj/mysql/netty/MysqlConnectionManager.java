@@ -34,6 +34,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
 	private static final Logger logger = LoggerFactory.getLogger(MysqlConnectionManager.class);
 
+
 	private static final String ENCODER = MysqlConnectionManager.class.getName() + ".encoder";
 	private static final String DECODER = MysqlConnectionManager.class.getName() + ".decoder";
     private final LoginCredentials credentials;
@@ -64,7 +65,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                     public void initChannel(Channel ch) throws Exception {
                         ch.config().setAutoRead(false);
                         ch.pipeline().addLast(ENCODER, new Encoder());
-//                        ch.pipeline().addLast(INBOUND_BUFFER, new MessageQueuingHandler());
 
                     }
                 });
@@ -76,7 +76,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         final DefaultDbFuture closeFuture;
         ArrayList<MySqlConnection> connectionsCopy;
         synchronized (connections) {
-            closeFuture = new DefaultDbFuture<Void>();
+            closeFuture = new DefaultDbFuture<Void>(stackTracingOption);
             connectionsCopy = new ArrayList<MySqlConnection>(connections);
         }
         final AtomicInteger toCloseCount = new AtomicInteger(connectionsCopy.size());

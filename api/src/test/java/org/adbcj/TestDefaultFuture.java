@@ -2,6 +2,7 @@ package org.adbcj;
 
 import org.adbcj.support.CancellationAction;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -24,7 +25,7 @@ public class TestDefaultFuture {
 
     @Test
     public void stateTransitionToComplete() throws InterruptedException {
-        DefaultDbFuture<String> future = new DefaultDbFuture<String>();
+        DefaultDbFuture<String> future = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT);
         Assert.assertEquals(FutureState.NOT_COMPLETED,future.getState());
         Assert.assertTrue(future.trySetResult("data"));
         Assert.assertEquals(FutureState.SUCCESS,future.getState());
@@ -35,7 +36,7 @@ public class TestDefaultFuture {
     }
     @Test
     public void stateTransitionToFailure() throws InterruptedException {
-        DefaultDbFuture<String> future = new DefaultDbFuture<String>();
+        DefaultDbFuture<String> future = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT);
         Assert.assertEquals(FutureState.NOT_COMPLETED, future.getState());
         Assert.assertTrue(future.trySetException(new Exception("Expected")));
         Assert.assertEquals(FutureState.FAILURE, future.getState());
@@ -49,7 +50,7 @@ public class TestDefaultFuture {
     }
     @Test
     public void stateTransitionToCancel()throws InterruptedException{
-        DefaultDbFuture<String> future = new DefaultDbFuture<String>(CAN_CANCEL);
+        DefaultDbFuture<String> future = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT,CAN_CANCEL);
         Assert.assertEquals(FutureState.NOT_COMPLETED,future.getState());
         Assert.assertTrue(future.cancel(true));
         Assert.assertEquals(FutureState.CANCELLED, future.getState());
@@ -63,7 +64,7 @@ public class TestDefaultFuture {
     }
     @Test
     public void notCancelSupport()throws InterruptedException{
-        DefaultDbFuture<String> notCancellable = new DefaultDbFuture<String>(new CancellationAction() {
+        DefaultDbFuture<String> notCancellable = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT,new CancellationAction() {
             @Override
             public boolean cancel() {
                 return false;
@@ -73,7 +74,7 @@ public class TestDefaultFuture {
         Assert.assertEquals(FutureState.NOT_COMPLETED, notCancellable.getState());
 
 
-        DefaultDbFuture<String> noSupport = new DefaultDbFuture<String>();
+        DefaultDbFuture<String> noSupport = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT);
         Assert.assertFalse(noSupport.cancel(true));
         Assert.assertEquals(FutureState.NOT_COMPLETED, notCancellable.getState());
     }
@@ -111,7 +112,7 @@ public class TestDefaultFuture {
     }
     @Test
     public void trySettingMyFail()throws InterruptedException{
-        DefaultDbFuture<String> future = new DefaultDbFuture<String>(CAN_CANCEL);
+        DefaultDbFuture<String> future = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT,CAN_CANCEL);
         future.setResult("completed");
 
         Assert.assertFalse(future.trySetResult("does not work"));
@@ -135,7 +136,7 @@ public class TestDefaultFuture {
 
     @Test
     public void wakesUp()throws InterruptedException{
-        final DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>();
+        final DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT);
         final CountDownLatch nowCanRun = new CountDownLatch(1);
         new Thread(){
             @Override
@@ -163,7 +164,7 @@ public class TestDefaultFuture {
     @Test
     public void canRemoveListener()throws InterruptedException{
         final CountDownLatch completed = new CountDownLatch(1);
-        DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>();
+        DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT);
         final DbListener<String> listener = new DbListener<String>() {
             @Override
             public void onCompletion(DbFuture<String> future) {
@@ -186,7 +187,7 @@ public class TestDefaultFuture {
 
     private void checkListenerByCompletingFuture(final FutureState expectedState, ActionOnFuture future) throws InterruptedException {
         final CountDownLatch completed = new CountDownLatch(1);
-        DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(CAN_CANCEL);
+        DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT,CAN_CANCEL);
         future.apply(toComplete);
         registerListener(expectedState, completed, toComplete);
         Assert.assertTrue(completed.await(10, TimeUnit.SECONDS));
@@ -194,7 +195,7 @@ public class TestDefaultFuture {
 
     private void checkListenerOnCompletedFuture(final FutureState expectedState, ActionOnFuture future) throws InterruptedException {
         final CountDownLatch completed = new CountDownLatch(1);
-        DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(CAN_CANCEL);
+        DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(StackTracingOptions.GLOBAL_DEFAULT,CAN_CANCEL);
         registerListener(expectedState, completed, toComplete);
         future.apply(toComplete);
         Assert.assertTrue(completed.await(10, TimeUnit.SECONDS));

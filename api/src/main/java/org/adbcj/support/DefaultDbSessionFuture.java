@@ -17,6 +17,7 @@
 package org.adbcj.support;
 
 import org.adbcj.*;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 
 public class DefaultDbSessionFuture<T> extends DefaultDbFuture<T> implements DbSessionFuture<T> {
 
@@ -40,12 +41,28 @@ public class DefaultDbSessionFuture<T> extends DefaultDbFuture<T> implements DbS
 		return this;
 	}
 	
-	public DefaultDbSessionFuture(DbSession session){
+	public DefaultDbSessionFuture(StackTracingOptions stackTracingOptions,DbSession session){
+        super(stackTracingOptions);
 		this.session = session;
 	}
 
-	public DefaultDbSessionFuture(DbSession session, CancellationAction cancelAction) {
+	public DefaultDbSessionFuture(StackTracingOptions stackTracingOptions,DbSession session, CancellationAction cancelAction) {
+        super(stackTracingOptions,cancelAction);
+		this.session = session;
+	}
+    /**
+     * Intended for internal use, for example for transformation adaptors
+     */
+	protected DefaultDbSessionFuture(DbSession session, CancellationAction cancelAction) {
         super(cancelAction);
+		this.session = session;
+	}
+
+    /**
+     * Intended for internal use, for example for transformation adaptors
+     */
+	protected DefaultDbSessionFuture(DbSession session) {
+        super();
 		this.session = session;
 	}
 

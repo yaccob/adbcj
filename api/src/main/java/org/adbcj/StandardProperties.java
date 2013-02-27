@@ -17,4 +17,15 @@ public final class StandardProperties {
      * By default this is 64.
      */
     public final static String MAX_QUEUE_LENGTH= "adbcj.maxQueueLength";
+
+    /**
+     * ADBCJ allows you to capture the stack trace of the location which issues a request.
+     * However this is a expensive operation, so it's optional. You can force a driver to capture
+     * this stack by setting this option.
+     *
+     * If not set, the JVM global property 'org.adbcj.debug' set to true will force capturing stack trace.
+     *
+     * This is disabled by default
+     */
+    public final static String CAPTURE_CALL_STACK= "org.adbcj.debug.capture.callstack";
 }
