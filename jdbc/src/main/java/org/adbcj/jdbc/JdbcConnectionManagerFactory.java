@@ -19,14 +19,16 @@ package org.adbcj.jdbc;
 import org.adbcj.ConnectionManager;
 import org.adbcj.ConnectionManagerFactory;
 import org.adbcj.DbException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 
 public class JdbcConnectionManagerFactory implements ConnectionManagerFactory {
+    private static final Logger log = LoggerFactory.getLogger(JdbcConnectionManagerFactory.class);
 
 	private static final String PROTOCOL = "jdbc";
 
@@ -40,6 +42,10 @@ public class JdbcConnectionManagerFactory implements ConnectionManagerFactory {
 			uri = new URI(uri.getSchemeSpecificPart());
 
 			String jdbcUrl = uri.toString();
+
+            log.warn("You are using the ADBCJ to JDBC bridge, which is only intended for testing");
+            log.warn("It is very slow and should not be used in production");
+            log.warn("DO NOT USE IN PRODUCTION!!!");
 
 			return new JdbcConnectionManager(new PlainJDBCConnection(jdbcUrl, username, password, properties),
                     properties);
