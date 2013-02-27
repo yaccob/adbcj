@@ -127,7 +127,7 @@ public final class PooledConnection implements Connection, PooledResource {
             if (isClosed()) {
                 return closingFuture;
             }
-            closingFuture = new DefaultDbFuture<Void>();
+            closingFuture = new DefaultDbFuture<Void>(pooledConnectionManager.stackTracingOptions());
             if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
                 ArrayList<Map.Entry<DbFuture,DefaultDbFuture>> iterationCopy
                         = new ArrayList<Map.Entry<DbFuture,DefaultDbFuture>>(runningOperations.entrySet());

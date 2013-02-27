@@ -18,6 +18,7 @@ package org.adbcj.jdbc;
 
 import org.adbcj.*;
 import org.adbcj.support.*;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -38,12 +39,14 @@ public abstract class AbstractDbSession implements DbSession {
 
     private boolean pipelining = false; // Access must be synchronized on lock
 
+    private final StackTracingOptions stackTracingOptions;
     private final int maxQueueSize;
 
 
     protected abstract Logger logger();
 
-    protected AbstractDbSession(int maxQueueSize) {
+    protected AbstractDbSession(StackTracingOptions stackTracingOptions,int maxQueueSize) {
+        this.stackTracingOptions = stackTracingOptions;
         this.maxQueueSize = maxQueueSize;
         synchronized (lock){
             requestQueue = new ArrayDeque<Request<?>>(maxQueueSize+1);
@@ -162,6 +165,10 @@ public abstract class AbstractDbSession implements DbSession {
                 activeRequest.error(DbException.wrap(exception));
             }
         }
+    }
+
+    public StackTracingOptions stackTracingOptions(){
+        return stackTracingOptions;
     }
 
     /**
@@ -412,7 +419,7 @@ public abstract class AbstractDbSession implements DbSession {
 
 
         public Request(AbstractDbSession session) {
-            this.futureToComplete = new DefaultDbSessionFuture<T>(session,new CancellationAction() {
+            this.futureToComplete = new DefaultDbSessionFuture<T>(session.stackTracingOptions(),session,new CancellationAction() {
                 @Override
                 public boolean cancel() {
                     return Request.this.doCancel();

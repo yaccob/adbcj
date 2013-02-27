@@ -41,8 +41,7 @@ public class JdbcConnectionManagerFactory implements ConnectionManagerFactory {
 
 			String jdbcUrl = uri.toString();
 
-			return new JdbcConnectionManager(Executors.newCachedThreadPool(),
-                    new PlainJDBCConnection(jdbcUrl, username, password, properties),
+			return new JdbcConnectionManager(new PlainJDBCConnection(jdbcUrl, username, password, properties),
                     properties);
 		} catch (URISyntaxException e) {
 			throw new DbException(e);

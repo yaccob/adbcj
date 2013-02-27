@@ -34,11 +34,10 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
     private final Set<JdbcConnection> connections = new HashSet<JdbcConnection>(); // Access must be synchronized on lock
 
 
-    public JdbcConnectionManager(ExecutorService executorService,
-                                 JDBCConnectionProvider connectionProvider,
+    public JdbcConnectionManager(JDBCConnectionProvider connectionProvider,
                                  Map<String, String> properties) {
         super(properties);
-        this.executorService = executorService;
+        this.executorService = createPool();
         this.connectionProvider = connectionProvider;
     }
 
@@ -46,7 +45,7 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
         if (isClosed()) {
             throw new DbException("This connection manager is closed");
         }
-        final DefaultDbFuture<Connection> future = new DefaultDbFuture<Connection>();
+        final DefaultDbFuture<Connection> future = new DefaultDbFuture<Connection>(stackTracingOptions());
         executorService.execute(new Runnable() {
             public void run() {
                 try {
@@ -75,7 +74,7 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
     @Override
     public DbFuture<Void> doClose(CloseMode mode) throws DbException {
         synchronized (lock) {
-            final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>();
+            final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>(stackTracingOptions());
             closeFuture.addListener(new DbListener<Void>() {
                 @Override
                 public void onCompletion(DbFuture<Void> future) {

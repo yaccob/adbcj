@@ -1,9 +1,7 @@
 package org.adbcj.h2.decoding;
 
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
-import org.adbcj.FutureState;
-import org.adbcj.Result;
+import org.adbcj.*;
+import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.H2Result;
 import org.adbcj.h2.protocol.StatusCodes;
@@ -34,7 +32,8 @@ public class UpdateResult  extends StatusReadingDecoder  {
         final ResultOrWait<Integer> affected = IoUtils.tryReadNextInt(stream, ResultOrWait.Start);
         final ResultOrWait<Boolean> autoCommit = IoUtils.tryReadNextBoolean(stream, affected);
         if(autoCommit.couldReadResult){
-            DefaultDbSessionFuture<DefaultResultSet> futureForAutoKeys = new DefaultDbSessionFuture<DefaultResultSet>(resultHandler.getSession());
+            final H2Connection session = (H2Connection) resultHandler.getSession();
+            DefaultDbSessionFuture<DefaultResultSet> futureForAutoKeys = new DefaultDbSessionFuture<DefaultResultSet>(session.stackTrachingOptions(),session);
             DefaultResultSet result = new DefaultResultSet();
             DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
 
