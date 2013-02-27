@@ -6,6 +6,7 @@ import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
 import io.netty.channel.Channel;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -242,6 +243,9 @@ public class MySqlConnection implements Connection {
         return lock;
     }
 
+    public StackTracingOptions stackTraceOptions(){
+        return this.connectionManager.stackTracingOptions();
+    }
 
 
     private void forceCloseOnPendingRequests() {

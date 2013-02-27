@@ -20,7 +20,7 @@ public class RequestCreator {
 
 
     public Request createCloseRequest() {
-        DefaultDbSessionFuture<Void> future = new DefaultDbSessionFuture<Void>(connection);
+        DefaultDbSessionFuture<Void> future = new DefaultDbSessionFuture<Void>(connection.stackTrachingOptions(),connection);
         return new Request("Close-Request", future, new CloseConnection(future, connection), new CloseCommand());
     }
 
@@ -30,7 +30,7 @@ public class RequestCreator {
         CancellationToken cancelSupport = new CancellationToken();
         final int sessionId = connection.nextId();
         final int queryId = connection.nextId();
-        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection,cancelSupport);
+        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection.stackTrachingOptions(),connection,cancelSupport);
         final Request executeQuery = executeQueryAndClose(sql,
                 eventHandler,
                 accumulator,
@@ -48,7 +48,7 @@ public class RequestCreator {
     public Request executeUpdate(String sql) {
         CancellationToken cancelSupport = new CancellationToken();
         final int sessionId = connection.nextId();
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection,cancelSupport);
+        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection.stackTrachingOptions(),connection,cancelSupport);
         final Request executeQuery = executeUpdateAndClose(sql, resultFuture,cancelSupport, sessionId);
         return new Request("Prepare Query: " + sql, resultFuture,
                 StatementPrepare.continueWithRequest(executeQuery, resultFuture),
@@ -58,7 +58,7 @@ public class RequestCreator {
 
     public Request executePrepareQuery(String sql) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(connection,cancelSupport);
+        DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(connection.stackTrachingOptions(),connection,cancelSupport);
         final int sessionId = connection.nextId();
         return new Request("Prepare Query: " + sql, resultFuture,
                 StatementPrepare.createPrepareQuery(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
@@ -67,7 +67,7 @@ public class RequestCreator {
 
     public Request executePrepareUpdate(String sql) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<PreparedUpdate> resultFuture = new DefaultDbSessionFuture<PreparedUpdate>(connection,cancelSupport);
+        DefaultDbSessionFuture<PreparedUpdate> resultFuture = new DefaultDbSessionFuture<PreparedUpdate>(connection.stackTrachingOptions(),connection,cancelSupport);
         final int sessionId = connection.nextId();
         return new Request("Prepare Update: " + sql, resultFuture,
                 StatementPrepare.createPrepareUpdate(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
@@ -78,7 +78,7 @@ public class RequestCreator {
                                                     int sessionId,
                                                     Object[] params) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection,cancelSupport);
+        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection.stackTrachingOptions(),connection,cancelSupport);
         int queryId = connection.nextId();
         return new Request("ExecutePreparedQuery", resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
@@ -88,7 +88,7 @@ public class RequestCreator {
     public Request executeUpdateStatement(int sessionId,
                                                  Object[] params) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection,cancelSupport);
+        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection.stackTrachingOptions(),connection,cancelSupport);
         return new Request("ExecutePreparedUpdate: ", resultFuture,
                 new UpdateResult(resultFuture),
                 new CompoundCommand(cancelSupport,
@@ -96,7 +96,7 @@ public class RequestCreator {
                         new QueryExecute(connection.idForAutoId(), connection.nextId(),cancelSupport)));
     }
     public Request executeCloseStatement(int sessionId) {
-        DefaultDbSessionFuture<Void> resultFuture = new DefaultDbSessionFuture<Void>(connection);
+        DefaultDbSessionFuture<Void> resultFuture = new DefaultDbSessionFuture<Void>(connection.stackTrachingOptions(),connection);
         return new Request("ExecuteCloseStatement: ", resultFuture,
                 new AnswerNextRequest(connection), new CommandClose(sessionId, resultFuture));
     }
@@ -124,13 +124,13 @@ public class RequestCreator {
     }
 
     public Request beginTransaction(){
-        return new Request("Begin Transacton",new DefaultDbSessionFuture(connection),
+        return new Request("Begin Transacton",new DefaultDbSessionFuture(connection.stackTrachingOptions(),connection),
                 new AwaitOk(connection),
                 new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_OFF) );
 
     }
     public Request commitTransaction(){
-        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection);
+        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection.stackTrachingOptions(),connection);
         return new Request("Commit Transaction", future,
                 new CompleteTransaction(future),
                 new CompoundCommand(CancellationToken.NO_CANCELLATION,
@@ -139,7 +139,7 @@ public class RequestCreator {
 
     }
     public Request rollbackTransaction(){
-        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection);
+        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection.stackTrachingOptions(),connection);
         return new Request("Rollback Transaction", future,
                 new CompleteTransaction(future),
                 new CompoundCommand(CancellationToken.NO_CANCELLATION,

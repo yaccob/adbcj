@@ -76,7 +76,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         final DefaultDbFuture closeFuture;
         ArrayList<MySqlConnection> connectionsCopy;
         synchronized (connections) {
-            closeFuture = new DefaultDbFuture<Void>(stackTracingOption);
+            closeFuture = new DefaultDbFuture<Void>(stackTracingOptions());
             connectionsCopy = new ArrayList<MySqlConnection>(connections);
         }
         final AtomicInteger toCloseCount = new AtomicInteger(connectionsCopy.size());
@@ -114,7 +114,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
         final ChannelFuture channelFuture = bootstrap.connect();
 
-        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>();
+        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>(stackTracingOptions());
 
         channelFuture.addListener(new ChannelFutureListener() {
             @Override

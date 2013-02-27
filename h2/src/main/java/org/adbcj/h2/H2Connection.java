@@ -3,6 +3,7 @@ package org.adbcj.h2;
 import org.adbcj.*;
 import org.adbcj.support.*;
 import io.netty.channel.Channel;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,6 +283,11 @@ public class H2Connection implements Connection {
             throw new DbSessionClosedException("This connection is closed");
         }
     }
+
+    public StackTracingOptions stackTrachingOptions() {
+        return this.manager.stackTracingOptions();
+    }
+
     /**
      * Expects that it is executed withing the connection lock
      */

@@ -69,7 +69,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
 
         final ChannelFuture channelFuture = bootstrap.connect();
 
-        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>();
+        final DefaultDbFuture<Connection> connectFuture = new DefaultDbFuture<Connection>(stackTracingOptions());
 
         channelFuture.addListener(new ChannelFutureListener() {
             @Override
@@ -111,7 +111,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
             connectionsCopy = new ArrayList<H2Connection>(connections);
         }
         final AtomicInteger toCloseCount = new AtomicInteger(connectionsCopy.size());
-        final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>();
+        final DefaultDbFuture closeFuture = new DefaultDbFuture<Void>(stackTracingOptions());
         for (H2Connection connection : connectionsCopy) {
             connection.close(mode).addListener(new DbListener<Void>() {
                 @Override

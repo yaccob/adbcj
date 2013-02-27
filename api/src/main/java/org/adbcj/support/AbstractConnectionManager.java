@@ -15,7 +15,7 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
 
 
     protected final Map<String, String> properties;
-    protected final StackTracingOptions stackTracingOption;
+    private final StackTracingOptions stackTracingOption;
     private volatile DbFuture<Void> closeFuture = null;
 
     public AbstractConnectionManager(Map<String, String> properties) {
@@ -51,6 +51,10 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("The property " + StandardProperties.MAX_QUEUE_LENGTH + " has to be positive number");
         }
+    }
+
+    public StackTracingOptions stackTracingOptions(){
+        return stackTracingOption;
     }
 
     private static StackTracingOptions readStackTracingOption(Map<String, String> properties) {

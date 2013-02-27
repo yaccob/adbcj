@@ -3,6 +3,7 @@ package org.adbcj.mysql.codec;
 import org.adbcj.mysql.codec.decoding.ExpectOK;
 import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
@@ -31,7 +32,7 @@ public class OkResponseDecodeTest {
 	public void okRepsonseWithMessage() throws Exception {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_WITH_MESSAGE);
         MySqlClientDecoder decoder = new MySqlClientDecoder(new ExpectOK<Void>(
-                new DefaultDbFuture<Void>(), null));
+                new DefaultDbFuture<Void>(StackTracingOptions.GLOBAL_DEFAULT), null));
         OkResponse.RegularOK response = castToOk(in, decoder);
 
 
@@ -56,7 +57,7 @@ public class OkResponseDecodeTest {
 	public void okResponseOneAffectedRow() throws Exception {
 		InputStream in = new ByteArrayInputStream(OK_RESPONSE_ONE_AFFECTED_ROW);
 		MySqlClientDecoder decoder = new MySqlClientDecoder(new ExpectOK<Void>(
-                new DefaultDbFuture<Void>(), null));
+                new DefaultDbFuture<Void>(StackTracingOptions.FORCED_BY_INSTANCE), null));
         OkResponse.RegularOK response = castToOk(in, decoder);
 
 		assertEquals(response.getPacketLength(), 7);
