@@ -28,7 +28,7 @@ class Encoder extends MessageToByteEncoder<ClientToServerPacket> {
             out.flush();
             out.close();
             if(logger.isDebugEnabled()){
-                logger.debug("Sent {} down stream",request);
+                logger.debug("Sent {} to server",request);
             }
         } else{
             // was cancelled

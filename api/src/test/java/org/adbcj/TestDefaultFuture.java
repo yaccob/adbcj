@@ -179,6 +179,24 @@ public class TestDefaultFuture {
         Assert.assertEquals(1,count);
 
     }
+    @Test
+    public void hasSuppressLocation()throws InterruptedException{
+        DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(StackTracingOptions.FORCED_BY_INSTANCE);
+
+        toComplete.setException(new DbException("Expected"));
+
+        final DbException exception = toComplete.getException();
+        Assert.assertEquals(exception.getMessage(),"Expected");
+        Assert.assertEquals(exception.getSuppressed().length,1);
+
+        try{
+            toComplete.get();
+        }catch (DbException e){
+            Assert.assertEquals(exception.getMessage(),"Expected");
+            Assert.assertEquals(exception.getSuppressed().length,1);
+        }
+
+    }
 
     private void checkListener(final FutureState expectedState, ActionOnFuture future) throws InterruptedException {
         checkListenerByCompletingFuture(expectedState, future);

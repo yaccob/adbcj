@@ -66,7 +66,7 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     }
 
     private DbFuture<Connection> waitForConnection() {
-        final DefaultDbFuture<Connection> connectionWaiter =new DefaultDbFuture<Connection>();
+        final DefaultDbFuture<Connection> connectionWaiter =new DefaultDbFuture<Connection>(stackTracingOptions());
         waitingForConnection.offer(connectionWaiter);
         logger.info("Couldn't serve a connection, because the pool.maxPool limit of {} has been reached",config.getMaxConnections());
         timeOutTimer.schedule(new TimerTask() {
@@ -90,7 +90,7 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
     }
 
     public DbFuture<Void> returnConnection(PooledConnection pooledConnection) {
-        final DefaultDbFuture<Void> transactionReturned = new DefaultDbFuture<Void>();
+        final DefaultDbFuture<Void> transactionReturned = new DefaultDbFuture<Void>(stackTracingOptions());
         aliveConnections.remove(pooledConnection);
         if(pooledConnection.isMayBeCorrupted()){
             allocatedConnectionsCount.decrementAndGet();

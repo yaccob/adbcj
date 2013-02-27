@@ -42,12 +42,12 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
 
     public DefaultDbFuture(StackTracingOptions stackTraceOption,CancellationAction cancelAction) {
-        this.entryPointMarking = stackTraceOption.capture();
+        this.entryPointMarking = stackTraceOption.captureStacktraceAtEntryPoint();
         this.optionalCancellation = cancelAction;
     }
 
     public DefaultDbFuture(StackTracingOptions stackTraceOption) {
-        this.entryPointMarking = stackTraceOption.capture();
+        this.entryPointMarking = stackTraceOption.captureStacktraceAtEntryPoint();
         this.optionalCancellation = null;
     }
 
@@ -187,7 +187,14 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
 
     private DbException exceptionToReturn(Failed myState) {
         final Throwable theError = ((Failed) myState).getError();
-        return DbException.wrap(theError);
+        final DbException exception = DbException.wrap(theError);
+        if(null!=this.entryPointMarking){
+            final DbException exceptionWithOriginalLocation = new DbException(exception.getMessage());
+            exceptionWithOriginalLocation.setStackTrace(this.entryPointMarking.getStackTrace());
+            exceptionWithOriginalLocation.addSuppressed(exception);
+            return exceptionWithOriginalLocation;
+        }
+        return exception;
     }
 
     public final void setResult(T result) {

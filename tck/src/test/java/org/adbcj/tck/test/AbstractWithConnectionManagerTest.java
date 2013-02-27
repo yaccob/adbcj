@@ -8,6 +8,9 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Parameters;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author roman.stoffel@gamlor.info
  */
@@ -17,7 +20,13 @@ public abstract class AbstractWithConnectionManagerTest {
     @Parameters({"url", "user", "password"})
     @BeforeClass
     public void createConnectionManager(String url, String user, String password) {
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
+        connectionManager = ConnectionManagerProvider.createConnectionManager(url,
+                user,
+                password, properties());
+    }
+
+    protected Map<String,String> properties(){
+        return new HashMap<>();
     }
 
     @AfterClass

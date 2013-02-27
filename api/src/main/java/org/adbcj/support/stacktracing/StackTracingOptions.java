@@ -8,7 +8,7 @@ public enum StackTracingOptions{
      */
     GLOBAL_DEFAULT{
         @Override
-        public MarkEntryPointToAdbcjException capture() {
+        public MarkEntryPointToAdbcjException captureStacktraceAtEntryPoint() {
             return StackTraceCapturing.defaultCapture();
         }
     },
@@ -18,10 +18,10 @@ public enum StackTracingOptions{
      */
     FORCED_BY_INSTANCE{
         @Override
-        public MarkEntryPointToAdbcjException capture() {
+        public MarkEntryPointToAdbcjException captureStacktraceAtEntryPoint() {
             return new MarkEntryPointToAdbcjException();
         }
     };
 
-    public abstract MarkEntryPointToAdbcjException capture();
+    public abstract MarkEntryPointToAdbcjException captureStacktraceAtEntryPoint();
 }
