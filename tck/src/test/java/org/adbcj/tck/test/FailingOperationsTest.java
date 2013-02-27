@@ -20,7 +20,13 @@ public class FailingOperationsTest extends AbstractWithConnectionManagerTest {
             connection.executeQuery("SELECT invalid query so it will throw").get();
             Assert.fail("Expect failure");
         }catch (DbException ex){
-            Assert.assertTrue(ex.getSuppressed().length>=1);
+            boolean foundThisTestInStack = false;
+            for (StackTraceElement element : ex.getStackTrace()) {
+                if(element.getMethodName().equals("failingQuery")){
+                    foundThisTestInStack = true;
+                }
+            }
+            Assert.assertTrue(foundThisTestInStack);
 
         }
 

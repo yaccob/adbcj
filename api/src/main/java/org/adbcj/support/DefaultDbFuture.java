@@ -189,9 +189,8 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         final Throwable theError = ((Failed) myState).getError();
         final DbException exception = DbException.wrap(theError);
         if(null!=this.entryPointMarking){
-            final DbException exceptionWithOriginalLocation = new DbException(exception.getMessage());
+            final DbException exceptionWithOriginalLocation = new DbException(exception.getMessage(),exception);
             exceptionWithOriginalLocation.setStackTrace(this.entryPointMarking.getStackTrace());
-            exceptionWithOriginalLocation.addSuppressed(exception);
             return exceptionWithOriginalLocation;
         }
         return exception;

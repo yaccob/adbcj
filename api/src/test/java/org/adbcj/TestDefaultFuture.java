@@ -180,22 +180,32 @@ public class TestDefaultFuture {
 
     }
     @Test
-    public void hasSuppressLocation()throws InterruptedException{
+    public void hasOriginalRequestStack()throws InterruptedException{
         DefaultDbFuture<String> toComplete = new DefaultDbFuture<String>(StackTracingOptions.FORCED_BY_INSTANCE);
 
         toComplete.setException(new DbException("Expected"));
 
         final DbException exception = toComplete.getException();
-        Assert.assertEquals(exception.getMessage(),"Expected");
-        Assert.assertEquals(exception.getSuppressed().length,1);
+        Assert.assertEquals(exception.getMessage(), "Expected");
+        checkStack(exception);
 
         try{
             toComplete.get();
-        }catch (DbException e){
-            Assert.assertEquals(exception.getMessage(),"Expected");
-            Assert.assertEquals(exception.getSuppressed().length,1);
+        }catch (DbException ex){
+            checkStack(ex);
+
         }
 
+    }
+
+    private void checkStack(DbException ex) {
+        boolean foundThisTestInStack = false;
+        for (StackTraceElement element : ex.getStackTrace()) {
+            if(element.getMethodName().equals("hasOriginalRequestStack")){
+                foundThisTestInStack = true;
+            }
+        }
+        junit.framework.Assert.assertTrue(foundThisTestInStack);
     }
 
     private void checkListener(final FutureState expectedState, ActionOnFuture future) throws InterruptedException {
