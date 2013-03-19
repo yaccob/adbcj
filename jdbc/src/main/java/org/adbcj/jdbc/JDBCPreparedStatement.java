@@ -32,7 +32,7 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
 
     // Implements the execute interface method of the sub types
     @SuppressWarnings("UnusedDeclaration")
-    public DbSessionFuture execute(final Object... params) {
+    public DbFuture execute(final Object... params) {
         connection.checkClosed();
         return executeWithCompletion(new CompletionProducerFunction() {
             public T complete() throws Exception {
@@ -41,7 +41,7 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
         }, params);
     }
 
-    protected <TResult> DbSessionFuture executeWithCompletion(final CompletionProducerFunction<TResult> createCompletionAction, final Object[] params) {
+    protected <TResult> DbFuture executeWithCompletion(final CompletionProducerFunction<TResult> createCompletionAction, final Object[] params) {
         validateParameters(params);
         return connection.enqueueTransactionalRequest(new AbstractDbSession.Request<TResult>(connection) {
             @Override
@@ -103,7 +103,7 @@ class JDBCPreparedQuery extends JDBCPreparedStatement<ResultSet> implements Prep
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeWithCallback(final ResultHandler<T> eventHandler, final T accumulator, Object... params) {
+    public <T> DbFuture<T> executeWithCallback(final ResultHandler<T> eventHandler, final T accumulator, Object... params) {
         return executeWithCompletion(new CompletionProducerFunction<T>() {
             @Override
             public T complete() throws Exception {

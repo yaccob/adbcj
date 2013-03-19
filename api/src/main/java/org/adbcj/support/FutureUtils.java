@@ -2,8 +2,6 @@ package org.adbcj.support;
 
 import org.adbcj.DbFuture;
 import org.adbcj.DbListener;
-import org.adbcj.DbSession;
-import org.adbcj.DbSessionFuture;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -38,18 +36,6 @@ public final class FutureUtils {
     public static <TArgument,TResult> DefaultDbFuture<TResult> map(final DbFuture<TArgument> originalFuture,
                                                              final OneArgFunction<TArgument, TResult> tranformation) {
         DefaultDbFuture<TResult> completion = new DefaultDbFuture<TResult>(new CancellationAction() {
-            @Override
-            public boolean cancel() {
-                return originalFuture.cancel(true);
-            }
-        });
-        originalFuture.addListener(createTransformationListener(tranformation,completion));
-        return completion;
-    }
-    public static <TArgument,TResult> DefaultDbSessionFuture<TResult> map(final DbSessionFuture<TArgument> originalFuture,
-                                                                          DbSession session,
-                                                             final OneArgFunction<TArgument, TResult> tranformation) {
-        DefaultDbSessionFuture<TResult> completion = new DefaultDbSessionFuture<TResult>(session,new CancellationAction() {
             @Override
             public boolean cancel() {
                 return originalFuture.cancel(true);

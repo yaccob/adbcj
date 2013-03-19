@@ -1,11 +1,10 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.packets.SizeConstants;
 import org.adbcj.h2.protocol.StatusCodes;
-import org.adbcj.support.DefaultDbSessionFuture;
-import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -55,7 +54,4 @@ public abstract class StatusReadingDecoder implements DecoderState {
     protected void requestFailedContinue(H2DbException exception){};
 
 
-    static H2Connection connectionOfFuture(DefaultDbSessionFuture<?> future){
-        return (H2Connection) future.getSession();
-    }
 }

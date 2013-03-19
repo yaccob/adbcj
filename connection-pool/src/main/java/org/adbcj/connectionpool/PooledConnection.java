@@ -2,7 +2,6 @@ package org.adbcj.connectionpool;
 
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.FutureUtils;
 import org.adbcj.support.OneArgFunction;
 import org.slf4j.Logger;
@@ -55,13 +54,13 @@ public final class PooledConnection implements Connection, PooledResource {
     }
 
     @Override
-    public DbSessionFuture<Void> commit() {
+    public DbFuture<Void> commit() {
         checkClosed();
         return monitor(nativeConnection.commit());
     }
 
     @Override
-    public DbSessionFuture<Void> rollback() {
+    public DbFuture<Void> rollback() {
         checkClosed();
         return monitor(nativeConnection.rollback());
     }
@@ -73,25 +72,25 @@ public final class PooledConnection implements Connection, PooledResource {
     }
 
     @Override
-    public DbSessionFuture<ResultSet> executeQuery(String sql) {
+    public DbFuture<ResultSet> executeQuery(String sql) {
         checkClosed();
         return monitor(nativeConnection.executeQuery(sql));
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
+    public <T> DbFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
         checkClosed();
         return monitor(nativeConnection.executeQuery(sql, eventHandler, accumulator));
     }
 
     @Override
-    public DbSessionFuture<Result> executeUpdate(String sql) {
+    public DbFuture<Result> executeUpdate(String sql) {
         checkClosed();
         return monitor(nativeConnection.executeUpdate(sql));
     }
 
     @Override
-    public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+    public DbFuture<PreparedQuery> prepareQuery(String sql) {
         checkClosed();
         return monitor(nativeConnection.prepareQuery(sql), new OneArgFunction<PreparedQuery, PreparedQuery>() {
             @Override
@@ -104,7 +103,7 @@ public final class PooledConnection implements Connection, PooledResource {
     }
 
     @Override
-    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+    public DbFuture<PreparedUpdate> prepareUpdate(String sql) {
         checkClosed();
         return monitor(nativeConnection.prepareUpdate(sql), new OneArgFunction<PreparedUpdate, PreparedUpdate>() {
             @Override
@@ -180,22 +179,12 @@ public final class PooledConnection implements Connection, PooledResource {
     }
 
     <T> DbFuture<T> monitor(DbFuture<T> futureToMonitor) {
-        return monitor(futureToMonitor,OneArgFunction.ID_FUNCTION);
+        addMonitoring(futureToMonitor, (DefaultDbFuture) futureToMonitor);
+        return futureToMonitor;
     }
     <TArgument,TResult> DbFuture<TResult> monitor(DbFuture<TArgument> futureToMonitor,
                                                   OneArgFunction<TArgument,TResult> transform) {
         final DefaultDbFuture<TResult> newFuture = FutureUtils.map(futureToMonitor, transform);
-        addMonitoring(futureToMonitor, newFuture);
-        return newFuture;
-    }
-
-    <T> DbSessionFuture<T> monitor(DbSessionFuture<T> futureToMonitor) {
-        return monitor(futureToMonitor,OneArgFunction.ID_FUNCTION);
-    }
-
-    <TArgument,TResult>DbSessionFuture<TResult> monitor(DbSessionFuture<TArgument> futureToMonitor,
-                                   OneArgFunction<TArgument,TResult> transform) {
-        final DefaultDbSessionFuture<TResult> newFuture = FutureUtils.map(futureToMonitor,this, transform);
         addMonitoring(futureToMonitor, newFuture);
         return newFuture;
     }

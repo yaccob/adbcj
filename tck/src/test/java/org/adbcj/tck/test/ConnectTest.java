@@ -77,7 +77,7 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 	public void testNonImmediateClose() throws Exception {
 		Connection connection = connectionManager.connect().get();
 
-		List<DbSessionFuture<ResultSet>> futures = new ArrayList<DbSessionFuture<ResultSet>>();
+		List<DbFuture<ResultSet>> futures = new ArrayList<DbFuture<ResultSet>>();
 
 		for (int i = 0; i <5; i++) {
 			futures.add(connection.executeQuery(String.format("SELECT *, %d FROM simple_values", i)));
@@ -85,7 +85,7 @@ public class ConnectTest extends AbstractWithConnectionManagerTest{
 		try {
             connection.close().get(100, TimeUnit.SECONDS);
 		} catch (TimeoutException e) {
-			for (DbSessionFuture<ResultSet> future : futures) {
+			for (DbFuture<ResultSet> future : futures) {
 				if (future.isDone()) {
 					future.get(); // Will throw exception if failed
 				} else {

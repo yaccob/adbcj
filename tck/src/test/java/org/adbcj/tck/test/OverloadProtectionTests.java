@@ -18,7 +18,7 @@ public class OverloadProtectionTests  extends AbstractWithConnectionManagerTest 
         List<DbFuture> futures = new ArrayList<DbFuture>();
         try{
             for(int i=0;i<256;i++){
-                final DbSessionFuture<ResultSet> future = connection.executeQuery("SELECT 1");
+                final DbFuture<ResultSet> future = connection.executeQuery("SELECT 1");
                 futures.add(future);
 
             }

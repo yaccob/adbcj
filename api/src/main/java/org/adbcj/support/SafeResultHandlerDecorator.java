@@ -20,7 +20,7 @@ public class SafeResultHandlerDecorator<T> implements ResultHandler<T> {
         this.future = future;
     }
 
-    public static <T> ResultHandler<T> wrap(ResultHandler<T> eventHandler, DefaultDbSessionFuture<T> resultFuture) {
+    public static <T> ResultHandler<T> wrap(ResultHandler<T> eventHandler, DefaultDbFuture<T> resultFuture) {
         if(eventHandler instanceof SafeResultHandlerDecorator){
             return eventHandler;
         } else{

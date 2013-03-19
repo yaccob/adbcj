@@ -55,7 +55,7 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
 
     public void testErrorIsReported() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
-        DbSessionFuture<PreparedQuery> future = connection.prepareQuery("SELECT * FROM this:is:an:invalid:query ");
+        DbFuture<PreparedQuery> future = connection.prepareQuery("SELECT * FROM this:is:an:invalid:query ");
 
         try{
             ResultSet rows = future.get().execute().get();
@@ -67,11 +67,11 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
     }
     public void testMultiErrorReported() throws DbException, InterruptedException {
         Connection connection = connectionManager.connect().get();
-        DbSessionFuture<PreparedUpdate> insert = connection.prepareUpdate("INSERT INTO this:is:an:invalid:query(name)" +
+        DbFuture<PreparedUpdate> insert = connection.prepareUpdate("INSERT INTO this:is:an:invalid:query(name)" +
                 " VALUES(42)");
-        DbSessionFuture<PreparedUpdate> update = connection.prepareUpdate("UPDATE this:is:an:invalid:query SET name=42 WHERE name =1" +
+        DbFuture<PreparedUpdate> update = connection.prepareUpdate("UPDATE this:is:an:invalid:query SET name=42 WHERE name =1" +
                 " VALUES(42)");
-        DbSessionFuture<PreparedQuery> select = connection.prepareQuery("SELECT * FROM this:is:an:invalid:query ");
+        DbFuture<PreparedQuery> select = connection.prepareQuery("SELECT * FROM this:is:an:invalid:query ");
 
         try{
             Result result = insert.get().execute().get();
@@ -152,7 +152,7 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
                 " WHERE str_val LIKE ?").get();
 
 
-        DbSessionFuture<StringBuilder> resultFuture = query.executeWithCallback(SelectTest.buildStringInCallback(),
+        DbFuture<StringBuilder> resultFuture = query.executeWithCallback(SelectTest.buildStringInCallback(),
                 new StringBuilder(),"Zero");
 
         StringBuilder result = resultFuture.get();
@@ -169,7 +169,7 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
 
         PreparedQuery query = connection.prepareQuery("SELECT str_val FROM simple_values " +
                 " WHERE str_val LIKE ?").get();
-        DbSessionFuture<StringBuilder> resultFuture = query.executeWithCallback(new AbstractResultHandler<StringBuilder>() {
+        DbFuture<StringBuilder> resultFuture = query.executeWithCallback(new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 throw new RuntimeException("Failure here");
@@ -195,15 +195,14 @@ public class PreparedStatementsTest extends AbstractWithConnectionManagerTest{
 
         PreparedQuery query = connection.prepareQuery("SELECT str_val FROM simple_values " +
                 " WHERE str_val LIKE ?").get();
-        DbSessionFuture<StringBuilder> causeOfError = query.executeWithCallback(new AbstractResultHandler<StringBuilder>() {
+        DbFuture<StringBuilder> causeOfError = query.executeWithCallback(new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
                 throw new RuntimeException("Failure here");
             }
         }, new StringBuilder(),"Zero");
-        final DbSessionFuture<ResultSet> future = query.execute("Two");
+        final DbFuture<ResultSet> future = query.execute("Two");
         ResultSet resultSet = future.get();
-        Assert.assertEquals(future.getSession(),connection);
         String result = resultSet.get(0).get(0).getString();
         Assert.assertEquals(result,"Two");
     }

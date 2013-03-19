@@ -1,8 +1,9 @@
 package org.adbcj.mysql.codec.decoding;
 
 import org.adbcj.ResultHandler;
+import org.adbcj.mysql.codec.MySqlConnection;
 import org.adbcj.mysql.codec.packets.OkResponse;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.OneArgFunction;
 
 /**
@@ -11,14 +12,16 @@ import org.adbcj.support.OneArgFunction;
 public class ExpectStatementResult extends ExpectQueryResult {
 
     public ExpectStatementResult(Row.RowDecodingType decodingType,
-                                 DefaultDbSessionFuture future,
-                                 ResultHandler eventHandler, Object accumulator) {
-        super(decodingType, future, eventHandler, accumulator);
+                                 DefaultDbFuture future,
+                                 MySqlConnection connection,
+                                 ResultHandler eventHandler,
+                                 Object accumulator) {
+        super(decodingType, future,connection, eventHandler, accumulator);
     }
 
 
     @Override
     protected ResultAndState handleOk(OkResponse.RegularOK regularOK) {
-        return ExpectUpdateResult.handleUpdateResult(regularOK, future, OneArgFunction.ID_FUNCTION);
+        return ExpectUpdateResult.handleUpdateResult(regularOK, future,connection, OneArgFunction.ID_FUNCTION);
     }
 }

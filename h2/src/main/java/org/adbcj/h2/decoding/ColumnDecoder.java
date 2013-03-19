@@ -1,12 +1,12 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.Field;
 import org.adbcj.ResultHandler;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultField;
-import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -21,28 +21,32 @@ import static org.adbcj.h2.decoding.IoUtils.*;
 public class ColumnDecoder<T>  implements DecoderState {
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
-    private final DefaultDbSessionFuture<T> resultFuture;
+    private final DefaultDbFuture<T> resultFuture;
+    private final H2Connection connection;
     private final int rows;
     private final int columnsAvailable;
     private final List<Field> columnsBuildUp;
 
     public ColumnDecoder(ResultHandler<T> eventHandler,
                           T accumulator,
-                          DefaultDbSessionFuture<T> resultFuture,
+                          DefaultDbFuture<T> resultFuture,
+                          H2Connection connection,
                           int rows,
                           int columnsAvailable){
-        this(eventHandler, accumulator, resultFuture, rows, columnsAvailable, new ArrayList<Field>());
+        this(eventHandler, accumulator, resultFuture,connection, rows, columnsAvailable, new ArrayList<Field>());
     }
 
     private ColumnDecoder(ResultHandler<T> eventHandler,
                          T accumulator,
-                         DefaultDbSessionFuture<T> resultFuture,
+                         DefaultDbFuture<T> resultFuture,
+                         H2Connection connection,
                          int rows,
                          int columnsAvailable,
                          List<Field> columnsBuildUp) {
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
         this.resultFuture = resultFuture;
+        this.connection = connection;
         this.rows = rows;
         this.columnsAvailable = columnsAvailable;
         this.columnsBuildUp = columnsBuildUp;
@@ -87,7 +91,11 @@ public class ColumnDecoder<T>  implements DecoderState {
                 return ResultAndState.newState(
                         new ColumnDecoder<T>(eventHandler,
                                 accumulator,
-                                resultFuture,rows, columnsAvailable, columnsBuildUp));
+                                resultFuture,
+                                connection,
+                                rows,
+                                columnsAvailable,
+                                columnsBuildUp));
             }
         } else{
             return ResultAndState.waitForMoreInput(this);
@@ -97,7 +105,7 @@ public class ColumnDecoder<T>  implements DecoderState {
     @Override
     public ResultAndState handleException(H2DbException exception) {
         resultFuture.trySetException(exception);
-        return ResultAndState.newState(new AnswerNextRequest((H2Connection) resultFuture.getSession()));
+        return ResultAndState.newState(new AnswerNextRequest(connection));
     }
 
     private ResultAndState goToRowParsing() {
@@ -105,12 +113,15 @@ public class ColumnDecoder<T>  implements DecoderState {
             eventHandler.startResults(accumulator);
             eventHandler.endResults(accumulator);
             resultFuture.trySetResult(accumulator);
-            return ResultAndState.newState(new AnswerNextRequest((H2Connection) resultFuture.getSession()));
+            return ResultAndState.newState(new AnswerNextRequest(connection));
         } else{
             return ResultAndState.newState(
                     new RowDecoder<T>(eventHandler,
                             accumulator,
-                            resultFuture, columnsBuildUp, rows)
+                            resultFuture,
+                            connection,
+                            columnsBuildUp,
+                            rows)
             );
 
         }

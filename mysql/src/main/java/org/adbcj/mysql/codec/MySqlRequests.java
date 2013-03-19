@@ -25,37 +25,37 @@ public final class MySqlRequests {
     }
     public static <T> MySqlRequest executeQuery(String query, ResultHandler<T> eventHandler, T accumulator, MySqlConnection connection) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<T> future = new DefaultDbSessionFuture<T>(connection.stackTraceOptions(),connection,cancelSupport);
+        DefaultDbFuture<T> future = new DefaultDbFuture<T>(connection.stackTraceOptions(),cancelSupport);
         ResultHandler<T> handleFailures = SafeResultHandlerDecorator.wrap(eventHandler, future);
         return new MySqlRequest("Query: "+query,future,
-                new ExpectQueryResult<T>(Row.RowDecodingType.STRING_BASED, future, handleFailures,accumulator),
+                new ExpectQueryResult<T>(Row.RowDecodingType.STRING_BASED, future,connection, handleFailures,accumulator),
                 new StringCommandRequest(Command.QUERY,query,cancelSupport));
     }
     public static <T> MySqlRequest executePreparedQuery(StatementPreparedEOF stmp,
                                                         Object[] data,
                                                         ResultHandler<T> eventHandler,
                                                         T accumulator, MySqlConnection connection) {
-        DefaultDbSessionFuture<T> future = new DefaultDbSessionFuture<T>(connection.stackTraceOptions(),connection);
+        DefaultDbFuture<T> future = new DefaultDbFuture<T>(connection.stackTraceOptions());
         ResultHandler<T> handleFailures = SafeResultHandlerDecorator.wrap(eventHandler, future);
         return new MySqlRequest("Execute-Statement",future,
-                new ExpectStatementResult(Row.RowDecodingType.BINARY, future, handleFailures,accumulator),
+                new ExpectStatementResult(Row.RowDecodingType.BINARY, future,connection, handleFailures,accumulator),
                 new PreparedStatementRequest(stmp.getHandlerId(),stmp.getParametersTypes(),data));
     }
 
     public static MySqlRequest executeUpdate(String sql, MySqlConnection connection) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection.stackTraceOptions(),connection,cancelSupport);
+        DefaultDbFuture<Result> future = new DefaultDbFuture<Result>(connection.stackTraceOptions(),cancelSupport);
         return new MySqlRequest("Update: "+sql,future,
-                new ExpectUpdateResult(future),
+                new ExpectUpdateResult(future,connection),
                 new StringCommandRequest(Command.QUERY,sql,cancelSupport));
     }
 
     public static MySqlRequest prepareQuery(String sql, MySqlConnection connection) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<PreparedQuery> future = new DefaultDbSessionFuture<PreparedQuery>(connection.stackTraceOptions(),connection,cancelSupport);
+        DefaultDbFuture<PreparedQuery> future = new DefaultDbFuture<PreparedQuery>(connection.stackTraceOptions(),cancelSupport);
 
         return new MySqlRequest("Prepare-Query: "+sql,future,
-                new ExpectPreparQuery(future),
+                new ExpectPreparQuery(future,connection),
                 new StringCommandRequest(Command.STATEMENT_PREPARE,sql,cancelSupport));
     }
 
@@ -68,22 +68,22 @@ public final class MySqlRequests {
     }
 
     public static MySqlRequest beginTransaction(MySqlConnection connection) {
-        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection.stackTraceOptions(),connection);
+        DefaultDbFuture<Result> future = new DefaultDbFuture<Result>(connection.stackTraceOptions());
         return new MySqlRequest("Begin-Transaction: ",future,
-                new ExpectUpdateResult(future),
+                new ExpectUpdateResult(future,connection),
                 new StringCommandRequest(Command.QUERY, "begin",CancellationToken.NO_CANCELLATION));
     }
 
     public static MySqlRequest commitTransaction(MySqlConnection connection) {
-        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection.stackTraceOptions(),connection);
+        DefaultDbFuture<Result> future = new DefaultDbFuture<Result>(connection.stackTraceOptions());
         return new MySqlRequest("Commit-Transaction: ",future,
-                new ExpectUpdateResult(future,TO_VOID),
+                new ExpectUpdateResult(future,connection,TO_VOID),
                 new StringCommandRequest(Command.QUERY, "commit",CancellationToken.NO_CANCELLATION));
     }
     public static MySqlRequest rollbackTransaction(MySqlConnection connection) {
-        DefaultDbSessionFuture<Result> future = new DefaultDbSessionFuture<Result>(connection.stackTraceOptions(),connection);
+        DefaultDbFuture<Result> future = new DefaultDbFuture<Result>(connection.stackTraceOptions());
         return new MySqlRequest("Rollback-Transaction: ",future,
-                new ExpectUpdateResult(future,TO_VOID),
+                new ExpectUpdateResult(future,connection,TO_VOID),
                 new StringCommandRequest(Command.QUERY, "rollback",CancellationToken.NO_CANCELLATION));
     }
 }

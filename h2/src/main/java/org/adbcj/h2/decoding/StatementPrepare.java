@@ -1,15 +1,14 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.Connection;
-import org.adbcj.DbException;
 import org.adbcj.PreparedQuery;
-import org.adbcj.PreparedUpdate;
-import org.adbcj.h2.*;
+import org.adbcj.h2.H2Connection;
+import org.adbcj.h2.H2DbException;
+import org.adbcj.h2.H2PreparedQuery;
 import org.adbcj.h2.packets.SizeConstants;
 import org.adbcj.h2.protocol.StatusCodes;
 import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultDbSessionFuture;
-import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -20,10 +19,6 @@ import java.io.IOException;
 public abstract class StatementPrepare<T> extends StatusReadingDecoder {
     private final DefaultDbFuture<T> resultFuture;
 
-    public StatementPrepare(DefaultDbSessionFuture<T> resultFuture) {
-        super((H2Connection) resultFuture.getSession());
-        this.resultFuture = resultFuture;
-    }
     public StatementPrepare(DefaultDbFuture<T> resultFuture, H2Connection connection) {
         super(connection);
         this.resultFuture = resultFuture;
@@ -49,42 +44,6 @@ public abstract class StatementPrepare<T> extends StatusReadingDecoder {
     @Override
     protected void requestFailedContinue(H2DbException exception) {
         resultFuture.trySetException(exception);
-    }
-
-    public static <T> StatementPrepare<T> continueWithRequest(final Request followUpRequest,
-                                                          DefaultDbSessionFuture<T> resultFuture){
-        return new StatementPrepare<T>(resultFuture) {
-            @Override
-            protected void handleCompletion(H2Connection connection, int paramsCount) {
-                if(paramsCount==0){
-                    connection.forceQueRequest(followUpRequest);
-                }else{
-                    throw new DbException("Implementation error: Expect 0 parameters, but got: "+paramsCount);
-                }
-            }
-        };
-    }
-
-    public static StatementPrepare<PreparedQuery> createPrepareQuery(final DefaultDbSessionFuture<PreparedQuery> resultFuture,
-                                                                     final int sessionId) {
-        return new StatementPrepare<PreparedQuery>(resultFuture) {
-            @Override
-            protected void handleCompletion(H2Connection connection, int paramsCount) {
-                H2PreparedQuery query = new H2PreparedQuery(connection,sessionId,paramsCount);
-                resultFuture.trySetResult(query);
-            }
-        };
-    }
-
-    public static StatementPrepare<PreparedUpdate> createPrepareUpdate(final DefaultDbSessionFuture<PreparedUpdate> resultFuture,
-                                                                     final int sessionId) {
-        return new StatementPrepare<PreparedUpdate>(resultFuture) {
-            @Override
-            protected void handleCompletion(H2Connection connection, int paramsCount) {
-                H2PreparedUpdate query = new H2PreparedUpdate(connection,sessionId,paramsCount);
-                resultFuture.trySetResult(query);
-            }
-        };
     }
 
     public static StatementPrepare<Connection> createOnlyPassFailure(

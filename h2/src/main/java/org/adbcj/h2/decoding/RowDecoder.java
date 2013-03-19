@@ -1,13 +1,13 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.Field;
 import org.adbcj.ResultHandler;
 import org.adbcj.Value;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.protocol.ReadUtils;
-import org.adbcj.support.DefaultDbSessionFuture;
-import io.netty.channel.Channel;
+import org.adbcj.support.DefaultDbFuture;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -19,28 +19,32 @@ import java.util.List;
 public class RowDecoder<T> implements DecoderState {
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
-    private final DefaultDbSessionFuture<T> resultFuture;
+    private final DefaultDbFuture<T> resultFuture;
+    private final H2Connection connection;
     private final List<Field> fields;
     private final int availableRows;
     private final int rowToRead;
 
     public RowDecoder(ResultHandler<T> eventHandler,
                       T accumulator,
-                      DefaultDbSessionFuture<T> resultFuture,
+                      DefaultDbFuture<T> resultFuture,
+                      H2Connection connection,
                       List<Field> fields,
                       int availableRows) {
-        this(eventHandler, accumulator, resultFuture,fields, availableRows, 0);
+        this(eventHandler, accumulator, resultFuture,connection,fields, availableRows, 0);
     }
 
     public RowDecoder(ResultHandler<T> eventHandler,
                       T accumulator,
-                      DefaultDbSessionFuture<T> resultFuture,
+                      DefaultDbFuture<T> resultFuture,
+                      H2Connection connection,
                       List<Field> fields,
                       int availableRows,
                       int rowToRead) {
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
         this.resultFuture = resultFuture;
+        this.connection = connection;
         this.fields = fields;
         this.availableRows = availableRows;
         this.rowToRead = rowToRead;
@@ -78,7 +82,7 @@ public class RowDecoder<T> implements DecoderState {
                 return finishResultRead();
             } else{
                 return ResultAndState.newState(
-                        new RowDecoder<T>(eventHandler, accumulator, resultFuture, fields, availableRows,rowToRead+1)
+                        new RowDecoder<T>(eventHandler, accumulator, resultFuture,connection, fields, availableRows,rowToRead+1)
                 );
             }
         } else{
@@ -89,13 +93,13 @@ public class RowDecoder<T> implements DecoderState {
     @Override
     public ResultAndState handleException(H2DbException exception) {
         resultFuture.trySetException(exception);
-        return ResultAndState.newState(new AnswerNextRequest((H2Connection) resultFuture.getSession()));
+        return ResultAndState.newState(new AnswerNextRequest(connection));
     }
 
     private ResultAndState finishResultRead() {
         eventHandler.endResults(accumulator);
         resultFuture.trySetResult(accumulator);
-        return ResultAndState.newState(new AnswerNextRequest((H2Connection) resultFuture.getSession()));
+        return ResultAndState.newState(new AnswerNextRequest(connection));
     }
 
 }

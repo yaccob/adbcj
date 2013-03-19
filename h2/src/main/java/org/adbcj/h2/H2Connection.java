@@ -62,7 +62,7 @@ public class H2Connection implements Connection {
     }
 
     @Override
-    public DbSessionFuture<Void> commit() {
+    public DbFuture<Void> commit() {
         checkClosed();
         synchronized (lock){
             if (!isInTransaction()) {
@@ -71,12 +71,12 @@ public class H2Connection implements Connection {
             final Request request = requestCreator.commitTransaction();
             queRequest(request);
             isInTransaction = false;
-            return (DbSessionFuture<Void>) request.getToComplete();
+            return (DbFuture<Void>) request.getToComplete();
         }
     }
 
     @Override
-    public DbSessionFuture<Void> rollback() {
+    public DbFuture<Void> rollback() {
         checkClosed();
         synchronized (lock){
             if (!isInTransaction()) {
@@ -85,7 +85,7 @@ public class H2Connection implements Connection {
             final Request request = requestCreator.rollbackTransaction();
             queRequest(request);
             isInTransaction = false;
-            return (DbSessionFuture<Void>) request.getToComplete();
+            return (DbFuture<Void>) request.getToComplete();
         }
     }
 
@@ -95,45 +95,45 @@ public class H2Connection implements Connection {
     }
 
     @Override
-    public DbSessionFuture<ResultSet> executeQuery(String sql) {
+    public DbFuture<ResultSet> executeQuery(String sql) {
         checkClosed();
         ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
-        return (DbSessionFuture) executeQuery(sql, eventHandler, resultSet);
+        return (DbFuture) executeQuery(sql, eventHandler, resultSet);
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
+    public <T> DbFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
         checkClosed();
         synchronized (lock){
             final Request request = requestCreator.createQuery(sql, eventHandler, accumulator);
             queRequest(request);
-            return (DbSessionFuture<T>) request.getToComplete();
+            return (DbFuture<T>) request.getToComplete();
         }
     }
 
     @Override
-    public DbSessionFuture<Result> executeUpdate(String sql) {
+    public DbFuture<Result> executeUpdate(String sql) {
         checkClosed();
         final Request request = requestCreator.executeUpdate(sql);
         queRequest(request);
-        return (DbSessionFuture) request.getToComplete();
+        return (DbFuture) request.getToComplete();
     }
 
     @Override
-    public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+    public DbFuture<PreparedQuery> prepareQuery(String sql) {
         checkClosed();
         final Request request = requestCreator.executePrepareQuery(sql);
         queRequest(request);
-        return (DbSessionFuture<PreparedQuery>) request.getToComplete();
+        return (DbFuture<PreparedQuery>) request.getToComplete();
     }
 
     @Override
-    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+    public DbFuture<PreparedUpdate> prepareUpdate(String sql) {
         checkClosed();
         final Request request = requestCreator.executePrepareUpdate(sql);
         queRequest(request);
-        return (DbSessionFuture<PreparedUpdate>) request.getToComplete();
+        return (DbFuture<PreparedUpdate>) request.getToComplete();
     }
 
     @Override

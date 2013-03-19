@@ -32,8 +32,8 @@ public class CloseConnectionsTest {
     public void closingManagerClosesConnections(String url, String user, String password) throws InterruptedException {
         final ConnectionManager manager = ConnectionManagerProvider.createConnectionManager(url, user, password);
         final Connection c1 = manager.connect().get();
-        final DbSessionFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(2)");
-        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(2)");
+        final DbFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(2)");
+        final DbFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(2)");
         final Connection c2 = manager.connect().get();
         c2.beginTransaction();
         manager.close().get();
@@ -49,8 +49,8 @@ public class CloseConnectionsTest {
         final Connection c1 = manager.connect().get();
         final Connection c2 = manager.connect().get();
         c2.beginTransaction();
-        final DbSessionFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(3)");
-        final DbSessionFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(4)");
+        final DbFuture<ResultSet> runningQuery = c1.executeQuery("SELECT SLEEP(3)");
+        final DbFuture<ResultSet> runningQuery2 = c1.executeQuery("SELECT SLEEP(4)");
         manager.close(CloseMode.CANCEL_PENDING_OPERATIONS).get();
 
 
@@ -67,7 +67,7 @@ public class CloseConnectionsTest {
         final Connection connection = connectionManager.connect().get();
         final PreparedQuery preparedSelect = connection.prepareQuery("SELECT 1").get();
         final PreparedUpdate preparedUpdate = connection.prepareUpdate("SELECT 1").get();
-        final DbSessionFuture<ResultSet> runningQuery = connection.executeQuery("SELECT SLEEP(5)");
+        final DbFuture<ResultSet> runningQuery = connection.executeQuery("SELECT SLEEP(5)");
         final DbFuture<Void> closeFuture = connection.close();
         Assert.assertTrue(connection.isClosed());
 
@@ -109,11 +109,11 @@ public class CloseConnectionsTest {
     public void forceCloseConnections() throws InterruptedException {
         final Connection connection = connectionManager.connect().get();
 
-        final DbSessionFuture<ResultSet> rs1 = connection.executeQuery("SELECT int_val, str_val " +
+        final DbFuture<ResultSet> rs1 = connection.executeQuery("SELECT int_val, str_val " +
                 "FROM simple_values where str_val LIKE 'Not-In-Database-Value'");
-        final DbSessionFuture<ResultSet> rs2 = connection.executeQuery("SELECT int_val, str_val " +
+        final DbFuture<ResultSet> rs2 = connection.executeQuery("SELECT int_val, str_val " +
                 "FROM simple_values where str_val LIKE 'Not-In-Database-Value'");
-        final DbSessionFuture<ResultSet> rs3 = connection.executeQuery("SELECT int_val, str_val " +
+        final DbFuture<ResultSet> rs3 = connection.executeQuery("SELECT int_val, str_val " +
                 "FROM simple_values where str_val LIKE 'Not-In-Database-Value'");
 
         connection.close(CloseMode.CANCEL_PENDING_OPERATIONS);
@@ -127,7 +127,7 @@ public class CloseConnectionsTest {
         }
     }
 
-    private void checkClosed(final Connection c1, DbSessionFuture<ResultSet> runningQuery, DbSessionFuture<ResultSet> runningQuery2, Connection c2) {
+    private void checkClosed(final Connection c1, DbFuture<ResultSet> runningQuery, DbFuture<ResultSet> runningQuery2, Connection c2) {
         shouldThrowException(new NoArgAction() {
             @Override
             public void invoke() {

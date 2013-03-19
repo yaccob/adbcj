@@ -1,9 +1,10 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.channel.Channel;
+import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.protocol.StatusCodes;
-import org.adbcj.support.DefaultDbSessionFuture;
-import io.netty.channel.Channel;
+import org.adbcj.support.DefaultDbFuture;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -12,10 +13,10 @@ import java.io.IOException;
  * @author roman.stoffel@gamlor.info
  */
 public class CompleteTransaction extends StatusReadingDecoder {
-    final DefaultDbSessionFuture<Void> toComplete;
+    final DefaultDbFuture<Void> toComplete;
 
-    public CompleteTransaction(DefaultDbSessionFuture<Void> toComplete) {
-        super(connectionOfFuture(toComplete));
+    public CompleteTransaction(DefaultDbFuture<Void> toComplete,H2Connection connection) {
+        super(connection);
         this.toComplete = toComplete;
     }
 

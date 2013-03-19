@@ -1,12 +1,12 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.ResultHandler;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.packets.SizeConstants;
 import org.adbcj.h2.protocol.StatusCodes;
-import org.adbcj.support.DefaultDbSessionFuture;
-import io.netty.channel.Channel;
+import org.adbcj.support.DefaultDbFuture;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -17,12 +17,13 @@ import java.io.IOException;
 public class QueryHeader<T> extends StatusReadingDecoder {
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
-    private final DefaultDbSessionFuture<T> resultFuture;
+    private final DefaultDbFuture<T> resultFuture;
 
     public QueryHeader(ResultHandler<T> eventHandler,
                        T accumulator,
-                       DefaultDbSessionFuture<T> resultFuture) {
-        super((H2Connection) resultFuture.getSession());
+                       DefaultDbFuture<T> resultFuture,
+                       H2Connection connection) {
+        super(connection);
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
         this.resultFuture = resultFuture;
@@ -43,7 +44,10 @@ public class QueryHeader<T> extends StatusReadingDecoder {
             return ResultAndState.newState(
                     new ColumnDecoder<T>(eventHandler,
                             accumulator,
-                            resultFuture, rowCount, columnCount)
+                            resultFuture,
+                            connection,
+                            rowCount,
+                            columnCount)
             );
         }
 

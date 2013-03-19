@@ -1,5 +1,6 @@
 package org.adbcj.mysql.codec.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.Field;
 import org.adbcj.ResultHandler;
 import org.adbcj.Value;
@@ -9,9 +10,8 @@ import org.adbcj.mysql.codec.MySqlConnection;
 import org.adbcj.mysql.codec.MysqlField;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.ResultSetRowResponse;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultValue;
-import io.netty.channel.Channel;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -23,18 +23,21 @@ import java.util.List;
 public class Row<T> extends DecoderState {
     private final RowDecodingType rowDecoding;
     private final List<MysqlField> fields;
-    private final DefaultDbSessionFuture<T> future;
+    private final DefaultDbFuture<T> future;
+    private final MySqlConnection connection;
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
 
     public Row(RowDecodingType rowDecoding,
                List<MysqlField> fields,
-               DefaultDbSessionFuture<T> future,
+               DefaultDbFuture<T> future,
+               MySqlConnection connection,
                ResultHandler<T> eventHandler,
                T accumulator) {
         this.rowDecoding = rowDecoding;
         this.fields = fields;
         this.future = future;
+        this.connection = connection;
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
     }
@@ -47,7 +50,7 @@ public class Row<T> extends DecoderState {
             eventHandler.endResults(accumulator);
             future.trySetResult(accumulator);
             EofResponse rowEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.ROW);
-            return result(new AcceptNextResponse((MySqlConnection) future.getSession()), rowEof);
+            return result(new AcceptNextResponse(connection), rowEof);
         }
 
         Value[] values = rowDecoding.decode(in, fieldCount, this);
@@ -56,7 +59,7 @@ public class Row<T> extends DecoderState {
             eventHandler.value(value, accumulator);
         }
         eventHandler.endRow(accumulator);
-        return result(new Row<T>(rowDecoding, fields, future, eventHandler, accumulator), new ResultSetRowResponse(length, packetNumber, values));
+        return result(new Row<T>(rowDecoding, fields, future,connection, eventHandler, accumulator), new ResultSetRowResponse(length, packetNumber, values));
 
     }
 
