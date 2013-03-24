@@ -224,11 +224,6 @@ class Handler implements ChannelHandler {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
     }
 
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-    }
-
-
 
 }
 

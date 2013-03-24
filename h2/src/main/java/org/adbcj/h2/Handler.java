@@ -33,10 +33,5 @@ class Handler  implements ChannelHandler {
         cause.getCause().printStackTrace();
     }
 
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-    }
-
-
 
 }
