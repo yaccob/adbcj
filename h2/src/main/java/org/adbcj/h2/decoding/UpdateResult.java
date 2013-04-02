@@ -1,14 +1,17 @@
 package org.adbcj.h2.decoding;
 
-import org.adbcj.*;
+import io.netty.channel.Channel;
+import org.adbcj.DbFuture;
+import org.adbcj.DbListener;
+import org.adbcj.FutureState;
+import org.adbcj.Result;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.H2Result;
 import org.adbcj.h2.protocol.StatusCodes;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
-import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -18,10 +21,10 @@ import java.util.ArrayList;
  * @author roman.stoffel@gamlor.info
  */
 public class UpdateResult  extends StatusReadingDecoder  {
-    private final DefaultDbSessionFuture<Result> resultHandler;
+    private final DefaultDbFuture<Result> resultHandler;
 
-    public UpdateResult(DefaultDbSessionFuture<Result> resultHandler) {
-        super(connectionOfFuture(resultHandler));
+    public UpdateResult(DefaultDbFuture<Result> resultHandler,H2Connection connection) {
+        super(connection);
         this.resultHandler = resultHandler;
     }
 
@@ -32,8 +35,7 @@ public class UpdateResult  extends StatusReadingDecoder  {
         final ResultOrWait<Integer> affected = IoUtils.tryReadNextInt(stream, ResultOrWait.Start);
         final ResultOrWait<Boolean> autoCommit = IoUtils.tryReadNextBoolean(stream, affected);
         if(autoCommit.couldReadResult){
-            final H2Connection session = (H2Connection) resultHandler.getSession();
-            DefaultDbSessionFuture<DefaultResultSet> futureForAutoKeys = new DefaultDbSessionFuture<DefaultResultSet>(session.stackTrachingOptions(),session);
+            DefaultDbFuture<DefaultResultSet> futureForAutoKeys = new DefaultDbFuture<DefaultResultSet>(connection.stackTrachingOptions());
             DefaultResultSet result = new DefaultResultSet();
             DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
 
@@ -60,7 +62,7 @@ public class UpdateResult  extends StatusReadingDecoder  {
 
             return ResultAndState.newState(new QueryHeader<DefaultResultSet>(handler,
                     result,
-                    futureForAutoKeys));
+                    futureForAutoKeys,connection));
         } else{
             return ResultAndState.waitForMoreInput(this);
         }

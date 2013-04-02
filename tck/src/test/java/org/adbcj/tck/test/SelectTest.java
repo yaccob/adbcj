@@ -146,7 +146,7 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
         Connection connection = connectionManager.connect().get();
 
 
-        DbSessionFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
+        DbFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
                 "WHERE str_val LIKE 'Zero'", buildStringInCallback(), new StringBuilder());
 
         StringBuilder result = resultFuture.get();
@@ -160,7 +160,7 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
         Connection connection = connectionManager.connect().get();
 
         final CountDownLatch latch = new CountDownLatch(1);
-        DbSessionFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
+        DbFuture<StringBuilder> resultFuture = connection.executeQuery("SELECT str_val FROM simple_values " +
                 "WHERE str_val LIKE 'Zero'", new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
@@ -200,7 +200,7 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
     public void testExceptionInCallbackHandlerDoesNotAffectNextCall() throws Exception {
         Connection connection = connectionManager.connect().get();
 
-        DbSessionFuture<StringBuilder> errorCause = connection.executeQuery("SELECT str_val FROM simple_values " +
+        DbFuture<StringBuilder> errorCause = connection.executeQuery("SELECT str_val FROM simple_values " +
                 "WHERE str_val LIKE 'Zero'", new AbstractResultHandler<StringBuilder>() {
             @Override
             public void startFields(StringBuilder accumulator) {
@@ -223,7 +223,7 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
     public void testBrokenSelect() throws Exception {
         Connection connection = connectionManager.connect().get();
 
-        DbSessionFuture<ResultSet> future = connection.executeQuery("SELECT broken_query");
+        DbFuture<ResultSet> future = connection.executeQuery("SELECT broken_query");
         try {
             future.get(5, TimeUnit.SECONDS);
             throw new AssertionError("Issues a bad query, future should have failed");
@@ -239,7 +239,7 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
     public void testCanUseProjectedNames() throws Exception {
         Connection connection = connectionManager.connect().get();
 
-        DbSessionFuture<ResultSet> future = connection.executeQuery("SELECT int_val AS number, str_val AS otherName FROM simple_values " +
+        DbFuture<ResultSet> future = connection.executeQuery("SELECT int_val AS number, str_val AS otherName FROM simple_values " +
                 " WHERE str_val LIKE 'Two'");
         try {
             final ResultSet values = future.get(5, TimeUnit.SECONDS);

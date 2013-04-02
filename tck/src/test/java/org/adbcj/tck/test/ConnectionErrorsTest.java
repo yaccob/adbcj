@@ -27,6 +27,21 @@ public class ConnectionErrorsTest {
         }
     }
 
+
+    @Parameters({"url", "user", "password"})
+    @Test
+    public void expectErrorWithWrongSchema(String url, String user, String pwd) throws Exception {
+        assumeIsOnLocalhost(url);
+        String unconnectableUrl = wrongSchema(url);
+        ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(unconnectableUrl, user, pwd);
+        try{
+            Connection connection = connectionManager.connect().get();
+            Assert.fail("should not be able to connect, but got" + connection);
+        }catch (DbException e){
+            // expected
+        }
+    }
+
     private void assumeIsOnLocalhost(String url) {
         if(!url.contains("localhost")){
             Assert.fail("This test assumes that the database is on localhost");
@@ -36,6 +51,13 @@ public class ConnectionErrorsTest {
 
     private String unconnectableURL(String url) throws Exception {
         return url.replace("localhost","not.reachable.localhost");
+    }
+
+    private String wrongSchema(String url) throws Exception {
+        if(url.contains("h2")){
+            return url.replace("adbcjtck","invalidschema;IFEXISTS=TRUE");
+        }
+        return url.replace("adbcjtck","invalidschema");
     }
 
 }

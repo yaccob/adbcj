@@ -2,7 +2,6 @@ package org.adbcj.connectionpool;
 
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.FutureUtils;
 import org.adbcj.support.OneArgFunction;
 import org.slf4j.Logger;
@@ -15,7 +14,7 @@ import java.util.*;
  */
 public final class PooledConnection implements Connection, PooledResource {
     private static final Logger logger = LoggerFactory.getLogger(PooledConnection.class);
-    private final Connection nativeConnection;
+    private final ConnectionItem connectionItem;
     private final PooledConnectionManager pooledConnectionManager;
     private volatile DefaultDbFuture<Void> closingFuture;
     private final Map<DbFuture,DefaultDbFuture> runningOperations = new HashMap<DbFuture, DefaultDbFuture>();
@@ -38,8 +37,8 @@ public final class PooledConnection implements Connection, PooledResource {
         }
     };
 
-    public PooledConnection(Connection nativConnection, PooledConnectionManager pooledConnectionManager) {
-        this.nativeConnection = nativConnection;
+    public PooledConnection(ConnectionItem connectionItem, PooledConnectionManager pooledConnectionManager) {
+        this.connectionItem = connectionItem;
         this.pooledConnectionManager = pooledConnectionManager;
     }
 
@@ -51,69 +50,77 @@ public final class PooledConnection implements Connection, PooledResource {
     @Override
     public void beginTransaction() {
         checkClosed();
-        nativeConnection.beginTransaction();
+        nativeConnection().beginTransaction();
     }
 
     @Override
-    public DbSessionFuture<Void> commit() {
+    public DbFuture<Void> commit() {
         checkClosed();
-        return monitor(nativeConnection.commit());
+        return monitor(nativeConnection().commit());
     }
 
     @Override
-    public DbSessionFuture<Void> rollback() {
+    public DbFuture<Void> rollback() {
         checkClosed();
-        return monitor(nativeConnection.rollback());
+        return monitor(nativeConnection().rollback());
     }
 
     @Override
     public boolean isInTransaction() {
         checkClosed();
-        return nativeConnection.isInTransaction();
+        return nativeConnection().isInTransaction();
     }
 
     @Override
-    public DbSessionFuture<ResultSet> executeQuery(String sql) {
+    public DbFuture<ResultSet> executeQuery(String sql) {
         checkClosed();
-        return monitor(nativeConnection.executeQuery(sql));
+        return monitor(nativeConnection().executeQuery(sql));
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
+    public <T> DbFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
         checkClosed();
-        return monitor(nativeConnection.executeQuery(sql, eventHandler, accumulator));
+        return monitor(nativeConnection().executeQuery(sql, eventHandler, accumulator));
     }
 
     @Override
-    public DbSessionFuture<Result> executeUpdate(String sql) {
+    public DbFuture<Result> executeUpdate(String sql) {
         checkClosed();
-        return monitor(nativeConnection.executeUpdate(sql));
+        return monitor(nativeConnection().executeUpdate(sql));
     }
 
     @Override
-    public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+    public DbFuture<PreparedQuery> prepareQuery(final String sql) {
         checkClosed();
-        return monitor(nativeConnection.prepareQuery(sql), new OneArgFunction<PreparedQuery, PreparedQuery>() {
-            @Override
-            public PreparedQuery apply(PreparedQuery arg) {
-                final PooledPreparedQuery pooledPreparedQuery = new PooledPreparedQuery(arg, PooledConnection.this);
-                addStatement(pooledPreparedQuery);
-                return pooledPreparedQuery;
-            }
-        });
+        final StmtItem stmtItem = connectionItem.stmtCache().get(sql);
+        if(stmtItem!=null){
+            return DefaultDbFuture.<PreparedQuery>completed(buildAndAddPooledQuery(stmtItem));
+        } else{
+            return monitor(nativeConnection().prepareQuery(sql), new OneArgFunction<PreparedQuery, PreparedQuery>() {
+                @Override
+                public PreparedQuery apply(PreparedQuery arg) {
+                    StmtItem item = connectionItem.stmtCache().put(sql,arg);
+                    return buildAndAddPooledQuery(item);
+                }
+            });
+        }
     }
 
     @Override
-    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+    public DbFuture<PreparedUpdate> prepareUpdate(final String sql) {
         checkClosed();
-        return monitor(nativeConnection.prepareUpdate(sql), new OneArgFunction<PreparedUpdate, PreparedUpdate>() {
-            @Override
-            public PreparedUpdate apply(PreparedUpdate arg) {
-                final PooledPreparedUpdate pooledPreparedUpdate = new PooledPreparedUpdate(arg, PooledConnection.this);
-                addStatement(pooledPreparedUpdate);
-                return pooledPreparedUpdate;
-            }
-        });
+        final StmtItem stmtItem = connectionItem.stmtCache().get(sql);
+        if(stmtItem!=null){
+            return DefaultDbFuture.<PreparedUpdate>completed(buildAndAddPooledUpdate(stmtItem));
+        } else{
+            return monitor(nativeConnection().prepareUpdate(sql), new OneArgFunction<PreparedUpdate, PreparedUpdate>() {
+                @Override
+                public PreparedUpdate apply(PreparedUpdate arg) {
+                    StmtItem item = connectionItem.stmtCache().put(sql,arg);
+                    return buildAndAddPooledUpdate(item);
+                }
+            });
+        }
     }
 
     @Override
@@ -149,7 +156,21 @@ public final class PooledConnection implements Connection, PooledResource {
 
     @Override
     public boolean isOpen() throws DbException {
-        return nativeConnection.isOpen();
+        return nativeConnection().isOpen();
+    }
+    private Connection nativeConnection(){
+        return connectionItem.connection();
+    }
+
+    private PooledPreparedUpdate buildAndAddPooledUpdate(StmtItem stmtItem) {
+        PooledPreparedUpdate pooled = new PooledPreparedUpdate(stmtItem, PooledConnection.this);
+        addStatement(pooled);
+        return pooled;
+    }
+    private PooledPreparedQuery buildAndAddPooledQuery(StmtItem stmtItem) {
+        PooledPreparedQuery pooled = new PooledPreparedQuery(stmtItem, PooledConnection.this);
+        addStatement(pooled);
+        return pooled;
     }
 
     private void addStatement(AbstractPooledPreparedStatement statement) {
@@ -180,22 +201,12 @@ public final class PooledConnection implements Connection, PooledResource {
     }
 
     <T> DbFuture<T> monitor(DbFuture<T> futureToMonitor) {
-        return monitor(futureToMonitor,OneArgFunction.ID_FUNCTION);
+        addMonitoring(futureToMonitor, (DefaultDbFuture) futureToMonitor);
+        return futureToMonitor;
     }
     <TArgument,TResult> DbFuture<TResult> monitor(DbFuture<TArgument> futureToMonitor,
                                                   OneArgFunction<TArgument,TResult> transform) {
         final DefaultDbFuture<TResult> newFuture = FutureUtils.map(futureToMonitor, transform);
-        addMonitoring(futureToMonitor, newFuture);
-        return newFuture;
-    }
-
-    <T> DbSessionFuture<T> monitor(DbSessionFuture<T> futureToMonitor) {
-        return monitor(futureToMonitor,OneArgFunction.ID_FUNCTION);
-    }
-
-    <TArgument,TResult>DbSessionFuture<TResult> monitor(DbSessionFuture<TArgument> futureToMonitor,
-                                   OneArgFunction<TArgument,TResult> transform) {
-        final DefaultDbSessionFuture<TResult> newFuture = FutureUtils.map(futureToMonitor,this, transform);
         addMonitoring(futureToMonitor, newFuture);
         return newFuture;
     }
@@ -209,7 +220,10 @@ public final class PooledConnection implements Connection, PooledResource {
 
 
     Connection getNativeConnection() {
-        return nativeConnection;
+        return connectionItem.connection();
+    }
+    ConnectionItem connectionItem() {
+        return connectionItem;
     }
 
     public boolean isMayBeCorrupted() {

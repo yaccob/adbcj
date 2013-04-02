@@ -105,7 +105,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         return !isClosed();
     }
 
-    public <T> DbSessionFuture<T> executeQuery(final String sql, final ResultHandler<T> eventHandler, final T accumulator) {
+    public <T> DbFuture<T> executeQuery(final String sql, final ResultHandler<T> eventHandler, final T accumulator) {
         checkClosed();
         logger.trace("Scheduling query '{}'", sql);
         return enqueueTransactionalRequest(new CallableRequest<T>() {
@@ -147,7 +147,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         );
     }
 
-    public DbSessionFuture<Result> executeUpdate(final String sql) {
+    public DbFuture<Result> executeUpdate(final String sql) {
         checkClosed();
         return enqueueTransactionalRequest(new CallableRequest<Result>() {
             public Result doCall() throws Exception {
@@ -171,7 +171,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
         });
     }
 
-    public DbSessionFuture<PreparedQuery> prepareQuery(final String sql) {
+    public DbFuture<PreparedQuery> prepareQuery(final String sql) {
         checkClosed();
         return enqueueTransactionalRequest(new CallableRequest<PreparedQuery>() {
             @Override
@@ -185,7 +185,7 @@ public class JdbcConnection extends AbstractDbSession implements Connection {
 
 
     @Override
-    public DbSessionFuture<PreparedUpdate> prepareUpdate(final String sql) {
+    public DbFuture<PreparedUpdate> prepareUpdate(final String sql) {
         checkClosed();
         return enqueueTransactionalRequest(new CallableRequest<PreparedUpdate>() {
             @Override

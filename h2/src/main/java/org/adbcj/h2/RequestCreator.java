@@ -5,7 +5,6 @@ import org.adbcj.h2.decoding.*;
 import org.adbcj.h2.packets.*;
 import org.adbcj.support.CancellationToken;
 import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultDbSessionFuture;
 import org.adbcj.support.SafeResultHandlerDecorator;
 
 /**
@@ -20,7 +19,7 @@ public class RequestCreator {
 
 
     public Request createCloseRequest() {
-        DefaultDbSessionFuture<Void> future = new DefaultDbSessionFuture<Void>(connection.stackTrachingOptions(),connection);
+        DefaultDbFuture<Void> future = new DefaultDbFuture<Void>(connection.stackTrachingOptions());
         return new Request("Close-Request", future, new CloseConnection(future, connection), new CloseCommand());
     }
 
@@ -30,7 +29,7 @@ public class RequestCreator {
         CancellationToken cancelSupport = new CancellationToken();
         final int sessionId = connection.nextId();
         final int queryId = connection.nextId();
-        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection.stackTrachingOptions(),connection,cancelSupport);
+        DefaultDbFuture<T> resultFuture = new DefaultDbFuture<T>(connection.stackTrachingOptions(),cancelSupport);
         final Request executeQuery = executeQueryAndClose(sql,
                 eventHandler,
                 accumulator,
@@ -40,7 +39,7 @@ public class RequestCreator {
                 queryId);
         return new Request("Prepare Query: " + sql,
                 resultFuture,
-                StatementPrepare.continueWithRequest(executeQuery, resultFuture),
+                continueWithRequest(executeQuery, resultFuture),
                 new QueryPrepareCommand(sessionId, sql,cancelSupport),
                 executeQuery);
     }
@@ -48,29 +47,29 @@ public class RequestCreator {
     public Request executeUpdate(String sql) {
         CancellationToken cancelSupport = new CancellationToken();
         final int sessionId = connection.nextId();
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection.stackTrachingOptions(),connection,cancelSupport);
+        DefaultDbFuture<Result> resultFuture = new DefaultDbFuture<Result>(connection.stackTrachingOptions(),cancelSupport);
         final Request executeQuery = executeUpdateAndClose(sql, resultFuture,cancelSupport, sessionId);
         return new Request("Prepare Query: " + sql, resultFuture,
-                StatementPrepare.continueWithRequest(executeQuery, resultFuture),
+                continueWithRequest(executeQuery, resultFuture),
                 new QueryPrepareCommand(sessionId, sql,cancelSupport),
                 executeQuery);
     }
 
     public Request executePrepareQuery(String sql) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<PreparedQuery> resultFuture = new DefaultDbSessionFuture<PreparedQuery>(connection.stackTrachingOptions(),connection,cancelSupport);
+        DefaultDbFuture<PreparedQuery> resultFuture = new DefaultDbFuture<PreparedQuery>(connection.stackTrachingOptions(),cancelSupport);
         final int sessionId = connection.nextId();
         return new Request("Prepare Query: " + sql, resultFuture,
-                StatementPrepare.createPrepareQuery(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
+                createPrepareQuery(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
     }
 
 
     public Request executePrepareUpdate(String sql) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<PreparedUpdate> resultFuture = new DefaultDbSessionFuture<PreparedUpdate>(connection.stackTrachingOptions(),connection,cancelSupport);
+        DefaultDbFuture<PreparedUpdate> resultFuture = new DefaultDbFuture<PreparedUpdate>(connection.stackTrachingOptions(),cancelSupport);
         final int sessionId = connection.nextId();
         return new Request("Prepare Update: " + sql, resultFuture,
-                StatementPrepare.createPrepareUpdate(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
+                createPrepareUpdate(resultFuture, sessionId), new QueryPrepareCommand(sessionId, sql,cancelSupport));
     }
 
     public <T> Request executeQueryStatement(ResultHandler<T> eventHandler,
@@ -78,25 +77,25 @@ public class RequestCreator {
                                                     int sessionId,
                                                     Object[] params) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<T> resultFuture = new DefaultDbSessionFuture<T>(connection.stackTrachingOptions(),connection,cancelSupport);
+        DefaultDbFuture<T> resultFuture = new DefaultDbFuture<T>(connection.stackTrachingOptions(),cancelSupport);
         int queryId = connection.nextId();
         return new Request("ExecutePreparedQuery", resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
                         accumulator,
-                        resultFuture), new QueryExecute(sessionId, queryId,cancelSupport, params));
+                        resultFuture,connection), new QueryExecute(sessionId, queryId,cancelSupport, params));
     }
     public Request executeUpdateStatement(int sessionId,
                                                  Object[] params) {
         CancellationToken cancelSupport = new CancellationToken();
-        DefaultDbSessionFuture<Result> resultFuture = new DefaultDbSessionFuture<Result>(connection.stackTrachingOptions(),connection,cancelSupport);
+        DefaultDbFuture<Result> resultFuture = new DefaultDbFuture<Result>(connection.stackTrachingOptions(),cancelSupport);
         return new Request("ExecutePreparedUpdate: ", resultFuture,
-                new UpdateResult(resultFuture),
+                new UpdateResult(resultFuture,connection),
                 new CompoundCommand(cancelSupport,
                         new UpdateExecute(sessionId,cancelSupport,params),
                         new QueryExecute(connection.idForAutoId(), connection.nextId(),cancelSupport)));
     }
     public Request executeCloseStatement(int sessionId) {
-        DefaultDbSessionFuture<Void> resultFuture = new DefaultDbSessionFuture<Void>(connection.stackTrachingOptions(),connection);
+        DefaultDbFuture<Void> resultFuture = new DefaultDbFuture<Void>(connection.stackTrachingOptions());
         return new Request("ExecuteCloseStatement: ", resultFuture,
                 new AnswerNextRequest(connection), new CommandClose(sessionId, resultFuture));
     }
@@ -124,52 +123,91 @@ public class RequestCreator {
     }
 
     public Request beginTransaction(){
-        return new Request("Begin Transacton",new DefaultDbSessionFuture(connection.stackTrachingOptions(),connection),
+        return new Request("Begin Transacton",new DefaultDbFuture(connection.stackTrachingOptions()),
                 new AwaitOk(connection),
                 new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_OFF) );
 
     }
     public Request commitTransaction(){
-        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection.stackTrachingOptions(),connection);
+        final DefaultDbFuture future = new DefaultDbFuture(connection.stackTrachingOptions());
         return new Request("Commit Transaction", future,
-                new CompleteTransaction(future),
+                new CompleteTransaction(future,connection),
                 new CompoundCommand(CancellationToken.NO_CANCELLATION,
                         new UpdateExecute(connection.idForCommit(),CancellationToken.NO_CANCELLATION),
                         new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_ON) ));
 
     }
     public Request rollbackTransaction(){
-        final DefaultDbSessionFuture future = new DefaultDbSessionFuture(connection.stackTrachingOptions(),connection);
+        final DefaultDbFuture future = new DefaultDbFuture(connection.stackTrachingOptions());
         return new Request("Rollback Transaction", future,
-                new CompleteTransaction(future),
+                new CompleteTransaction(future,connection),
                 new CompoundCommand(CancellationToken.NO_CANCELLATION,
                         new UpdateExecute(connection.idForRollback(),CancellationToken.NO_CANCELLATION),
                         new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_ON) ));
 
     }
 
+
+    <T> StatementPrepare<T> continueWithRequest(final Request followUpRequest,
+                                                              DefaultDbFuture<T> resultFuture){
+        return new StatementPrepare<T>(resultFuture,connection) {
+            @Override
+            protected void handleCompletion(H2Connection connection, int paramsCount) {
+                if(paramsCount==0){
+                    connection.forceQueRequest(followUpRequest);
+                }else{
+                    throw new DbException("Implementation error: Expect 0 parameters, but got: "+paramsCount);
+                }
+            }
+        };
+    }
+
+
+    StatementPrepare<PreparedUpdate> createPrepareUpdate(final DefaultDbFuture<PreparedUpdate> resultFuture,
+                                                                final int sessionId) {
+        return new StatementPrepare<PreparedUpdate>(resultFuture,connection) {
+            @Override
+            protected void handleCompletion(H2Connection connection, int paramsCount) {
+                H2PreparedUpdate query = new H2PreparedUpdate(connection,sessionId,paramsCount);
+                resultFuture.trySetResult(query);
+            }
+        };
+    }
+
+
+    StatementPrepare<PreparedQuery> createPrepareQuery(final DefaultDbFuture<PreparedQuery> resultFuture,
+                                                              final int sessionId) {
+        return new StatementPrepare<PreparedQuery>(resultFuture,connection) {
+            @Override
+            protected void handleCompletion(H2Connection connection, int paramsCount) {
+                H2PreparedQuery query = new H2PreparedQuery(connection,sessionId,paramsCount);
+                resultFuture.trySetResult(query);
+            }
+        };
+    }
+
+
     <T> Request executeQueryAndClose(String sql, ResultHandler<T> eventHandler,
                                             T accumulator,
-                                            DefaultDbSessionFuture<T> resultFuture,
+                                            DefaultDbFuture<T> resultFuture,
                                             CancellationToken cancelSupport,
                                             int sessionId,
                                             int queryId) {
         return new Request("ExecuteQuery: " + sql, resultFuture,
                 new QueryHeader<T>(SafeResultHandlerDecorator.wrap(eventHandler, resultFuture),
                         accumulator,
-                        resultFuture),
+                        resultFuture,connection),
                 new CompoundCommand(cancelSupport,
                 new QueryExecute(sessionId, queryId,cancelSupport),
                 new CommandClose(sessionId)));
     }
 
     <T> Request executeUpdateAndClose(String sql,
-                                             DefaultDbSessionFuture<Result> resultFuture,
+                                      DefaultDbFuture<Result> resultFuture,
                                              CancellationToken cancelSupport,
                                              int sessionId) {
-        H2Connection connection = (H2Connection) resultFuture.getSession();
         return new Request("UpdateExecute: " + sql, resultFuture,
-                new UpdateResult(resultFuture),
+                new UpdateResult(resultFuture,connection),
                 new CompoundCommand(cancelSupport,
                         new UpdateExecute(sessionId,cancelSupport),
                         new QueryExecute(connection.idForAutoId(), connection.nextId(),cancelSupport),

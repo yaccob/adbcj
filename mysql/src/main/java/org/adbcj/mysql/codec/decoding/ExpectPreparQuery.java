@@ -8,7 +8,7 @@ import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.mysql.codec.packets.PreparedStatementToBuild;
 import org.adbcj.mysql.codec.packets.StatementPreparedEOF;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 import io.netty.channel.Channel;
 
 import java.io.IOException;
@@ -17,11 +17,14 @@ import java.io.IOException;
  * @author roman.stoffel@gamlor.info
  */
 public class ExpectPreparQuery extends DecoderState {
-    private final DefaultDbSessionFuture future;
+    private final DefaultDbFuture future;
+    private final MySqlConnection connection;
 
-    public ExpectPreparQuery(DefaultDbSessionFuture<PreparedQuery> future) {
+    public ExpectPreparQuery(DefaultDbFuture<PreparedQuery> future,
+                             MySqlConnection connection) {
         super();
         this.future = future;
+        this.connection = connection;
     }
 
     @Override
@@ -40,10 +43,10 @@ public class ExpectPreparQuery extends DecoderState {
     private ResultAndState handlePrepareQuery(int length, int packetNumber,
                                               OkResponse.PreparedStatementOK preparedStatement) {
         final PreparedStatementToBuild statement = new PreparedStatementToBuild(length, packetNumber, preparedStatement);
-        final DecoderState decoderState = FinishPrepareStatement.create(statement,future);
+        final DecoderState decoderState = FinishPrepareStatement.create(statement,future,connection);
         if(decoderState instanceof AcceptNextResponse){
             final StatementPreparedEOF eof = new StatementPreparedEOF(length, packetNumber, statement);
-            future.trySetResult(new MySqlPreparedStatement((MySqlConnection) future.getSession(),
+            future.trySetResult(new MySqlPreparedStatement(connection,
                     eof));
             return new ResultAndState(decoderState, eof);
         } else{
@@ -53,6 +56,6 @@ public class ExpectPreparQuery extends DecoderState {
 
     private ResultAndState handleError(ErrorResponse errorResponse) {
         future.trySetException(errorResponse.toException());
-        return new ResultAndState(new AcceptNextResponse((MySqlConnection) future.getSession()),errorResponse );
+        return new ResultAndState(new AcceptNextResponse(connection),errorResponse );
     }
 }

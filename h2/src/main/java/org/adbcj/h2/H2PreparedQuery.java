@@ -1,6 +1,6 @@
 package org.adbcj.h2;
 
-import org.adbcj.DbSessionFuture;
+import org.adbcj.DbFuture;
 import org.adbcj.PreparedQuery;
 import org.adbcj.ResultHandler;
 import org.adbcj.ResultSet;
@@ -17,7 +17,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
     }
 
     @Override
-    public DbSessionFuture<ResultSet> execute(Object... params) {
+    public DbFuture<ResultSet> execute(Object... params) {
         connection.checkClosed();
         DefaultResultEventsHandler eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
@@ -25,7 +25,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
+    public <T> DbFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
         connection.checkClosed();
         if(paramsCount!=params.length){
             throw new IllegalArgumentException("Expect "+paramsCount+" parameters, but got: "+params.length);
@@ -35,7 +35,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
                 sessionId,
                 params);
         connection.queRequest(request);
-        return (DbSessionFuture<T>) request.getToComplete();
+        return (DbFuture<T>) request.getToComplete();
     }
 
 }

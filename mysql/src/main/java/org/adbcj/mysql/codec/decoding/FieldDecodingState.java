@@ -1,10 +1,10 @@
 package org.adbcj.mysql.codec.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.ResultHandler;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ResultSetFieldResponse;
-import org.adbcj.support.DefaultDbSessionFuture;
-import io.netty.channel.Channel;
+import org.adbcj.support.DefaultDbFuture;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +18,8 @@ import java.util.Set;
 public class FieldDecodingState<T> extends DecoderState {
     private final int expectedAmountOfFields;
     private final List<MysqlField> fields;
-    private final DefaultDbSessionFuture<T> future;
+    private final DefaultDbFuture<T> future;
+    private final MySqlConnection connection;
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
     private Row.RowDecodingType decodingType;
@@ -26,7 +27,8 @@ public class FieldDecodingState<T> extends DecoderState {
     public FieldDecodingState(Row.RowDecodingType decodingType,
                               int expectedAmountOfFields,
                               List<MysqlField> fields,
-                              DefaultDbSessionFuture<T> future,
+                              DefaultDbFuture<T> future,
+                              MySqlConnection connection,
                               ResultHandler<T> eventHandler,
                               T accumulator) {
         this.decodingType = decodingType;
@@ -34,6 +36,7 @@ public class FieldDecodingState<T> extends DecoderState {
         this.expectedAmountOfFields = expectedAmountOfFields;
         this.fields = fields;
         this.future = future;
+        this.connection = connection;
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
     }
@@ -59,9 +62,20 @@ public class FieldDecodingState<T> extends DecoderState {
 
 
         if (expectedAmountOfFields > (fieldNo+1)) {
-            return result(new FieldDecodingState<T>(decodingType, expectedAmountOfFields,newFields,future,eventHandler, accumulator),resultSetFieldResponse);
+            return result(new FieldDecodingState<T>(decodingType,
+                    expectedAmountOfFields,
+                    newFields,
+                    future,
+                    connection,
+                    eventHandler,
+                    accumulator),resultSetFieldResponse);
         } else{
-            return result(new FieldEof<T>(decodingType, newFields,future,eventHandler, accumulator),resultSetFieldResponse);
+            return result(new FieldEof<T>(decodingType,
+                    newFields,
+                    future,
+                    connection,
+                    eventHandler,
+                    accumulator),resultSetFieldResponse);
         }
     }
 

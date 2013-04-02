@@ -4,7 +4,7 @@ import org.adbcj.Result;
 import org.adbcj.mysql.codec.MySqlConnection;
 import org.adbcj.mysql.codec.MysqlResult;
 import org.adbcj.mysql.codec.packets.OkResponse;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.OneArgFunction;
 
 import java.util.ArrayList;
@@ -16,24 +16,28 @@ public class ExpectUpdateResult<T> extends ExpectOK {
 
     private final OneArgFunction<MysqlResult, T> transformation;
 
-    public ExpectUpdateResult(DefaultDbSessionFuture<Result> future) {
-        this(future,OneArgFunction.ID_FUNCTION);
+    public ExpectUpdateResult(DefaultDbFuture<Result> future,
+                              MySqlConnection connection) {
+        this(future,connection,OneArgFunction.ID_FUNCTION);
     }
-    public ExpectUpdateResult(DefaultDbSessionFuture<Result> future,
+    public ExpectUpdateResult(DefaultDbFuture<Result> future,
+                              MySqlConnection connection,
                               OneArgFunction<MysqlResult,T> transformation) {
-        super(future,(MySqlConnection) future.getSession());
+        super(future,connection);
         this.transformation = transformation;
     }
 
     @Override
     protected ResultAndState handleOk(OkResponse.RegularOK regularOK) {
         return handleUpdateResult(regularOK,
-                (DefaultDbSessionFuture<T>) futureToComplete,
+                (DefaultDbFuture<T>) futureToComplete,
+                connection,
                 transformation);
     }
 
     static <TFutureType> ResultAndState handleUpdateResult(OkResponse.RegularOK regularOK,
-                                                 DefaultDbSessionFuture<TFutureType> futureToComplete,
+                                                 DefaultDbFuture<TFutureType> futureToComplete,
+                                                 MySqlConnection connection,
                                                  OneArgFunction<MysqlResult,TFutureType> transformation) {
         ArrayList<String> warnings = new ArrayList<String>(regularOK.getWarningCount());
         for (int i = 0; i < regularOK.getWarningCount(); i++) {
@@ -41,6 +45,6 @@ public class ExpectUpdateResult<T> extends ExpectOK {
         }
         MysqlResult result = new MysqlResult(regularOK.getAffectedRows(),warnings,regularOK.getInsertId());
         futureToComplete.trySetResult(transformation.apply(result));
-        return new ResultAndState(new AcceptNextResponse((MySqlConnection) futureToComplete.getSession()),regularOK );
+        return new ResultAndState(new AcceptNextResponse(connection),regularOK );
     }
 }

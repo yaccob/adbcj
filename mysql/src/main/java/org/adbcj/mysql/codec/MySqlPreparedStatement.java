@@ -33,16 +33,16 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
 
 
     @Override
-    public DbSessionFuture execute(Object... params) {
+    public DbFuture execute(Object... params) {
         connection.checkClosed();
-        return (DbSessionFuture)executeWithCallback(new DefaultResultEventsHandler(),new DefaultResultSet(),params);
+        return (DbFuture)executeWithCallback(new DefaultResultEventsHandler(),new DefaultResultSet(),params);
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
+    public <T> DbFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
         connection.checkClosed();
         validateParameters(params);
-        return (DbSessionFuture<T>) connection.queRequest(
+        return (DbFuture<T>) connection.queRequest(
                 MySqlRequests.executePreparedQuery(
                         statementInfo, params, eventHandler, accumulator, connection
                 )).getFuture();

@@ -2,7 +2,7 @@ package org.adbcj.tck.test;
 
 import junit.framework.Assert;
 import org.adbcj.Connection;
-import org.adbcj.DbSessionFuture;
+import org.adbcj.DbFuture;
 import org.adbcj.ResultSet;
 import org.testng.annotations.Test;
 
@@ -18,7 +18,7 @@ public class CancelingRequests extends AbstractWithConnectionManagerTest{
     public void canCancelSelect() throws InterruptedException {
         final Connection connection = connectionManager.connect().get();
 
-        final DbSessionFuture<ResultSet> result = connection.executeQuery("SELECT SLEEP(2)");
+        final DbFuture<ResultSet> result = connection.executeQuery("SELECT SLEEP(2)");
         Thread.sleep(500);
         boolean cannotBeCanceled = result.cancel(true);
 
@@ -32,8 +32,8 @@ public class CancelingRequests extends AbstractWithConnectionManagerTest{
         final Connection connection = connectionManager.connect().get();
 
 
-        final DbSessionFuture<ResultSet> runningStatment = connection.executeQuery("SELECT SLEEP(1)");
-        final DbSessionFuture<ResultSet> toCancel = connection.executeQuery("SELECT SLEEP(2)");
+        final DbFuture<ResultSet> runningStatment = connection.executeQuery("SELECT SLEEP(1)");
+        final DbFuture<ResultSet> toCancel = connection.executeQuery("SELECT SLEEP(2)");
         boolean canCancel = toCancel.cancel(true);
 
         if(canCancel){

@@ -1,19 +1,21 @@
 package org.adbcj.connectionpool;
 
 import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
 import org.adbcj.PreparedStatement;
+import org.adbcj.support.DefaultDbFuture;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
 public abstract class AbstractPooledPreparedStatement implements PooledResource {
-    protected final PreparedStatement nativeQuery;
+    private final StmtItem stmtItem;
+    protected final PreparedStatement stmt;
     protected final PooledConnection pooledConnection;
     private volatile DbFuture<Void> closeFuture = null;
 
-    public AbstractPooledPreparedStatement(PreparedStatement nativeQuery, PooledConnection pooledConnection) {
-        this.nativeQuery = nativeQuery;
+    public AbstractPooledPreparedStatement(StmtItem nativeQuery, PooledConnection pooledConnection) {
+        this.stmtItem = nativeQuery;
+        stmt = this.stmtItem.aquireSharedAccess();
         this.pooledConnection = pooledConnection;
     }
 
@@ -26,13 +28,9 @@ public abstract class AbstractPooledPreparedStatement implements PooledResource 
             if(closeFuture!=null){
                 return closeFuture;
             }
-            closeFuture = pooledConnection.monitor(nativeQuery.close());
-            closeFuture.addListener(new DbListener<Void>() {
-                @Override
-                public void onCompletion(DbFuture<Void> future) {
-                    pooledConnection.removeResource(AbstractPooledPreparedStatement.this);
-                }
-            });
+            closeFuture = DefaultDbFuture.completed(null);
+            stmtItem.close();
+            pooledConnection.removeResource(this);
             return closeFuture;
         }
     }

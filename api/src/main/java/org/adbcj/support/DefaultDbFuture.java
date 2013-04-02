@@ -73,6 +73,13 @@ public class DefaultDbFuture<T> implements DbFuture<T> {
         return f;
     }
 
+
+    public static <E> DbFuture<E> createCompletedErrorFuture(StackTracingOptions stackTracingOptions,DbException result) {
+        DefaultDbFuture f = new DefaultDbFuture(stackTracingOptions);
+        f.setException(result);
+        return f;
+    }
+
     public DbFuture<T> addListener(DbListener<T> listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener can NOT be null");

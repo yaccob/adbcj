@@ -37,7 +37,7 @@ public interface DbSession {
      * After calling commit, the connection is again in auto-commit mode.
     * @return future which signals the success, or contains the error
     */
-	DbSessionFuture<Void> commit();
+	DbFuture<Void> commit();
 
     /**
      * Commits this transaction.
@@ -49,7 +49,7 @@ public interface DbSession {
      * After calling rollback, the connection is again in auto-commit mode.
      * @return future which signals the success, or contains the error
      */
-	DbSessionFuture<Void> rollback();
+	DbFuture<Void> rollback();
 	
 	/**
 	 * Indicates whether or not the current session is involved in a transaction.
@@ -59,16 +59,16 @@ public interface DbSession {
 	boolean isInTransaction();
 
 
-	DbSessionFuture<ResultSet> executeQuery(String sql);
+	DbFuture<ResultSet> executeQuery(String sql);
 	
-	<T> DbSessionFuture<T> executeQuery(String sql,
+	<T> DbFuture<T> executeQuery(String sql,
                                         ResultHandler<T> eventHandler,
                                         T accumulator);
 
-	DbSessionFuture<Result> executeUpdate(String sql);
+	DbFuture<Result> executeUpdate(String sql);
 
-	DbSessionFuture<PreparedQuery> prepareQuery(String sql);
-	DbSessionFuture<PreparedUpdate> prepareUpdate(String sql);
+	DbFuture<PreparedQuery> prepareQuery(String sql);
+	DbFuture<PreparedUpdate> prepareUpdate(String sql);
 
     /**
      * Closes this connection releases its resources.

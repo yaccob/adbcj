@@ -4,7 +4,7 @@ import org.adbcj.ResultHandler;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,11 +15,15 @@ import java.util.ArrayList;
 public class ExpectQueryResult<T> extends ResponseStart {
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
-    protected final DefaultDbSessionFuture<T> future;
+    protected final DefaultDbFuture<T> future;
     private Row.RowDecodingType decodingType;
 
-    public ExpectQueryResult(Row.RowDecodingType decodingType, DefaultDbSessionFuture<T> future, ResultHandler<T> eventHandler, T accumulator) {
-        super((MySqlConnection) future.getSession());
+    public ExpectQueryResult(Row.RowDecodingType decodingType,
+                             DefaultDbFuture<T> future,
+                             MySqlConnection connection,
+                             ResultHandler<T> eventHandler,
+                             T accumulator) {
+        super(connection);
         this.decodingType = decodingType;
         this.future = future;
         this.eventHandler = eventHandler;
@@ -49,7 +53,13 @@ public class ExpectQueryResult<T> extends ResponseStart {
             extra = IoUtils.readBinaryLengthEncoding(in);
         }
         eventHandler.startFields(accumulator);
-        return result(new FieldDecodingState(decodingType, expectedFieldPackets,new ArrayList<MysqlField>(),future, eventHandler,accumulator),
+        return result(new FieldDecodingState(decodingType,
+                expectedFieldPackets,
+                new ArrayList<MysqlField>(),
+                future,
+                connection,
+                eventHandler,
+                accumulator),
                 new ResultSetResponse(length, packetNumber, expectedFieldPackets, extra));
     }
 }

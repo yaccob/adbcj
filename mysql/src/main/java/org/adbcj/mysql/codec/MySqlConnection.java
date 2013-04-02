@@ -64,7 +64,7 @@ public class MySqlConnection implements Connection {
     }
 
     @Override
-    public DbSessionFuture<Void> commit() {
+    public DbFuture<Void> commit() {
         if(!isInTransaction()){
             throw new DbException("No transaction has been started to commit");
         }
@@ -72,12 +72,12 @@ public class MySqlConnection implements Connection {
         synchronized (lock){
             final MySqlRequest request = queRequest(MySqlRequests.commitTransaction(this));
             isInTransaction = false;
-            return (DbSessionFuture<Void>) request.getFuture();
+            return (DbFuture<Void>) request.getFuture();
         }
     }
 
     @Override
-    public DbSessionFuture<Void> rollback() {
+    public DbFuture<Void> rollback() {
         if(!isInTransaction()){
             throw new DbException("No transaction has been started to rollback");
         }
@@ -85,7 +85,7 @@ public class MySqlConnection implements Connection {
         synchronized (lock){
             final MySqlRequest request = queRequest(MySqlRequests.rollbackTransaction(this));
             isInTransaction = false;
-            return (DbSessionFuture<Void>) request.getFuture();
+            return (DbFuture<Void>) request.getFuture();
         }
     }
 
@@ -95,40 +95,40 @@ public class MySqlConnection implements Connection {
     }
 
     @Override
-    public DbSessionFuture<ResultSet> executeQuery(String sql) {
+    public DbFuture<ResultSet> executeQuery(String sql) {
         checkClosed();
         DefaultResultSet rs = new DefaultResultSet();
         DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
-        return (DbSessionFuture) executeQuery(sql, handler, rs);
+        return (DbFuture) executeQuery(sql, handler, rs);
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
+    public <T> DbFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
         checkClosed();
-        return (DbSessionFuture) queRequest(MySqlRequests.executeQuery(sql,
+        return (DbFuture) queRequest(MySqlRequests.executeQuery(sql,
                 eventHandler,
                 accumulator,
                 this)).getFuture();
     }
 
     @Override
-    public DbSessionFuture<Result> executeUpdate(String sql) {
+    public DbFuture<Result> executeUpdate(String sql) {
         checkClosed();
-        return (DbSessionFuture) queRequest(MySqlRequests.executeUpdate(sql,
+        return (DbFuture) queRequest(MySqlRequests.executeUpdate(sql,
                 this)).getFuture();
     }
 
     @Override
-    public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+    public DbFuture<PreparedQuery> prepareQuery(String sql) {
         checkClosed();
-        return (DbSessionFuture) queRequest(MySqlRequests.prepareQuery(sql,
+        return (DbFuture) queRequest(MySqlRequests.prepareQuery(sql,
                 this)).getFuture();
     }
 
     @Override
-    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+    public DbFuture<PreparedUpdate> prepareUpdate(String sql) {
         checkClosed();
-        return (DbSessionFuture) queRequest(MySqlRequests.prepareQuery(sql,
+        return (DbFuture) queRequest(MySqlRequests.prepareQuery(sql,
                 this)).getFuture();
     }
 

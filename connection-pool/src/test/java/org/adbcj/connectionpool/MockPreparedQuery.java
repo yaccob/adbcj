@@ -2,7 +2,7 @@ package org.adbcj.connectionpool;
 
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 
 class AbstractMockPreparedStatement {
     private final String sql;
@@ -24,12 +24,12 @@ class AbstractMockPreparedStatement {
         return DefaultDbFuture.completed(null);
     }
 
-    DbSessionFuture executeOrFail(){
+    DbFuture executeOrFail(){
 
         if(sql.equals(FAIL_STATEMENT_EXECUTE)){
-            return DefaultDbSessionFuture.createCompletedErrorFuture(connection, new DbException("Failed: " + sql));
+            return DefaultDbFuture.createCompletedErrorFuture(StackTracingOptions.FORCED_BY_INSTANCE, new DbException("Failed: " + sql));
         }else {
-            return DefaultDbSessionFuture.createCompletedFuture(connection,null);
+            return DefaultDbFuture.completed(null);
         }
     }
 }
@@ -39,10 +39,10 @@ class MockPreparedQuery extends AbstractMockPreparedStatement implements Prepare
     }
 
     @Override
-    public DbSessionFuture<ResultSet> execute(Object... params) {
+    public DbFuture<ResultSet> execute(Object... params) {
         return executeOrFail();
     }
-    public <T> DbSessionFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
+    public <T> DbFuture<T> executeWithCallback(ResultHandler<T> eventHandler, T accumulator, Object... params) {
         return executeOrFail();
     }
 }
@@ -53,7 +53,7 @@ class MockPreparedUpdate extends AbstractMockPreparedStatement implements Prepar
     }
 
     @Override
-    public DbSessionFuture<Result> execute(Object... params) {
+    public DbFuture<Result> execute(Object... params) {
         return executeOrFail();
     }
 }

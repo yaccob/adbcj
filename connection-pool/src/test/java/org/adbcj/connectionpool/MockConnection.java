@@ -2,9 +2,10 @@ package org.adbcj.connectionpool;
 
 import junit.framework.Assert;
 import org.adbcj.*;
-import org.adbcj.support.DefaultDbSessionFuture;
+import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,21 +35,21 @@ public class MockConnection implements Connection {
     }
 
     @Override
-    public DbSessionFuture<Void> commit() {
+    public DbFuture<Void> commit() {
         if(failTxOperation){
-            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed"));
+            return DefaultDbFuture.createCompletedErrorFuture(StackTracingOptions.FORCED_BY_INSTANCE, new DbException("Failed"));
         } else{
-            return DefaultDbSessionFuture.createCompletedFuture(this, null);
+            return DefaultDbFuture.completed(null);
         }
     }
 
     @Override
-    public DbSessionFuture<Void> rollback() {
+    public DbFuture<Void> rollback() {
         currentTxState = TransactionState.ROLLED_BACK;
         if(failTxOperation){
-            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed"));
+            return DefaultDbFuture.createCompletedErrorFuture(StackTracingOptions.FORCED_BY_INSTANCE, new DbException("Failed"));
         } else{
-            return DefaultDbSessionFuture.createCompletedFuture(this, null);
+            return DefaultDbFuture.completed(null);
         }
     }
 
@@ -58,35 +59,35 @@ public class MockConnection implements Connection {
     }
 
     @Override
-    public DbSessionFuture<ResultSet> executeQuery(String sql) {
-        return (DbSessionFuture) executeQuery(sql,new DefaultResultEventsHandler(),new DefaultResultSet());
+    public DbFuture<ResultSet> executeQuery(String sql) {
+        return (DbFuture) executeQuery(sql,new DefaultResultEventsHandler(),new DefaultResultSet());
     }
 
     @Override
-    public <T> DbSessionFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
+    public <T> DbFuture<T> executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator) {
         return maySuccedingOperation(sql);
     }
     @Override
-    public DbSessionFuture<Result> executeUpdate(String sql) {
+    public DbFuture<Result> executeUpdate(String sql) {
          return maySuccedingOperation(sql);
     }
 
     @Override
-    public DbSessionFuture<PreparedQuery> prepareQuery(String sql) {
+    public DbFuture<PreparedQuery> prepareQuery(String sql) {
         if(sql.equals(FAIL_QUERY)){
-            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed: " + sql));
+            return DefaultDbFuture.createCompletedErrorFuture(StackTracingOptions.FORCED_BY_INSTANCE, new DbException("Failed: " + sql));
         }
         openStatements.incrementAndGet();
-        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedQuery(sql,this));
+        return (DbFuture) DefaultDbFuture.completed(new MockPreparedQuery(sql,this));
     }
 
     @Override
-    public DbSessionFuture<PreparedUpdate> prepareUpdate(String sql) {
+    public DbFuture<PreparedUpdate> prepareUpdate(String sql) {
         if(sql.equals(FAIL_QUERY)){
-            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed: " + sql));
+            return DefaultDbFuture.createCompletedErrorFuture(StackTracingOptions.FORCED_BY_INSTANCE,  new DbException("Failed: " + sql));
         }
         openStatements.incrementAndGet();
-        return (DbSessionFuture) DefaultDbSessionFuture.createCompletedFuture(this, new MockPreparedUpdate(sql,this));
+        return (DbFuture) DefaultDbFuture.completed(new MockPreparedUpdate(sql,this));
     }
 
     @Override
@@ -100,9 +101,9 @@ public class MockConnection implements Connection {
         connection.decementConnectionCounter();
 
         if(failCloseOperation){
-            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed"));
+            return DefaultDbFuture.createCompletedErrorFuture(StackTracingOptions.FORCED_BY_INSTANCE, new DbException("Failed"));
         } else{
-            return DefaultDbSessionFuture.createCompletedFuture(this, null);
+            return DefaultDbFuture.completed(null);
         }
     }
 
@@ -116,11 +117,11 @@ public class MockConnection implements Connection {
         throw new Error("Not implemented yet: TODO");  //TODO: Implement
     }
 
-    private <T> DbSessionFuture<T> maySuccedingOperation(String sql) {
+    private <T> DbFuture<T> maySuccedingOperation(String sql) {
         if(sql.equals(FAIL_QUERY)){
-            return DefaultDbSessionFuture.createCompletedErrorFuture(this, new DbException("Failed: " + sql));
+            return DefaultDbFuture.createCompletedErrorFuture(StackTracingOptions.FORCED_BY_INSTANCE, new DbException("Failed: " + sql));
         } else{
-            return DefaultDbSessionFuture.createCompletedFuture(this,null);
+            return DefaultDbFuture.completed(null);
         }
     }
 

@@ -51,12 +51,10 @@ class FirstServerHandshake extends StatusReadingDecoder {
 
 class SessionIdReceived extends StatusReadingDecoder {
     private final DefaultDbFuture<Connection> currentState;
-    private final H2Connection connection;
 
     SessionIdReceived(DefaultDbFuture<Connection> currentState, H2Connection connection) {
         super(connection);
         this.currentState = currentState;
-        this.connection = connection;
     }
 
     @Override

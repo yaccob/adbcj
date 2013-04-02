@@ -178,10 +178,10 @@ public abstract class AbstractDbSession implements DbSession {
      */
     protected abstract void checkClosed() throws DbSessionClosedException;
 
-    public DbSessionFuture<ResultSet> executeQuery(String sql) {
+    public DbFuture<ResultSet> executeQuery(String sql) {
         ResultHandler<DefaultResultSet> eventHandler = new DefaultResultEventsHandler();
         DefaultResultSet resultSet = new DefaultResultSet();
-        return (DbSessionFuture) executeQuery(sql, eventHandler, resultSet);
+        return (DbFuture) executeQuery(sql, eventHandler, resultSet);
     }
 
 
@@ -209,12 +209,12 @@ public abstract class AbstractDbSession implements DbSession {
         }
     }
 
-    public DbSessionFuture<Void> commit() {
+    public DbFuture<Void> commit() {
         checkClosed();
         if (!isInTransaction()) {
             throw new DbException("Not currently in a transaction, cannot commit");
         }
-        DbSessionFuture<Void> future;
+        DbFuture<Void> future;
         synchronized (lock) {
             isInTransaction = false;
             if (transaction.isBeginScheduled()) {
@@ -224,19 +224,19 @@ public abstract class AbstractDbSession implements DbSession {
             } else {
                 transaction = null;
                 // If transaction was not started, don't worry about committing transaction
-                future = DefaultDbSessionFuture.createCompletedFuture(this, null);
+                future = DefaultDbFuture.completed(null);
             }
         }
         return future;
     }
 
 
-    public DbSessionFuture<Void> rollback() {
+    public DbFuture<Void> rollback() {
         checkClosed();
         if (!isInTransaction()) {
             throw new DbException( "Not currently in a transaction, cannot rollback");
         }
-        DbSessionFuture<Void> future;
+        DbFuture<Void> future;
         synchronized (lock) {
             isInTransaction = false;
             if (transaction.isBeginScheduled()) {
@@ -245,19 +245,19 @@ public abstract class AbstractDbSession implements DbSession {
                 markTransactionAsCompleteWhenDone(future);
             } else {
                 this.transaction = null;
-                future = DefaultDbSessionFuture.createCompletedFuture(this, null);
+                future = DefaultDbFuture.completed(null);
             }
         }
         return future;
     }
 
-    public <E> DbSessionFuture<E> enqueueTransactionalRequest(Request<E> request) {
+    public <E> DbFuture<E> enqueueTransactionalRequest(Request<E> request) {
         // Check to see if we're in a transaction
         synchronized (lock) {
             if (transaction != null) {
                 if (transaction.isCanceled()) {
-                    return DefaultDbSessionFuture.createCompletedErrorFuture(
-                            this, new DbException("Could not execute request; transaction is in failed state"));
+                    return DefaultDbFuture.createCompletedErrorFuture(
+                            this.stackTracingOptions(), new DbException("Could not execute request; transaction is in failed state"));
                 }
                 // Schedule starting transaction with database if possible
                 if (!transaction.isBeginScheduled()) {
@@ -314,7 +314,7 @@ public abstract class AbstractDbSession implements DbSession {
     protected Request<Void> createCommitRequest(final Transaction transaction) {
         return new CommitRequest(this, transaction);
     }
-    private void markTransactionAsCompleteWhenDone(DbSessionFuture<Void> future) {
+    private void markTransactionAsCompleteWhenDone(DbFuture<Void> future) {
         future.addListener(new DbListener<Void>() {
             @Override
             public void onCompletion(DbFuture<Void> voidDbFuture) {
@@ -410,7 +410,7 @@ public abstract class AbstractDbSession implements DbSession {
 
     public static abstract class Request<T>  {
         private volatile Transaction transaction;
-        private final DefaultDbSessionFuture<T> futureToComplete;
+        private final DefaultDbFuture<T> futureToComplete;
         private final AbstractDbSession session;
 
         private boolean cancelled; // Access must be synchronized on this
@@ -419,7 +419,7 @@ public abstract class AbstractDbSession implements DbSession {
 
 
         public Request(AbstractDbSession session) {
-            this.futureToComplete = new DefaultDbSessionFuture<T>(session.stackTracingOptions(),session,new CancellationAction() {
+            this.futureToComplete = new DefaultDbFuture<T>(session.stackTracingOptions(),new CancellationAction() {
                 @Override
                 public boolean cancel() {
                     return Request.this.doCancel();
@@ -518,7 +518,7 @@ public abstract class AbstractDbSession implements DbSession {
             }
         }
 
-        public DbSessionFuture<T> getFuture(){
+        public DbFuture<T> getFuture(){
             return this.futureToComplete;
         }
 
