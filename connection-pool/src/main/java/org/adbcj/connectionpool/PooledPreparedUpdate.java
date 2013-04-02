@@ -8,7 +8,7 @@ import org.adbcj.Result;
  * @author roman.stoffel@gamlor.info
  */
 class PooledPreparedUpdate extends AbstractPooledPreparedStatement implements PreparedUpdate {
-    public PooledPreparedUpdate(PreparedUpdate nativeQuery, PooledConnection pooledConnection) {
+    public PooledPreparedUpdate(StmtItem nativeQuery, PooledConnection pooledConnection) {
         super(nativeQuery,pooledConnection);
     }
 
@@ -19,6 +19,6 @@ class PooledPreparedUpdate extends AbstractPooledPreparedStatement implements Pr
     }
 
     private PreparedUpdate nativeQuery() {
-        return (PreparedUpdate)nativeQuery;
+        return (PreparedUpdate) stmt;
     }
 }

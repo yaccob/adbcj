@@ -7,7 +7,7 @@ import org.adbcj.*;
  */
 class PooledPreparedQuery extends AbstractPooledPreparedStatement implements PreparedQuery {
 
-    public PooledPreparedQuery(PreparedQuery nativeQuery, PooledConnection pooledConnection) {
+    public PooledPreparedQuery(StmtItem nativeQuery, PooledConnection pooledConnection) {
         super(nativeQuery, pooledConnection);
     }
 
@@ -24,7 +24,7 @@ class PooledPreparedQuery extends AbstractPooledPreparedStatement implements Pre
     }
 
     private PreparedQuery nativeQuery() {
-        return (PreparedQuery) nativeQuery;
+        return (PreparedQuery) stmt;
     }
 
 }
