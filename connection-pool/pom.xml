@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>org.adbcj</groupId>
 		<artifactId>adbcj</artifactId>
-		<version>0.7-SNAPSHOT</version>
+		<version>0.7.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>adbcj-connection-pool</artifactId>

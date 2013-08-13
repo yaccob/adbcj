@@ -6,7 +6,7 @@
 
 	<groupId>org.adbcj</groupId>
 	<artifactId>adbcj</artifactId>
-	<version>0.7-SNAPSHOT</version>
+	<version>0.7.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>ADBCJ</name>
