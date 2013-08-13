@@ -39,7 +39,7 @@ class FirstServerHandshake extends StatusReadingDecoder {
             throw new DbException("This version only supports version " + Constants.TCP_PROTOCOL_VERSION_12
                     + ", but server wants " + clientVersion);
         }
-        channel.write(new AnnounceClientSession(connection.getSessionId()));
+        channel.writeAndFlush(new AnnounceClientSession(connection.getSessionId()));
         return ResultAndState.newState(new SessionIdReceived(currentState, connection));
     }
 

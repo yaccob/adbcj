@@ -17,7 +17,7 @@ DROP TABLE IF EXISTS updates;
 CREATE TABLE updates (id int) ENGINE=InnoDB ;
 
 DROP TABLE IF EXISTS locks;
-CREATE TABLE locks (name varchar(255) primary key not null) ENGINE=InnoDB;
+CREATE TABLE locks (name varchar(128) primary key not null) ENGINE=InnoDB;
 INSERT INTO locks(name) VALUES ('lock');
 
 DROP TABLE IF EXISTS table_with_some_values;

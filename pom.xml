@@ -20,7 +20,7 @@
 
 	<properties>
 		<slf4j.version>1.7.2</slf4j.version>
-		<netty.version>4.0.0.Beta3</netty.version>
+		<netty.version>4.0.6.Final</netty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 

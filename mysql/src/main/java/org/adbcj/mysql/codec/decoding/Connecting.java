@@ -54,7 +54,7 @@ public class Connecting extends DecoderState {
                 connection.getClientCapabilities(),
                 connection.getExtendedClientCapabilities(),
                 MysqlCharacterSet.UTF8_UNICODE_CI,serverGreeting.getSalt());
-        channel.write(loginRequest);
+        channel.writeAndFlush(loginRequest);
         return result(new FinishLogin(connectFuture, connection),serverGreeting);
     }
 

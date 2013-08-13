@@ -210,7 +210,7 @@ public class MySqlConnection implements Connection {
     public MySqlRequest forceQueRequest(MySqlRequest request) {
         synchronized (lock) {
             requestQueue.add(request);
-            channel.write(request.getRequest());
+            channel.writeAndFlush(request.getRequest());
             return request;
         }
     }

@@ -190,7 +190,7 @@ public class H2Connection implements Connection {
         synchronized (lock){
             if(blockingRequest==null){
                 requestQueue.add(request);
-                channel.write(request.getRequest());
+                channel.writeAndFlush(request.getRequest());
                 if(request.isBlocking()){
                     blockingRequest = new BlockingRequestInProgress(request);
                     request.getToComplete().addListener(new DbListener<Object>() {
@@ -203,7 +203,7 @@ public class H2Connection implements Connection {
             } else{
                 if(blockingRequest.unblockBy(request)){
                     requestQueue.add(request);
-                    channel.write(request.getRequest());
+                    channel.writeAndFlush(request.getRequest());
                 } else {
                     blockingRequest.add(request);
                 }

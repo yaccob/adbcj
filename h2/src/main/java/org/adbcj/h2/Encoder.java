@@ -25,7 +25,6 @@ class Encoder extends MessageToByteEncoder<ClientToServerPacket> {
             DataOutputStream dataOutputStream = new DataOutputStream(out);
             request.writeToStream(dataOutputStream);
             dataOutputStream.close();
-            out.flush();
             out.close();
             if(logger.isDebugEnabled()){
                 logger.debug("Sent {} to server",request);

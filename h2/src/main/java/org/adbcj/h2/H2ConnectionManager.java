@@ -4,6 +4,8 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.adbcj.*;
 import org.adbcj.h2.decoding.Decoder;
 import org.adbcj.h2.packets.ClientHandshake;
@@ -88,7 +90,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
 
                 H2Connection connection = new H2Connection(maxQueueLength(),H2ConnectionManager.this,channel);
                 channel.pipeline().addFirst(DECODER, new Decoder(connectFuture,connection));
-                channel.write(
+                channel.writeAndFlush(
                         new ClientHandshake(credentials.getDatabase(),url,
                                 credentials.getUserName(),
                                 credentials.getPassword(),keys));
@@ -142,8 +144,16 @@ public class H2ConnectionManager extends AbstractConnectionManager {
         new Thread("Closing H2 ConnectionManager") {
             @Override
             public void run() {
-                bootstrap.shutdown();
-                closeFuture.setResult(null);
+                bootstrap.group().shutdownGracefully().addListener(new GenericFutureListener() {
+                    @Override
+                    public void operationComplete(Future future) throws Exception {
+                        if(future.isSuccess()){
+                            closeFuture.setResult(null);
+                        } else {
+                            closeFuture.setException(future.cause());
+                        }
+                    }
+                });
             }
         }.start();
     }

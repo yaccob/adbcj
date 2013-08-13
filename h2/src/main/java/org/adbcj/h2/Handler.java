@@ -5,27 +5,15 @@ import io.netty.channel.*;
 /**
  * @author roman.stoffel@gamlor.info
  */
-class Handler  implements ChannelHandler {
+class Handler  extends SimpleChannelInboundHandler<Object> {
     public Handler() {
         //To change body of created methods use File | Settings | File Templates.
     }
 
-
     @Override
-    public void beforeAdd(ChannelHandlerContext ctx) throws Exception {
-
-    }
-
-    @Override
-    public void afterAdd(ChannelHandlerContext ctx) throws Exception {
-    }
-
-    @Override
-    public void beforeRemove(ChannelHandlerContext ctx) throws Exception {
-    }
-
-    @Override
-    public void afterRemove(ChannelHandlerContext ctx) throws Exception {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
+        // We process the decodes stuff directly at the moment.
+        // Not very elegant, but works
     }
 
     @Override

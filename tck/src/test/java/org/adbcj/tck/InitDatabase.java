@@ -57,6 +57,7 @@ public abstract class InitDatabase {
             try {
                 for (String line : setupSQL(script)) {
                     Statement stmt = connection.createStatement();
+                    System.out.println("Prepare: "+line);
                     stmt.execute(line);
                     stmt.close();
 

@@ -10,11 +10,13 @@ import org.adbcj.support.DefaultDbFuture;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
 public class Decoder extends ByteToMessageDecoder {
+    public static Object DecodedToken = new Object();
     private DecoderState currentState;
     private H2Connection connection;
 
@@ -24,7 +26,7 @@ public class Decoder extends ByteToMessageDecoder {
     }
 
     @Override
-    public String decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+    public void decode(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) throws Exception {
         InputStream in = new ByteBufInputStream(buffer);
         in.mark(Integer.MAX_VALUE);
         try {
@@ -32,9 +34,9 @@ public class Decoder extends ByteToMessageDecoder {
             currentState = resultState.getNewState();
             if(resultState.isWaitingForMoreInput()){
                 in.reset();
-                return null;
+            } else{
+                out.add(DecodedToken);
             }
-            return null;
         } catch (Exception ex){
             ex.printStackTrace();
             throw ex;

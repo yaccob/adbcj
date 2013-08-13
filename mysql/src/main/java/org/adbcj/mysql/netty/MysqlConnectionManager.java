@@ -9,6 +9,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.adbcj.*;
 import org.adbcj.mysql.codec.ClientRequest;
 import org.adbcj.mysql.codec.MySqlClientDecoder;
@@ -16,6 +18,7 @@ import org.adbcj.mysql.codec.MySqlClientEncoder;
 import org.adbcj.mysql.codec.MySqlConnection;
 import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.decoding.DecoderState;
+import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.LoginCredentials;
@@ -24,10 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MysqlConnectionManager extends AbstractConnectionManager {
@@ -100,8 +100,17 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         new Thread("Closing MySQL ConnectionManager"){
             @Override
             public void run() {
-                bootstrap.shutdown();
-                closeFuture.setResult(null);
+                bootstrap.group().shutdownGracefully().addListener(new GenericFutureListener() {
+                    @Override
+                    public void operationComplete(Future future) throws Exception {
+                        if(future.isSuccess()){
+                            closeFuture.setResult(null);
+
+                        }else{
+                            closeFuture.setException(future.cause());
+                        }
+                    }
+                });
             }
         }.start();
     }
@@ -179,14 +188,16 @@ class Decoder extends ByteToMessageDecoder {
     }
 
     @Override
-    public Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+    public void decode(ChannelHandlerContext ctx, ByteBuf buffer,List<Object> out) throws Exception {
         InputStream in = new ByteBufInputStream(buffer);
         try {
             Object obj= decoder.decode(in,ctx.channel(), false);
             if(log.isDebugEnabled()&&null!=obj){
                 log.debug("Decoded message: {}",obj);
             }
-            return null;
+            if(obj!=null){
+                out.add(obj);
+            }
         } finally {
             in.close();
         }
@@ -201,7 +212,7 @@ class Decoder extends ByteToMessageDecoder {
 }
 
 
-class Handler implements ChannelHandler {
+class Handler extends SimpleChannelInboundHandler<ServerPacket> {
     private final MySqlConnection connection;
     private static final Logger logger = LoggerFactory.getLogger(Handler.class);
 
@@ -209,23 +220,14 @@ class Handler implements ChannelHandler {
         this.connection = connection;
     }
 
-
     @Override
-    public void beforeAdd(ChannelHandlerContext ctx) throws Exception {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, ServerPacket item) throws Exception {
+        // The binary decoder is a state machine,
+        // which decodes according to the expected state.
+        // and directly returns to the connection
+        // Not elegant, but works
     }
 
-    @Override
-    public void afterAdd(ChannelHandlerContext ctx) throws Exception {
-
-    }
-
-    @Override
-    public void beforeRemove(ChannelHandlerContext ctx) throws Exception {
-    }
-
-    @Override
-    public void afterRemove(ChannelHandlerContext ctx) throws Exception {
-    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -249,7 +251,7 @@ class Encoder extends MessageToByteEncoder<ClientRequest> {
 
         ByteBufOutputStream out = new ByteBufOutputStream(buffer);
         encoder.encode(msg, out);
-        out.flush();
+        out.close();
     }
 }
 
