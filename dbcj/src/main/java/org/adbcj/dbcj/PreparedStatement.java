@@ -31,8 +31,6 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     private final DbFuture<PreparedUpdate> updateFuture;
     private final DbFuture<PreparedQuery> queryFuture;
     private ArrayList<Object> params=new ArrayList<Object>();
-    private int parameterCount;
-    private int[] parameterTypes=null;
 
 
 
@@ -52,7 +50,9 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     }
 
-
+    public Object[] getParamArray(){
+        return params.toArray();
+    }
 
     public Type getQueryType(String sql) throws UnsupportedOperationException {
 
@@ -75,9 +75,13 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
         if (type != Type.QUERY){
             throw new SQLException("Not supported query");
         }
+        org.adbcj.ResultSet ars;
         try{
             PreparedQuery preparedQuery=queryFuture.get();
-            org.adbcj.ResultSet ars=preparedQuery.execute().get();
+            if (params.size()==0)
+                ars = preparedQuery.execute().get();
+            else
+                ars=preparedQuery.execute(getParamArray()).get();
             return new ResultSetImpl(ars);
         }catch (Exception e){
             throw new SQLException("Unknown exception");
@@ -86,14 +90,15 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     @Override
     public int executeUpdate() throws SQLException {
-        if (type!=Type.UPDATE)
+        if (type!=Type.UPDATE){
             throw new SQLException("Not supported update");
+        }
         org.adbcj.Result ar=null;
         try{
             if (params.size()==0)
                 ar=updateFuture.get().execute().get();
             else
-                ar=updateFuture.get().execute(params.toArray()).get();
+                ar=updateFuture.get().execute(getParamArray()).get();
             return (int)ar.getAffectedRows();
         }catch (Exception e){
             throw new SQLException("Unknown exception");
