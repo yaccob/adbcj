@@ -10,7 +10,9 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,8 +30,9 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     private final Type type;
     private final DbFuture<PreparedUpdate> updateFuture;
     private final DbFuture<PreparedQuery> queryFuture;
-    private Object[] params=null;
-
+    private ArrayList<Object> params=new ArrayList<Object>();
+    private int parameterCount;
+    private int[] parameterTypes=null;
 
 
 
@@ -46,6 +49,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
             queryFuture=null;
             updateFuture=connection.prepareUpdate(sql);
         }
+
     }
 
 
@@ -73,11 +77,10 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
         }
         try{
             PreparedQuery preparedQuery=queryFuture.get();
-            org.adbcj.ResultSet ars=preparedQuery.execute(params).get();
-            //TODO: change org.adbcj.ResultSet into java.sql.ResultSet
-            return null;
+            org.adbcj.ResultSet ars=preparedQuery.execute().get();
+            return new ResultSetImpl(ars);
         }catch (Exception e){
-            throw new SQLException("Unknown situation");
+            throw new SQLException("Unknown exception");
         }
     }
 
@@ -85,12 +88,26 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     public int executeUpdate() throws SQLException {
         if (type!=Type.UPDATE)
             throw new SQLException("Not supported update");
+        org.adbcj.Result ar=null;
         try{
-            org.adbcj.Result ar=updateFuture.get().execute().get();
+            if (params.size()==0)
+                ar=updateFuture.get().execute().get();
+            else
+                ar=updateFuture.get().execute(params.toArray()).get();
             return (int)ar.getAffectedRows();
         }catch (Exception e){
-            throw new SQLException("Unknown situation");
+            throw new SQLException("Unknown exception");
         }
+    }
+
+
+    public void setValue(int parameterIndex,Object item){
+        if (parameterIndex>params.size()){
+            for(int i=params.size();i<parameterIndex;i++){
+                params.add(i,null);
+            }
+        }
+        params.set(parameterIndex-1,item);
     }
 
     @Override
@@ -100,67 +117,67 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     @Override
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setByte(int parameterIndex, byte x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setShort(int parameterIndex, short x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setInt(int parameterIndex, int x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setLong(int parameterIndex, long x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setFloat(int parameterIndex, float x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setDouble(int parameterIndex, double x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setString(int parameterIndex, String x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setDate(int parameterIndex, Date x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setTime(int parameterIndex, Time x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override
@@ -190,7 +207,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     @Override
     public void setObject(int parameterIndex, Object x) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        setValue(parameterIndex,x);
     }
 
     @Override

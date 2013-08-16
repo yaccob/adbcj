@@ -1,12 +1,15 @@
 package org.adbcj.dbcj;
 
-import java.io.InputStream;
-import java.io.Reader;
+import org.adbcj.Row;
+import org.adbcj.Value;
+
+import java.io.*;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
 import java.sql.Statement;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -17,9 +20,32 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public class ResultSetImpl implements ResultSet {
+
+    private final org.adbcj.ResultSet realResultSet;
+    private final Iterator<Row> iterator;
+    private Row nullRow=null;
+    private Row row=null;
+
+    public ResultSetImpl(org.adbcj.ResultSet realResultSet){
+        this.realResultSet=realResultSet;
+        this.iterator=realResultSet.iterator();
+    }
+
+
     @Override
     public boolean next() throws SQLException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        if(iterator.hasNext()){
+            row=iterator.next();
+            return true;
+        }
+        return false;
+    }
+
+    public Object getValue(int index){
+        return this.row.get(index).getValue();
+    }
+    public Object getValue(String columnLabel){
+        return this.row.get(columnLabel).getValue();
     }
 
     @Override
@@ -34,52 +60,53 @@ public class ResultSetImpl implements ResultSet {
 
     @Override
     public String getString(int columnIndex) throws SQLException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getString();
     }
 
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getBoolean();
     }
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getByte();
     }
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getShort();
     }
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getInt();
     }
 
     @Override
     public long getLong(int columnIndex) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getLong();
     }
 
     @Override
     public float getFloat(int columnIndex) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getFloat();
     }
 
     @Override
     public double getDouble(int columnIndex) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getDouble();
     }
 
     @Override
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        //FIXME: scale unused !
+        return this.row.get(columnIndex).getBigDecimal();
     }
 
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
-        return new byte[0];  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnIndex).getBytes();
     }
 
     @Override
@@ -114,52 +141,52 @@ public class ResultSetImpl implements ResultSet {
 
     @Override
     public String getString(String columnLabel) throws SQLException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getString();
     }
 
     @Override
     public boolean getBoolean(String columnLabel) throws SQLException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getBoolean();
     }
 
     @Override
     public byte getByte(String columnLabel) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getByte();
     }
 
     @Override
     public short getShort(String columnLabel) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getShort();
     }
 
     @Override
     public int getInt(String columnLabel) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getInt();
     }
 
     @Override
     public long getLong(String columnLabel) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getLong();
     }
 
     @Override
     public float getFloat(String columnLabel) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getFloat();
     }
 
     @Override
     public double getDouble(String columnLabel) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getDouble();
     }
 
     @Override
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getBigDecimal();
     }
 
     @Override
     public byte[] getBytes(String columnLabel) throws SQLException {
-        return new byte[0];  //To change body of implemented methods use File | Settings | File Templates.
+        return this.row.get(columnLabel).getBytes();
     }
 
     @Override
@@ -264,7 +291,7 @@ public class ResultSetImpl implements ResultSet {
 
     @Override
     public boolean isLast() throws SQLException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return !this.iterator.hasNext();
     }
 
     @Override
