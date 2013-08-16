@@ -15,10 +15,17 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>adbcj-api</artifactId>
+            <version>0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>adbcj</artifactId>
+            <version>0.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mysql-async-driver</artifactId>
+            <version>0.7-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
