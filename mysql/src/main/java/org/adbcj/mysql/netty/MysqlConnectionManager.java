@@ -148,7 +148,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                 if (future.cause() != null) {
                     connectFuture.setException(future.cause());
                 }
-                addConnection(connection);
+
 
                 channel.config().setAutoRead(true);
                 channel.read();

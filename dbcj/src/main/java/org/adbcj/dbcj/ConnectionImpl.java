@@ -22,7 +22,7 @@ import java.util.concurrent.Executor;
 public class ConnectionImpl implements Connection {
 
 
-    private final org.adbcj.Connection realConnection;
+    protected final org.adbcj.Connection realConnection;
     public ConnectionImpl(org.adbcj.Connection rc){
         realConnection=rc;
 

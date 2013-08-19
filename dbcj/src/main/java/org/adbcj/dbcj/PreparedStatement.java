@@ -25,15 +25,15 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
 
     //executeUpdate or executeQuery
-    private static enum Type {
+    protected static enum Type {
         UPDATE,
         QUERY
     }
-    private final Connection connection;
-    private final Type type;
-    private final DbFuture<PreparedUpdate> updateFuture;
-    private final DbFuture<PreparedQuery> queryFuture;
-    private ArrayList<Object> params=new ArrayList<Object>();
+    protected final Connection connection;
+    protected final Type type;
+    protected final DbFuture<PreparedUpdate> updateFuture;
+    protected final DbFuture<PreparedQuery> queryFuture;
+    protected ArrayList<Object> params=new ArrayList<Object>();
 
 
 
@@ -60,6 +60,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     public Type getQueryType(String sql) throws UnsupportedOperationException {
 
         switch (Character.toLowerCase(sql.charAt(0))){
+            //TODO trim    add reason
             case 's':
                 //for select
                 return Type.QUERY;
@@ -115,7 +116,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     }
 
 
-    public void setValue(int parameterIndex,Object item){
+    protected void setValue(int parameterIndex,Object item){
         if (parameterIndex>params.size()){
             for(int i=params.size();i<parameterIndex;i++){
                 params.add(i,null);

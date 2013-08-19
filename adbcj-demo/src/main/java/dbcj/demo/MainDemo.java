@@ -50,7 +50,7 @@ public class MainDemo {
     }
     private static void checkResults(Connection connection) throws Exception{
         ResultSet resultSet=null;
-        PreparedStatement preparedStatement=connection.prepareStatement("select * from `user_info`");
+        PreparedStatement preparedStatement=connection.prepareStatement("select * from `user_info` order by id desc");
         try {
             resultSet=preparedStatement.executeQuery();
         } catch (Exception e){
@@ -90,7 +90,5 @@ public class MainDemo {
 
 
 
-
-        System.out.println("Demo Completed");
     }
 }

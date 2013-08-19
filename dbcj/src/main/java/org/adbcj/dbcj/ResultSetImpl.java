@@ -21,10 +21,10 @@ import java.util.Map;
  */
 public class ResultSetImpl implements ResultSet {
 
-    private final org.adbcj.ResultSet realResultSet;
-    private final Iterator<Row> iterator;
-    private Row nullRow=null;
-    private Row row=null;
+    protected final org.adbcj.ResultSet realResultSet;
+    protected final Iterator<Row> iterator;
+    protected Row nullRow=null;
+    protected Row row=null;
 
     public ResultSetImpl(org.adbcj.ResultSet realResultSet){
         this.realResultSet=realResultSet;
@@ -41,10 +41,10 @@ public class ResultSetImpl implements ResultSet {
         return false;
     }
 
-    public Object getValue(int index){
+    protected Object getValue(int index){
         return this.row.get(index).getValue();
     }
-    public Object getValue(String columnLabel){
+    protected Object getValue(String columnLabel){
         return this.row.get(columnLabel).getValue();
     }
 
