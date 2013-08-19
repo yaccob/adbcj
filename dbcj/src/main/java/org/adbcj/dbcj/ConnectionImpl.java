@@ -86,7 +86,12 @@ public class ConnectionImpl implements Connection {
 
     @Override
     public void close() throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        try{
+
+            realConnection.close().get();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override

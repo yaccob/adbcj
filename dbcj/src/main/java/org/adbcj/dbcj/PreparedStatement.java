@@ -22,6 +22,9 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class PreparedStatement extends StatementImpl implements java.sql.PreparedStatement{
+
+
+    //executeUpdate or executeQuery
     private static enum Type {
         UPDATE,
         QUERY
@@ -58,10 +61,16 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
         switch (Character.toLowerCase(sql.charAt(0))){
             case 's':
+                //for select
                 return Type.QUERY;
             case 'u':
+                //for update
             case 'i':
+                //for insert
             case 'd':
+                //for delete | drop
+            case 'c':
+                //for create
                 return Type.UPDATE;
             default:
                 throw new UnsupportedOperationException("Not supported query");
@@ -84,7 +93,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
                 ars=preparedQuery.execute(getParamArray()).get();
             return new ResultSetImpl(ars);
         }catch (Exception e){
-            throw new SQLException("Unknown exception");
+            throw new SQLException("Cannot execute this query SQL");
         }
     }
 
@@ -101,7 +110,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
                 ar=updateFuture.get().execute(getParamArray()).get();
             return (int)ar.getAffectedRows();
         }catch (Exception e){
-            throw new SQLException("Unknown exception");
+            throw new SQLException("Cannot execute this update SQL");
         }
     }
 
