@@ -20,7 +20,7 @@ public class UpdateDemo {
         }catch (Exception e){
             e.printStackTrace();
         }
-        String url="adbcj:mysql://localhost/adbcjtck";
+        String url="jdbc:mysql://localhost/adbcjtck";
         String name="adbcjtck";
         String password="adbcjtck";
         try{

@@ -14,9 +14,6 @@ import java.sql.ResultSet;
  */
 public class MainDemo {
 
-    private String url;
-    private String user;
-    private String password;
     static {
         try{
             Class.forName("org.adbcj.dbcj.Driver");
@@ -70,7 +67,7 @@ public class MainDemo {
     }
 
     public static void main(String[] args){
-        String url="adbcj:mysql://localhost/adbcjtck";
+        String url="jdbc:mysql://localhost/adbcjtck";
         String user="adbcjtck";
         String password="adbcjtck";
         Connection conn=null;

@@ -34,6 +34,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     protected final DbFuture<PreparedUpdate> updateFuture;
     protected final DbFuture<PreparedQuery> queryFuture;
     protected ArrayList<Object> params=new ArrayList<Object>();
+    protected final String sql;
 
 
 
@@ -41,6 +42,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     public PreparedStatement(Connection con,String sql) throws UnknownError{
         connection=con;
+        this.sql=sql;
         type=getQueryType(sql);
 
         if(type==Type.QUERY){
@@ -94,7 +96,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
                 ars=preparedQuery.execute(getParamArray()).get();
             return new ResultSetImpl(ars);
         }catch (Exception e){
-            throw new SQLException("Cannot execute this query SQL");
+            throw new SQLException("Cannot execute this query SQL:"+sql);
         }
     }
 
@@ -111,7 +113,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
                 ar=updateFuture.get().execute(getParamArray()).get();
             return (int)ar.getAffectedRows();
         }catch (Exception e){
-            throw new SQLException("Cannot execute this update SQL");
+            throw new SQLException("Cannot execute this update SQL:"+sql);
         }
     }
 
