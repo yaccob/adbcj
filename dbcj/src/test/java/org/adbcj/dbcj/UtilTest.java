@@ -6,11 +6,7 @@ import org.adbcj.PreparedQuery;
 import org.testng.annotations.Test;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fooling
- * Date: 13-8-16
- * Time: 下午3:36
- * To change this template use File | Settings | File Templates.
+ * @author foooling@gmail.com
  */
 public class UtilTest {
     @Test

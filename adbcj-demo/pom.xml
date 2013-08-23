@@ -14,7 +14,7 @@
 
     <properties>
         <slf4j.version>1.7.2</slf4j.version>
-        <adbcj.version>0.7-SNAPSHOT</adbcj.version>
+        <adbcj.version>0.7.1-SNAPSHOT</adbcj.version>
     </properties>
 
     <dependencies>
@@ -47,10 +47,13 @@
         <dependency>
             <groupId>org.adbcj</groupId>
             <artifactId>dbcj</artifactId>
-            <version>0.7-SNAPSHOT</version>
+            <version>0.7.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
+
+    <!-- FIXME: not available sometimes when version changes   -->
+<!--
     <repositories>
         <repository>
             <id>gamlor-snapshot</id>
@@ -60,6 +63,6 @@
             </snapshots>
             <layout>default</layout>
         </repository>
-    </repositories>
+    </repositories>-->
 
 </project>

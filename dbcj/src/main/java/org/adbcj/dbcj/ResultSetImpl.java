@@ -13,11 +13,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fooling
- * Date: 13-8-15
- * Time: 下午3:35
- * To change this template use File | Settings | File Templates.
+ * @author foooling@gmail.com
  */
 public class ResultSetImpl implements ResultSet {
 

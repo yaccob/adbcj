@@ -6,11 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fooling
- * Date: 13-8-16
- * Time: 上午11:02
- * To change this template use File | Settings | File Templates.
+ * @author foooling@gmail.com
  */
 public class QueryDemo {
     public static void main(String[] args){

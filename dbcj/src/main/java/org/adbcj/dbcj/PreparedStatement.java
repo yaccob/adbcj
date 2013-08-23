@@ -15,11 +15,7 @@ import java.util.Calendar;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fooling
- * Date: 13-8-15
- * Time: 下午3:32
- * To change this template use File | Settings | File Templates.
+ * @author foooling@gmail.com
  */
 public class PreparedStatement extends StatementImpl implements java.sql.PreparedStatement{
 

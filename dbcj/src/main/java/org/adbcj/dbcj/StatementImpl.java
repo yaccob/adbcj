@@ -5,11 +5,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fooling
- * Date: 13-8-15
- * Time: 下午3:33
- * To change this template use File | Settings | File Templates.
+ * @author foooling@gmail.com
  */
 public class StatementImpl implements Statement {
     @Override

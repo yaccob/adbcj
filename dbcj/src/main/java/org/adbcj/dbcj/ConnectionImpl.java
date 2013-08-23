@@ -13,11 +13,7 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fooling
- * Date: 13-8-15
- * Time: 下午3:30
- * To change this template use File | Settings | File Templates.
+ * @author foooling@gmail.com
  */
 public class ConnectionImpl implements Connection {
 
