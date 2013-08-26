@@ -38,9 +38,9 @@ public class QueryDemo {
             rs=ps.executeQuery();
             while (rs.next()){
 
-                int id=rs.getInt(0);
-                int n=rs.getInt(1);
-                int passwd=rs.getInt(2);
+                int id=rs.getInt(1);
+                int n=rs.getInt(2);
+                int passwd=rs.getInt(3);
                 System.out.println("id:"+id+",name:"+n+",password:"+passwd);
             }
         } catch (Exception e){

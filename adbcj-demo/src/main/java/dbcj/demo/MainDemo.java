@@ -13,6 +13,8 @@ public class MainDemo {
     static {
         try{
             Class.forName("org.adbcj.dbcj.Driver");
+            //Uncomment would still work
+            //Class.forName("com.mysql.jdbc.Driver");
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -50,9 +52,9 @@ public class MainDemo {
             throw new Exception("Cannot get result set");
         }
         while(resultSet.next()){
-            int userid=resultSet.getInt(0);
-            String username= resultSet.getString(1);
-            String password= resultSet.getString(2);
+            int userid=resultSet.getInt(1);
+            String username= resultSet.getString(2);
+            String password= resultSet.getString(3);
             System.out.println(userid+" "+username+" "+password);
         }
     }

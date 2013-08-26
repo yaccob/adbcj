@@ -42,7 +42,7 @@ public class ConnectionImpl implements Connection {
 
     @Override
     public Statement createStatement() throws SQLException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new StatementImpl(this);
     }
 
     @Override

@@ -20,18 +20,13 @@ import java.util.List;
 public class PreparedStatement extends StatementImpl implements java.sql.PreparedStatement{
 
 
-    //executeUpdate or executeQuery
-    protected static enum Type {
-        UPDATE,
-        QUERY
-    }
+
     protected final Connection connection;
     protected final Type type;
     protected final DbFuture<PreparedUpdate> updateFuture;
     protected final DbFuture<PreparedQuery> queryFuture;
     protected ArrayList<Object> params=new ArrayList<Object>();
     protected final String sql;
-
 
 
 
@@ -55,27 +50,6 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
         return params.toArray();
     }
 
-    public Type getQueryType(String sql) throws UnsupportedOperationException {
-
-        switch (Character.toLowerCase(sql.charAt(0))){
-            //TODO trim    add reason
-            case 's':
-                //for select
-                return Type.QUERY;
-            case 'u':
-                //for update
-            case 'i':
-                //for insert
-            case 'd':
-                //for delete | drop
-            case 'c':
-                //for create
-                return Type.UPDATE;
-            default:
-                throw new UnsupportedOperationException("Not supported query");
-
-        }
-    }
 
 
     @Override
