@@ -8,45 +8,28 @@ import java.sql.ResultSet;
  * @author foooling@gmail.com
  */
 public class StatementImpl implements Statement {
-    //executeUpdate or executeQuery
-    protected static enum Type {
-        UPDATE,
-        QUERY
-    }
+
 
     protected final org.adbcj.dbcj.Connection connection;
+    protected final org.adbcj.Connection realConnection;
+
     public StatementImpl(org.adbcj.dbcj.Connection conn){
         connection=conn;
+        realConnection=connection.getRealConnection();
     }
 
-    public StatementImpl(){
-        connection=null;
-    }
-    protected Type getQueryType(String sql) throws UnsupportedOperationException {
 
-        switch (Character.toLowerCase(sql.charAt(0))){
-            //TODO trim    add reason
-            case 's':
-                //for select
-                return Type.QUERY;
-            case 'u':
-                //for update
-            case 'i':
-                //for insert
-            case 'd':
-                //for delete | drop
-            case 'c':
-                //for create
-                return Type.UPDATE;
-            default:
-                throw new UnsupportedOperationException("Not supported query");
 
-        }
-    }
 
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        try {
+            org.adbcj.ResultSet ars =realConnection.executeQuery(sql).get();
+            return new ResultSetImpl(ars);
+
+        } catch (Exception e){
+            throw new SQLException("Failed to execute query: "+sql);
+        }
     }
 
     @Override
