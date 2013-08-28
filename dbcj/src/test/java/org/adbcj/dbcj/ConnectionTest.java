@@ -34,7 +34,7 @@ public class ConnectionTest {
             java.sql.PreparedStatement pstmt=con.prepareStatement(sql);
             java.sql.ResultSet resultSet =pstmt.executeQuery();
             resultSet.next();
-            Assert.assertEquals(resultSet.getInt(0),1);
+            Assert.assertEquals(resultSet.getInt(1),1);
 
         } catch (Exception e){
             e.printStackTrace();

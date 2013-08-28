@@ -96,7 +96,7 @@ public class UtilTest {
         } catch (Exception e){
             Assert.fail();
         }
-        for(int i=1;i<=pstmt.getParamArray().length;i++){
+        for(int i=0;i<pstmt.getParamArray().length;i++){
             org.testng.Assert.assertEquals(pstmt.getParamArray()[i],targetArray[i]);
         }
 
