@@ -34,7 +34,14 @@ public class StatementImpl implements Statement {
 
     @Override
     public int executeUpdate(String sql) throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        try {
+
+            org.adbcj.Result ar =realConnection.executeUpdate(sql).get();
+            return (int)ar.getAffectedRows();
+
+        } catch (Exception e){
+            throw new SQLException("Failed to execute query: "+sql);
+        }
     }
 
     @Override

@@ -20,14 +20,8 @@ import java.util.List;
 public class PreparedStatement extends StatementImpl implements java.sql.PreparedStatement{
 
 
-    //executeUpdate or executeQuery
-    protected static enum Type {
-        UPDATE,
-        QUERY
-    }
 
 
-    protected final Type type;
     protected final DbFuture<PreparedUpdate> updateFuture;
     protected final DbFuture<PreparedQuery> queryFuture;
     protected ArrayList<Object> params=new ArrayList<Object>();
@@ -39,39 +33,15 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     public PreparedStatement(Connection con,String sql) throws UnknownError{
         super(con);
         this.sql=sql;
-        type=getQueryType(sql);
 
-        if(type==Type.QUERY){
-            queryFuture=realConnection.prepareQuery(sql);
-            updateFuture=null;
-        }else {
-            queryFuture=null;
-            updateFuture=realConnection.prepareUpdate(sql);
-        }
+        queryFuture=realConnection.prepareQuery(sql);
+
+        updateFuture=realConnection.prepareUpdate(sql);
+
 
     }
 
-    protected Type getQueryType(String sql) throws UnsupportedOperationException {
 
-        switch (Character.toLowerCase(sql.charAt(0))){
-            //TODO trim    add reason
-            case 's':
-                //for select
-                return Type.QUERY;
-            case 'u':
-                //for update
-            case 'i':
-                //for insert
-            case 'd':
-                //for delete | drop
-            case 'c':
-                //for create
-                return Type.UPDATE;
-            default:
-                throw new UnsupportedOperationException("Not supported query: "+sql);
-
-        }
-    }
 
     public Object[] getParamArray(){
         return params.toArray();
@@ -81,9 +51,6 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     @Override
     public ResultSet executeQuery() throws SQLException {
-        if (type != Type.QUERY){
-            throw new SQLException("Not supported query");
-        }
         org.adbcj.ResultSet ars;
         try{
             PreparedQuery preparedQuery=queryFuture.get();
@@ -99,9 +66,6 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     @Override
     public int executeUpdate() throws SQLException {
-        if (type!=Type.UPDATE){
-            throw new SQLException("Not supported update");
-        }
         org.adbcj.Result ar=null;
         try{
             if (params.size()==0)

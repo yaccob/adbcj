@@ -76,7 +76,7 @@ public class MainDemo {
             insertValues(conn);
             checkResults(conn);
             clearTable(conn);
-            conn.close();
+            //conn.close();
 
         } catch (Exception e){
             e.printStackTrace();
