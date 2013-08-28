@@ -25,20 +25,18 @@ public class ConnectionImpl implements Connection {
     }
 
 
-    /*@Override
+    @Override
     public org.adbcj.Connection getRealConnection(){
+        if (realConnection.isClosed()){
+            return null;
+        }
         return realConnection;
-    }*/
-
-    @Override
-    public DbFuture<PreparedQuery> prepareQuery(String sql) {
-        return realConnection.prepareQuery(sql);
     }
 
-    @Override
-    public DbFuture<PreparedUpdate> prepareUpdate(String sql) {
-        return realConnection.prepareUpdate(sql);
-    }
+
+
+
+
 
     @Override
     public Statement createStatement() throws SQLException {
