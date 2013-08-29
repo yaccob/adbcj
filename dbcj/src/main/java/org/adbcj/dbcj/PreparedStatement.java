@@ -22,11 +22,31 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
 
 
-    protected final DbFuture<PreparedUpdate> updateFuture;
-    protected final DbFuture<PreparedQuery> queryFuture;
+    protected DbFuture<PreparedUpdate> updateFuture=null;
+    protected DbFuture<PreparedQuery> queryFuture=null;
     protected ArrayList<Object> params=new ArrayList<Object>();
     protected final String sql;
 
+    @Override
+    public void close(){
+        try{
+            if(updateFuture!=null){
+                updateFuture.cancel(true);
+                updateFuture.get().close();
+            }
+            if (queryFuture!=null){
+                queryFuture.cancel(true);
+                queryFuture.get().close();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            updateFuture=null;
+            queryFuture=null;
+            params=null;
+        }
+
+    }
 
 
 
@@ -34,9 +54,9 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
         super(con);
         this.sql=sql;
 
-        queryFuture=realConnection.prepareQuery(sql);
+        /*queryFuture=realConnection.prepareQuery(sql);
 
-        updateFuture=realConnection.prepareUpdate(sql);
+        updateFuture=realConnection.prepareUpdate(sql);*/
 
 
     }
@@ -53,6 +73,9 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     public ResultSet executeQuery() throws SQLException {
         org.adbcj.ResultSet ars;
         try{
+            if (queryFuture==null){
+                queryFuture=realConnection.prepareQuery(sql);
+            }
             PreparedQuery preparedQuery=queryFuture.get();
             if (params.size()==0)
                 ars = preparedQuery.execute().get();
@@ -68,6 +91,9 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
     public int executeUpdate() throws SQLException {
         org.adbcj.Result ar=null;
         try{
+            if (updateFuture==null){
+                updateFuture=realConnection.prepareUpdate(sql);
+            }
             if (params.size()==0)
                 ar=updateFuture.get().execute().get();
             else
