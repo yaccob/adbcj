@@ -230,30 +230,9 @@
 			<classifier>jdk15</classifier>
 		</dependency>
 
-        <!-- datasource  -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
-            <version>0.2.12</version>
-        </dependency>
+
 	</dependencies>
 
-    <repositories>
-        <!-- for druid -->
-        <repository>
-            <id>alibaba-opensource</id>
-            <name>alibaba-opensource</name>
-            <url>http://code.alibabatech.com/mvn/releases/</url>
-            <layout>default</layout>
-        </repository>
-        <!-- for druid -->
-        <repository>
-            <id>alibaba-opensource-snapshot</id>
-            <name>alibaba-opensource-snapshot</name>
-            <url>http://code.alibabatech.com/mvn/snapshots/</url>
-            <layout>default</layout>
-        </repository>
-    </repositories>
 
 </project>
 
