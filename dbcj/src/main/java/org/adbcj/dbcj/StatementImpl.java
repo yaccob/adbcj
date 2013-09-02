@@ -46,6 +46,7 @@ public class StatementImpl implements Statement {
 
     @Override
     public void close() throws SQLException {
+        //TODO: close behavior
         //To change body of implemented methods use File | Settings | File Templates.
     }
 

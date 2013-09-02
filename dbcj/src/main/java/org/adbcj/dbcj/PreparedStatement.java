@@ -29,6 +29,7 @@ public class PreparedStatement extends StatementImpl implements java.sql.Prepare
 
     @Override
     public void close(){
+        //FIXME : may have problem using get() when query is big
         try{
             if(updateFuture!=null){
                 updateFuture.cancel(true);
