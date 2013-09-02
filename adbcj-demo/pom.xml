@@ -46,7 +46,7 @@
         </dependency>
         <dependency>
             <groupId>org.adbcj</groupId>
-            <artifactId>dbcj</artifactId>
+            <artifactId>adbcj-dbcj</artifactId>
             <version>0.7.1-SNAPSHOT</version>
         </dependency>
         <!-- datasource  -->

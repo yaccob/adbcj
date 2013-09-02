@@ -181,6 +181,11 @@
 				<groupId>${project.groupId}</groupId>
 				<version>${project.version}</version>
 			</dependency>
+            <dependency>
+                <artifactId>adbcj-dbcj</artifactId>
+                <groupId>${project.groupId}</groupId>
+                <version>${project.version}</version>
+            </dependency>
 			<dependency>
 				<artifactId>adbcj-connection-pool</artifactId>
 				<groupId>${project.groupId}</groupId>
