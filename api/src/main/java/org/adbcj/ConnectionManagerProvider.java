@@ -59,6 +59,10 @@ public class ConnectionManagerProvider {
             connectionManager=createConnectionManager(url, username, password, Collections.<String,String>emptyMap());
             managerConcurrentHashMap.putIfAbsent(key,connectionManager);
             return connectionManager;
+        }else if (connectionManager.isClosed()){
+            connectionManager=createConnectionManager(url, username, password, Collections.<String,String>emptyMap());
+            managerConcurrentHashMap.put(key,connectionManager);
+            return connectionManager;
         }
         return connectionManager;
 	}
