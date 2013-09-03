@@ -13,6 +13,7 @@
 
 	<artifactId>adbcj-tck</artifactId>
 	<packaging>jar</packaging>
+    <version>${parent.version}</version>
 	<name>ADBCJ - TCK</name>
 
 	<build>
@@ -34,26 +35,31 @@
 		<dependency>
 			<artifactId>adbcj-api</artifactId>
 			<groupId>${project.groupId}</groupId>
+            <version>${parent.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<artifactId>adbcj-jdbc</artifactId>
 			<groupId>${project.groupId}</groupId>
+            <version>${parent.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<artifactId>mysql-async-driver</artifactId>
 			<groupId>${project.groupId}</groupId>
+            <version>${parent.version}</version>
 			<scope>test</scope>
 		</dependency>
         <dependency>
             <artifactId>h2-async-driver</artifactId>
             <groupId>${project.groupId}</groupId>
+            <version>${parent.version}</version>
             <scope>test</scope>
         </dependency>
 		<dependency>
 			<artifactId>adbcj-connection-pool</artifactId>
 			<groupId>${project.groupId}</groupId>
+            <version>${parent.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
