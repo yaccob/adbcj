@@ -34,7 +34,6 @@ public class ConnectionManagerProvider {
 
 	public static final String ADBCJ_PROTOCOL = "adbcj";
     public static final String DBCJ_PROTOCOL="jdbc";
-    public static ConcurrentHashMap<String,ConnectionManager> managerConcurrentHashMap=new ConcurrentHashMap<String, ConnectionManager>();
 	private ConnectionManagerProvider () {}
 
     /**
