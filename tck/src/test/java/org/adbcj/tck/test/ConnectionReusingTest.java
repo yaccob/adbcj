@@ -42,7 +42,7 @@ public class ConnectionReusingTest {
 
 
 
-    private static final int CONN_NUM=4;
+    private static final int CONN_NUM=5;
     private volatile int finishCount;
     @Test
     public void tryConnect(){
@@ -73,7 +73,7 @@ public class ConnectionReusingTest {
                             continueAndInsert();
                         }
                     });
-                    logger.info(tablename+"-"+randint+" ---create table");
+                    logger.info(tablename + "-" + randint + " ---create table");
                 }  catch (Exception e){
                     e.printStackTrace();
                     Assert.fail();
@@ -89,7 +89,7 @@ public class ConnectionReusingTest {
                                     continueAndVerify();
                                 }
                             });
-                    logger.info(tablename+"-"+randint+" ---insert value");
+                    logger.info(tablename + "-" + randint + " ---insert value");
                 } catch (Exception e){
                     e.printStackTrace();
                     Assert.fail();
@@ -101,15 +101,15 @@ public class ConnectionReusingTest {
                     connection.executeQuery("SELECT * from "+tablename+";").addListener(new DbListener<ResultSet>() {
                         @Override
                         public void onCompletion(DbFuture<ResultSet> future) {
-                            try{
-                                ResultSet rs=future.getResult();
-                                Row r=rs.get(0);
-                                int resultint=r.get(1).getInt();
-                                logger.info(tablename+"-"+randint+" ---select got "+resultint);
+                            try {
+                                ResultSet rs = future.getResult();
+                                Row r = rs.get(0);
+                                int resultint = r.get(1).getInt();
+                                logger.info(tablename + "-" + randint + " ---select got " + resultint);
                                 finishWithDrop();
                                 //org.testng.Assert.assertEquals(resultint,randint);
 
-                            } catch (Exception e){
+                            } catch (Exception e) {
                                 e.printStackTrace();
                                 Assert.fail();
                             }
@@ -124,9 +124,12 @@ public class ConnectionReusingTest {
 
                 try {
                     logger.info(tablename+"-"+randint+" ---dropping");
-                    connection.executeUpdate("drop table "+tablename+";").get();
-                    //FIXME : Problems everywhere
-                    finishCount++;
+                    connection.executeUpdate("drop table "+tablename+";").addListener(new DbListener<Result>() {
+                        @Override
+                        public void onCompletion(DbFuture<Result> future) {
+                            finishCount++;
+                        }
+                    });
                 }   catch (Exception e){
                     e.printStackTrace();
                     Assert.fail();
