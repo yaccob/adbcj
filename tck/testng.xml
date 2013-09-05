@@ -13,8 +13,8 @@
 
         <classes>
             <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest" />-->
-            <!--<class name="org.adbcj.tck.test.PreparedUpdateTest"/>-->
+            <class name="org.adbcj.tck.test.CloseConnectionsTest" />
+            <class name="org.adbcj.tck.test.PreparedUpdateTest"/>
         </classes>
     </test>
     <test name="MySQL-Pooled">
