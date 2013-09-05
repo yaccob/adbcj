@@ -42,13 +42,13 @@ public class ConnectionReusingTest {
 
 
 
-    private static final int CONN_NUM=5;
-    private volatile int finishCount;
+    private static final int CONN_NUM=20;
+    private volatile int finishCount=0;
+    private volatile int threadNum=0;
     @Test
     public void tryConnect(){
         try {
             connection=connectionManager.connect().get();
-            finishCount=0;
         }catch (Exception e){
             e.printStackTrace();
             Assert.fail();
@@ -60,6 +60,7 @@ public class ConnectionReusingTest {
         new Object(){
             String tablename=randString(7);
             int randint=randInt();
+            int num=threadNum++;
 
             public void createTableIfNotExist(){
                 try {
@@ -89,7 +90,7 @@ public class ConnectionReusingTest {
                                     continueAndVerify();
                                 }
                             });
-                    logger.info(tablename + "-" + randint + " ---insert value");
+                    logger.info(num+" : "+tablename + "-" + randint + " ---insert value");
                 } catch (Exception e){
                     e.printStackTrace();
                     Assert.fail();
@@ -97,7 +98,8 @@ public class ConnectionReusingTest {
             }
             public void continueAndVerify(){
                 try {
-                    logger.info(tablename+"-"+randint+" ---select start ");
+                    logger.info(num+" : "+tablename+"-"+randint+" ---select start ");
+                    connection.executeQuery("SELECT 1 from "+tablename+";");
                     connection.executeQuery("SELECT * from "+tablename+";").addListener(new DbListener<ResultSet>() {
                         @Override
                         public void onCompletion(DbFuture<ResultSet> future) {
@@ -105,7 +107,7 @@ public class ConnectionReusingTest {
                                 ResultSet rs = future.getResult();
                                 Row r = rs.get(0);
                                 int resultint = r.get(1).getInt();
-                                logger.info(tablename + "-" + randint + " ---select got " + resultint);
+                                logger.info(num+" : "+tablename + "-" + randint + " ---select got " + resultint);
                                 finishWithDrop();
                                 //org.testng.Assert.assertEquals(resultint,randint);
 
@@ -123,7 +125,7 @@ public class ConnectionReusingTest {
             public void finishWithDrop(){
 
                 try {
-                    logger.info(tablename+"-"+randint+" ---dropping");
+                    logger.info(num+" : "+tablename+"-"+randint+" ---dropping");
                     connection.executeUpdate("drop table "+tablename+";").addListener(new DbListener<Result>() {
                         @Override
                         public void onCompletion(DbFuture<Result> future) {
