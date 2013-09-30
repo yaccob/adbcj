@@ -54,6 +54,10 @@ public class PooledConnectionManager extends AbstractConnectionManager implement
         });
     }
 
+    @Override
+    public DbFuture<Connection> connect(String user, String password) {
+        throw new RuntimeException("Not yet supported");
+    }
 
     private DbFuture<ConnectionItem> findOrGetNewConnection() {
         ConnectionItem connection = poolOfConnections.poll();

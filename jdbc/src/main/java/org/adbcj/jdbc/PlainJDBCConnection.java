@@ -1,10 +1,14 @@
 package org.adbcj.jdbc;
 
+import org.adbcj.DbException;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
+
+import static java.sql.DriverManager.getConnection;
 
 /**
  * @author roman.stoffel@gamlor.info
@@ -30,7 +34,17 @@ public final class PlainJDBCConnection implements JDBCConnectionProvider {
     }
 
     @Override
-    public Connection getConnection() throws SQLException {
+    public Connection getConnection() throws SQLException{
         return DriverManager.getConnection(jdbcUrl, properties);
+
+    }
+
+    @Override
+    public Connection getConnection(String user,String password) throws SQLException {
+        Properties withUsername = new Properties(properties);
+
+        withUsername.put(USER, user);
+        withUsername.put(PASSWORD, password);
+        return DriverManager.getConnection(jdbcUrl, withUsername);
     }
 }

@@ -32,7 +32,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
     private static final String ENCODER = H2ConnectionManager.class.getName() + ".encoder";
     private static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
     private final String url;
-    private final LoginCredentials credentials;
+    private final LoginCredentials defaultCredentials;
     private final Map<String, String> keys;
     private final Set<H2Connection> connections = new HashSet<H2Connection>();
 
@@ -43,7 +43,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                                Map<String,String> keys) {
         super(properties);
         this.url = url;
-        this.credentials = credentials;
+        this.defaultCredentials = credentials;
         this.keys = keys;
 
         bootstrap = new Bootstrap()
@@ -64,6 +64,15 @@ public class H2ConnectionManager extends AbstractConnectionManager {
 
     @Override
     public DbFuture<Connection> connect() {
+        return connect(defaultCredentials);
+    }
+
+    @Override
+    public DbFuture<Connection> connect(String user, String password) {
+        return connect(new LoginCredentials(user,password,defaultCredentials.getDatabase()));
+    }
+
+    private DbFuture<Connection> connect(final LoginCredentials credentials) {
         if (isClosed()) {
             throw new DbSessionClosedException("Connection manager closed");
         }

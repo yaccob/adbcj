@@ -17,9 +17,12 @@
 package org.adbcj.jdbc;
 
 import org.adbcj.*;
+import org.adbcj.Connection;
 import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.DefaultDbFuture;
+import org.adbcj.support.NoArgFunction;
 
+import java.sql.*;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +44,35 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
         this.connectionProvider = connectionProvider;
     }
 
-    public DbFuture<Connection> connect() throws DbException {
+    @Override
+    public DbFuture<Connection> connect() {
+        return connect(new NoArgFunction<java.sql.Connection>() {
+            @Override
+            public java.sql.Connection apply() {
+                try {
+                    return connectionProvider.getConnection();
+                } catch (SQLException e) {
+                    throw DbException.wrap(e);
+                }
+            }
+        });
+    }
+
+    @Override
+    public DbFuture<Connection> connect(final String user,final  String password) {
+        return connect(new NoArgFunction<java.sql.Connection>() {
+            @Override
+            public java.sql.Connection apply() {
+                try {
+                    return connectionProvider.getConnection(user,password);
+                } catch (SQLException e) {
+                    throw DbException.wrap(e);
+                }
+            }
+        });
+    }
+
+    private DbFuture<Connection> connect(final NoArgFunction<java.sql.Connection> connectionGetter) throws DbException {
         if (isClosed()) {
             throw new DbException("This connection manager is closed");
         }
@@ -49,7 +80,7 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
         executorService.execute(new Runnable() {
             public void run() {
                 try {
-                    java.sql.Connection jdbcConnection = connectionProvider.getConnection();
+                    java.sql.Connection jdbcConnection = connectionGetter.apply();
                     JdbcConnection connection = new JdbcConnection(JdbcConnectionManager.this,
                             jdbcConnection, getExecutorService());
                     synchronized (lock) {

@@ -5,3 +5,6 @@ DROP TABLE IF EXISTS table_with_some_values;
 DROP TABLE IF EXISTS supporteddatatypes;
 DROP TABLE IF EXISTS textcontent;
 DROP TABLE IF EXISTS tablewithautoid;
+
+GRANT USAGE ON *.* TO 'adbcj-other-user'@'localhost';
+DROP USER 'adbcj-other-user'@'localhost';

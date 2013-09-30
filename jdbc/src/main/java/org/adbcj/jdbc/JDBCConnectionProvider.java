@@ -8,7 +8,7 @@ import java.sql.SQLException;
  * @since 26.04.12
  */
 public interface JDBCConnectionProvider {
-
     Connection getConnection() throws SQLException;
+    Connection getConnection(String user,String password) throws SQLException;
 
 }

@@ -37,7 +37,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
 	private static final String ENCODER = MysqlConnectionManager.class.getName() + ".encoder";
 	private static final String DECODER = MysqlConnectionManager.class.getName() + ".decoder";
-    private final LoginCredentials credentials;
+    private final LoginCredentials defaultCredentials;
 
 	private final Bootstrap bootstrap;
     private final Set<MySqlConnection> connections = new HashSet<MySqlConnection>();
@@ -50,7 +50,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
                                   String schema,
                                   Map<String,String> properties) {
         super(properties);
-        credentials = new LoginCredentials(username, password, schema);
+        defaultCredentials = new LoginCredentials(username, password, schema);
 
 		bootstrap = new Bootstrap()
                 .group(new NioEventLoopGroup())
@@ -116,6 +116,16 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
     }
 
     public DbFuture<Connection> connect() {
+        return connect(defaultCredentials);
+    }
+
+    @Override
+    public DbFuture<Connection> connect(String user, String password) {
+        return connect(new LoginCredentials(user, password, defaultCredentials.getDatabase()));
+    }
+
+    private DbFuture<Connection> connect(final LoginCredentials credentials) {
+
         if (isClosed()) {
             throw new DbException("Connection manager closed");
         }
@@ -155,9 +165,8 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
             }
         });
 
-        return connectFuture;                          }
-
-
+        return connectFuture;
+    }
 
     public int nextId() {
         return idCounter.incrementAndGet();

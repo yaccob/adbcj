@@ -1,3 +1,6 @@
+GRANT USAGE ON *.* TO 'adbcj-other-user'@'localhost';
+DROP USER 'adbcj-other-user'@'localhost';
+CREATE USER 'adbcj-other-user'@'localhost' IDENTIFIED BY  'adbcj-other-user';
 
 DROP TABLE IF EXISTS simple_values;
 

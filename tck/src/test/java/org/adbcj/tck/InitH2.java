@@ -1,5 +1,6 @@
 package org.adbcj.tck;
 
+import org.adbcj.DbException;
 import org.adbcj.jdbc.PlainJDBCConnection;
 import org.h2.tools.Server;
 
@@ -43,10 +44,6 @@ public class InitH2 extends InitDatabase {
             // expected, server not running
         }
         try {
-//            this.server = Server.createPgServer("-pgAllowOthers",
-//                    "-pgDaemon",
-//                    "-pgPort", "14242",
-//                    "-baseDir", "./h2testdb");
             this.server = Server.createTcpServer("-tcpAllowOthers",
                     "-tcpDaemon",
                     "-tcpPort", "14242",

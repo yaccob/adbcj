@@ -45,6 +45,11 @@ public class CheckConstructionManager implements ConnectionManager{
     }
 
     @Override
+    public DbFuture<Connection> connect(String user, String password) {
+        throw new Error("Mock does not support this operation");
+    }
+
+    @Override
     public DbFuture<Void> close(CloseMode mode) throws DbException {
         throw new Error("Mock does not support this operation");
     }

@@ -16,6 +16,11 @@ class MockConnectionManager implements ConnectionManager {
     private final ThreadLocal<MockConnection> lastConnection = new ThreadLocal<MockConnection>();
     @Override
     public DbFuture<Connection> connect() {
+        return connect("","");
+    }
+
+    @Override
+    public DbFuture<Connection> connect(String user, String password) {
         final MockConnection connection = new MockConnection(this);
         lastConnection.set(connection);
         return DefaultDbFuture.<Connection>completed(connection);

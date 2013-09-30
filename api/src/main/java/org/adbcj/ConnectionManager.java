@@ -18,7 +18,7 @@ package org.adbcj;
 
 /**
  * Manages a set of {@link Connection} instances.  A database connection is established by invoking {@link #connect()}.
- * All the connections managed by this connection manager can be closed using {@link #close(boolean)}.
+ * All the connections managed by this connection manager can be closed using {@link #close(CloseMode)}.
  * 
  * @author Mike Heath
  */
@@ -26,10 +26,18 @@ public interface ConnectionManager extends DbSessionProvider {
 	
 	/**
 	 * Establishes a new database connection.
+     *
+     * Uses the user name and password given when the connection manager was created
 	 * 
 	 * @return  a future object that will complete when the database connection has been established or failed.
 	 */
 	DbFuture<Connection> connect();
+
+    /**
+     * Establishes a new database connection, with the given user and password
+     * @return  a future object that will complete when the database connection has been established or failed.
+     */
+    DbFuture<Connection> connect(String user,String password);
 	
 	/**
 	 * Closes all the database connections managed by this {@code ConnectionManager} and releases any resources
