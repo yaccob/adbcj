@@ -8,144 +8,80 @@ import org.adbcj.support.OneArgFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
 public class PooledConnectionManager extends AbstractConnectionManager implements PooledResource {
-    private final Logger logger = LoggerFactory.getLogger(PooledConnectionManager.class);
 
-    private final ConnectionManager connectionManager;
-    private final ConcurrentLinkedQueue<ConnectionItem> poolOfConnections = new ConcurrentLinkedQueue<ConnectionItem>();
-    private final ConcurrentLinkedQueue<DefaultDbFuture<ConnectionItem>> waitingForConnection
-            = new ConcurrentLinkedQueue<DefaultDbFuture<ConnectionItem>>();
-    private final ConcurrentHashMap<PooledConnection,Boolean> aliveConnections = new ConcurrentHashMap<PooledConnection,Boolean>();
-    private final ConfigInfo config;
+    private final UsersConnectionPool.UserConnectionId defaultConnection = new UsersConnectionPool.UserConnectionId("",true);
 
     private final Timer timeOutTimer = new Timer("PooledConnectionManager timeout timer",true);
 
-    private final AtomicInteger allocatedConnectionsCount = new AtomicInteger();
-    public PooledConnectionManager(ConnectionManager connectionManager,Map<String,String> properties, ConfigInfo config) {
+    private final ConcurrentHashMap<UsersConnectionPool.UserConnectionId,UsersConnectionPool> connectionsPerUser
+            = new ConcurrentHashMap<UsersConnectionPool.UserConnectionId, UsersConnectionPool>();
+    private final ConnectionManager connectionManager;
+    private final ConfigInfo config;
+
+    public PooledConnectionManager(ConnectionManager connectionManager,Map<String, String> properties,ConfigInfo config) {
         super(properties);
         this.connectionManager = connectionManager;
         this.config = config;
     }
 
     @Override
-    public DbFuture<Connection> connect() {
-        if(isClosed()){
-            throw new DbException("Connection manager is closed. Cannot open a new connection");
+    protected DbFuture<Void> doClose(CloseMode mode) {
+        final DefaultDbFuture<Void> toComplete = new DefaultDbFuture<Void>(stackTracingOptions());
+        final ArrayList<UsersConnectionPool> toClose = new ArrayList<UsersConnectionPool>(connectionsPerUser.values());
+        final AtomicInteger countDown = new AtomicInteger(toClose.size());
+        final AtomicReference<Exception> failure = new AtomicReference(null);
+        for(UsersConnectionPool pool : connectionsPerUser.values()){
+            pool.close(mode).addListener(new DbListener<Void>() {
+                @Override
+                public void onCompletion(DbFuture<Void> future) {
+                    if(future.getState()==FutureState.FAILURE){
+                        failure.compareAndSet(null,future.getException());
+                    }
+                    int pendingCloses = countDown.decrementAndGet();
+                    if(pendingCloses==0){
+                        if(failure.get()==null){
+                            toComplete.trySetResult(null);
+                        } else{
+                            toComplete.trySetException(failure.get());
+                        }
+                    }
+                }
+            });
         }
-        return (DbFuture) FutureUtils.map(findOrGetNewConnection(), new OneArgFunction<ConnectionItem, PooledConnection>() {
-            @Override
-            public PooledConnection apply(ConnectionItem arg) {
-                final PooledConnection pooledConnection = new PooledConnection(
-                        arg,
-                        PooledConnectionManager.this);
-                aliveConnections.put(pooledConnection, true);
-                return pooledConnection;
-            }
-        });
+        return toComplete;
+    }
+
+    @Override
+    public DbFuture<Connection> connect() {
+        return connectByKey(defaultConnection).connect();
     }
 
     @Override
     public DbFuture<Connection> connect(String user, String password) {
-        throw new RuntimeException("Not yet supported");
+
+        return connectByKey(new UsersConnectionPool.UserConnectionId(user,false)).connect(user, password);
     }
 
-    private DbFuture<ConnectionItem> findOrGetNewConnection() {
-        ConnectionItem connection = poolOfConnections.poll();
-        if(null!=connection){
-            return DefaultDbFuture.completed(connection);
+    private UsersConnectionPool connectByKey(UsersConnectionPool.UserConnectionId key) {
+        UsersConnectionPool connectionPool = connectionsPerUser.get(key);
+        if(null==connectionPool){
+            connectionsPerUser.putIfAbsent(key,new UsersConnectionPool(connectionManager,timeOutTimer,key,properties, config));
+            connectionPool = connectionsPerUser.get(key);
         }
-        if(allocatedConnectionsCount.get()>=config.getMaxConnections()){
-            return waitForConnection();
-        }  else{
-            allocatedConnectionsCount.incrementAndGet();
-            return FutureUtils.map(connectionManager.connect(), new OneArgFunction<Connection, ConnectionItem>() {
-                @Override
-                public ConnectionItem apply(Connection arg) {
-                    return new ConnectionItem(arg, config.getStatementCacheSize());
-                }
-            });
-        }
+        return connectionPool;
     }
-
-    private DbFuture<ConnectionItem> waitForConnection() {
-        final DefaultDbFuture<ConnectionItem> connectionWaiter =new DefaultDbFuture<ConnectionItem>(stackTracingOptions());
-        waitingForConnection.offer(connectionWaiter);
-        logger.info("Couldn't serve a connection, because the pool.maxPool limit of {} has been reached",config.getMaxConnections());
-        timeOutTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                connectionWaiter.trySetException(new DbException("No connection available. Time out waiting for a connection. " +
-                        "The "+ConfigInfo.MAX_WAIT_FOR_CONNECTIONS+" is set to "+config.getMaxWaitForConnectionsInMillisec() + ". " +
-                        "The "+ConfigInfo.POOL_MAX_CONNECTIONS+" is set to "+config.getMaxConnections() + ". " ));
-            }
-        }, config.getMaxWaitForConnectionsInMillisec());
-        return connectionWaiter;
-    }
-
-    @Override
-    public DbFuture<Void> doClose(CloseMode mode) throws DbException {
-        timeOutTimer.cancel();
-        for (Connection pooledConnection : aliveConnections.keySet()) {
-            pooledConnection.close(mode);
-        }
-        return connectionManager.close(mode);
-    }
-
-    public DbFuture<Void> returnConnection(PooledConnection pooledConnection) {
-        final DefaultDbFuture<Void> transactionReturned = new DefaultDbFuture<Void>(stackTracingOptions());
-        aliveConnections.remove(pooledConnection);
-        if(pooledConnection.isMayBeCorrupted()){
-            allocatedConnectionsCount.decrementAndGet();
-            return pooledConnection.getNativeConnection().close();
-        } else {
-            return returnConnectionToPool(pooledConnection, transactionReturned);
-        }
-    }
-
-    private DbFuture<Void> returnConnectionToPool(PooledConnection pooledConnection, final DefaultDbFuture<Void> transactionReturned) {
-        final ConnectionItem item = pooledConnection.connectionItem();
-        final Connection nativeTx = item.connection();
-        if(!nativeTx.isClosed() && nativeTx.isInTransaction()){
-            nativeTx.rollback().addListener(new DbListener<Void>() {
-                @Override
-                public void onCompletion(DbFuture<Void> future) {
-                    PooledConnectionManager.this.returnConnection(item, transactionReturned);
-                }
-            });
-        } else {
-            PooledConnectionManager.this.returnConnection(item, transactionReturned);
-        }
-        return transactionReturned;
-    }
-
-    private void returnConnection(ConnectionItem nativeTx, DefaultDbFuture<Void> transactionReturned) {
-        if(!tryCompleteWaitingConnectionRequests(nativeTx)){
-            poolOfConnections.offer(nativeTx);
-        }
-        transactionReturned.setResult(null);
-    }
-
-    private boolean tryCompleteWaitingConnectionRequests(ConnectionItem nativeTx){
-        DefaultDbFuture<ConnectionItem> waitForConnection = waitingForConnection.poll();
-        while(null!=waitForConnection ){
-            if(waitForConnection.trySetResult(nativeTx)){
-                return true;
-            }
-            waitForConnection = waitingForConnection.poll();
-        }
-        return false;
-
-    }
-
-
 }

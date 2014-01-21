@@ -15,7 +15,7 @@ import java.util.*;
 public final class PooledConnection implements Connection, PooledResource {
     private static final Logger logger = LoggerFactory.getLogger(PooledConnection.class);
     private final ConnectionItem connectionItem;
-    private final PooledConnectionManager pooledConnectionManager;
+    private final UsersConnectionPool pooledConnectionManager;
     private volatile DefaultDbFuture<Void> closingFuture;
     private final Map<DbFuture,DefaultDbFuture> runningOperations = new HashMap<DbFuture, DefaultDbFuture>();
     private final Set<AbstractPooledPreparedStatement> openStatements = new HashSet<AbstractPooledPreparedStatement>();
@@ -37,7 +37,7 @@ public final class PooledConnection implements Connection, PooledResource {
         }
     };
 
-    public PooledConnection(ConnectionItem connectionItem, PooledConnectionManager pooledConnectionManager) {
+    public PooledConnection(ConnectionItem connectionItem, UsersConnectionPool pooledConnectionManager) {
         this.connectionItem = connectionItem;
         this.pooledConnectionManager = pooledConnectionManager;
     }
