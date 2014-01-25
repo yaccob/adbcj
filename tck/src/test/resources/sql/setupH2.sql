@@ -1,7 +1,8 @@
 DROP ALIAS IF EXISTS SLEEP;
 CREATE ALIAS SLEEP FOR "org.adbcj.tck.h2.SleepFunction.sleep";
 
-CREATE USER IF NOT EXISTS "adbcj-other-user" PASSWORD 'adbcj-other-user';
+CREATE USER IF NOT EXISTS "ADBCJ-OTHER-USER" PASSWORD 'adbcj-other-user';
+ALTER USER "ADBCJ-OTHER-USER" ADMIN TRUE;
 
 DROP TABLE IF EXISTS simple_values;
 

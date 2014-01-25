@@ -7,7 +7,6 @@ import org.testng.annotations.Test;
 
 public class ConnectDiffrentUsersTest extends AbstractWithConnectionManagerTest{
 
-    @Parameters({"url", "user", "password"})
     @Test
     public void connectWithOtherUser() throws Exception {
 
@@ -17,8 +16,8 @@ public class ConnectDiffrentUsersTest extends AbstractWithConnectionManagerTest{
         String userNormal = normalUser.executeQuery("SELECT current_user()").get().get(0).get(0).getString();
         String otherUser = connectionOtherUser.executeQuery("SELECT current_user()").get().get(0).get(0).getString();
 
-        Assert.assertEquals(userNormal,"adbcjtck@localhost");
-        Assert.assertEquals(otherUser,"adbcj-other-user@localhost");
+        Assert.assertTrue(userNormal.toLowerCase().contains("adbcjtck"));
+        Assert.assertTrue(otherUser.toLowerCase().contains("adbcj-other-user"));
 
         normalUser.close();
         connectionOtherUser.close();
