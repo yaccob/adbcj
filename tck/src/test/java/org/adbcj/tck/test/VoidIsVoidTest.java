@@ -1,15 +1,15 @@
 package org.adbcj.tck.test;
 
-import junit.framework.Assert;
 import org.adbcj.Connection;
 import org.adbcj.DbFuture;
 import org.adbcj.DbListener;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
  * @author roman.stoffel@gamlor.info
  */
-public class VoidIsVoidTest extends AbstractWithConnectionManagerTest{
+public class VoidIsVoidTest extends AbstractWithConnectionManagerTest {
 
     @Test
     public void testCommitTransaction() throws Exception {
@@ -21,6 +21,7 @@ public class VoidIsVoidTest extends AbstractWithConnectionManagerTest{
             connection.close();
         }
     }
+
     @Test
     public void testRollbackTransaction() throws Exception {
         Connection connection = connectionManager.connect().get();
@@ -31,6 +32,7 @@ public class VoidIsVoidTest extends AbstractWithConnectionManagerTest{
             connection.close();
         }
     }
+
     @Test
     public void testClose() throws Exception {
         Connection connection = connectionManager.connect().get();

@@ -1,9 +1,9 @@
 package org.adbcj.tck.test;
 
-import junit.framework.Assert;
 import org.adbcj.Connection;
 import org.adbcj.DbException;
 import org.adbcj.StandardProperties;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Map;

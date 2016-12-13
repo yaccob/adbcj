@@ -1,9 +1,9 @@
 package org.adbcj.connectionpool;
 
-import junit.framework.Assert;
 import org.adbcj.Connection;
 import org.adbcj.ConnectionManager;
 import org.adbcj.ConnectionManagerProvider;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
@@ -25,7 +25,7 @@ public class AllInstancesNeedToBeWrappedTest {
     }
 
     private void assertIsPooledResource(Object resource) {
-        Assert.assertTrue("Instance has to be a pooled resource: "+resource,resource instanceof PooledResource);
+        Assert.assertTrue(resource instanceof PooledResource,"Instance has to be a pooled resource: "+resource);
     }
 
 

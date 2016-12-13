@@ -1,16 +1,14 @@
 package org.adbcj.tck.test;
 
-import junit.framework.Assert;
 import org.adbcj.Connection;
 import org.adbcj.DbFuture;
 import org.adbcj.ResultSet;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CancellationException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class CancelingRequests extends AbstractWithConnectionManagerTest{
 
 

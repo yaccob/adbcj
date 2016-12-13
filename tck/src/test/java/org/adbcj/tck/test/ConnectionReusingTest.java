@@ -1,15 +1,12 @@
 package org.adbcj.tck.test;
-import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.Parameters;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author foooling@gmail.com
  */
 public class ConnectionReusingTest extends AbstractWithConnectionManagerTest {
-    Logger logger=LoggerFactory.getLogger(ConnectionReusingTest.class);
+    private static Logger logger=LoggerFactory.getLogger(ConnectionReusingTest.class);
     private static final String alpha="abcdefghijklmnopqrstuvwxyz";
     private static final int MAX_INT=999999;
     private final Random random=new Random();

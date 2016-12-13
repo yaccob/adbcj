@@ -1,8 +1,8 @@
 package org.adbcj.connectionpool;
 
-import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
+import org.testng.Assert;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -56,12 +56,12 @@ class MockConnectionManager implements ConnectionManager {
     }
 
     public void assertWasClosed() {
-        Assert.assertTrue("Expected that the manager has been closed",closed);
+        Assert.assertTrue(closed, "Expected that the manager has been closed");
     }
 
     public void assertConnectionAlive(int expectedAmount) {
 
-        Assert.assertEquals("Expect the amount of open connections",expectedAmount,connectionCounter.get());
+        Assert.assertEquals(expectedAmount,connectionCounter.get(),"Expect the amount of open connections");
     }
 
     public MockConnection lastInstanceRequestedOnThisThread() {
@@ -69,7 +69,7 @@ class MockConnectionManager implements ConnectionManager {
     }
 
     public void assertMaxConnectonsUsed(int expectedMaxSize) {
-        Assert.assertEquals("Expect the amount of max open connections",expectedMaxSize,maxUsedConnections.get());
+        Assert.assertEquals(expectedMaxSize,maxUsedConnections.get(),"Expect the amount of max open connections");
     }
 }
 

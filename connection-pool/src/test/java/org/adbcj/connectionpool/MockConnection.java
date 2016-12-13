@@ -1,17 +1,17 @@
 package org.adbcj.connectionpool;
 
-import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
 import org.adbcj.support.stacktracing.StackTracingOptions;
+import org.testng.Assert;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MockConnection implements Connection {
 
-    public static final String FAIL_QUERY = "fail-query";
+    static final String FAIL_QUERY = "fail-query";
     private final MockConnectionManager connection;
     final AtomicInteger openStatements = new AtomicInteger();
     private volatile TransactionState currentTxState = TransactionState.NONE;
@@ -127,7 +127,7 @@ public class MockConnection implements Connection {
 
 
     public void assertAmountOfPreparedStatements(int expectedAmount) {
-        Assert.assertEquals("Expect this amount of open statements", expectedAmount, openStatements.get());
+        Assert.assertEquals(expectedAmount, openStatements.get(),"Expect this amount of open statements");
     }
 
     public void assertTransactionState(TransactionState expectedState) {

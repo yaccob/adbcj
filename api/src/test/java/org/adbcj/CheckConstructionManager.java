@@ -1,12 +1,11 @@
 package org.adbcj;
 
-import junit.framework.Assert;
+
+import org.testng.Assert;
 
 import java.util.Map;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class CheckConstructionManager implements ConnectionManager{
     private final String url;
     private final String username;

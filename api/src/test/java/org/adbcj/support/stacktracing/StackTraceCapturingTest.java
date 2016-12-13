@@ -1,6 +1,6 @@
 package org.adbcj.support.stacktracing;
 
-import junit.framework.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.adbcj.support.stacktracing.StackTracingOptions.FORCED_BY_INSTANCE;

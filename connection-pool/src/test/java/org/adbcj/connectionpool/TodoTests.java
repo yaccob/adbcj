@@ -1,6 +1,7 @@
 package org.adbcj.connectionpool;
 
-import junit.framework.Assert;
+
+import org.testng.Assert;
 
 /**
  * @author roman.stoffel@gamlor.info

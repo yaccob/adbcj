@@ -1,8 +1,8 @@
 package org.adbcj.tck.test;
 
-import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.tck.NoArgAction;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
@@ -57,8 +57,8 @@ public class CloseConnectionsTest {
         checkClosed(c1, runningQuery, runningQuery2, c2);
 
 
-        Assert.assertTrue("Why is state: "+runningQuery2.getState(),runningQuery2.getState()==FutureState.SUCCESS
-                || runningQuery2.getState()==FutureState.FAILURE);
+        Assert.assertTrue(runningQuery2.getState()==FutureState.SUCCESS
+                || runningQuery2.getState()==FutureState.FAILURE,"Why is state: "+runningQuery2.getState());
     }
 
 

@@ -1,6 +1,5 @@
 package org.adbcj.tck;
 
-import org.adbcj.DbException;
 import org.adbcj.jdbc.PlainJDBCConnection;
 import org.h2.tools.Server;
 
@@ -8,11 +7,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class InitH2 extends InitDatabase {
-    private Server server;
 
     @Override
     protected void loadDriver() throws ClassNotFoundException {
@@ -32,10 +28,10 @@ public class InitH2 extends InitDatabase {
     protected void beforeSetupScript(String jdbcUrl, String user, String password) {
 
         try {
-            Connection connection  = new PlainJDBCConnection(jdbcUrl,
-                        user,
-                        password,
-                        new HashMap<String, String>()).getConnection();
+            Connection connection = new PlainJDBCConnection(jdbcUrl,
+                    user,
+                    password,
+                    new HashMap<>()).getConnection();
             if (null != connection) {
                 connection.close();
                 return;
@@ -44,10 +40,13 @@ public class InitH2 extends InitDatabase {
             // expected, server not running
         }
         try {
-            this.server = Server.createTcpServer("-tcpAllowOthers",
+            Server server = Server.createTcpServer(
+                    "-tcpAllowOthers",
                     "-tcpDaemon",
                     "-tcpPort", "14242",
                     "-baseDir", "./h2testdb");
+//            Server inspect = Server.createWebServer();
+//            inspect.start();
             server.start();
         } catch (Exception e) {
             throw new RuntimeException(e);

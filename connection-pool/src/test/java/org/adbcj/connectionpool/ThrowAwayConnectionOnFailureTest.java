@@ -1,9 +1,9 @@
 package org.adbcj.connectionpool;
 
-import junit.framework.Assert;
 import org.adbcj.*;
 import org.adbcj.support.DefaultResultEventsHandler;
 import org.adbcj.support.DefaultResultSet;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.HashMap;

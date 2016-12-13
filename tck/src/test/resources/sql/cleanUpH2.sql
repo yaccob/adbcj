@@ -7,4 +7,4 @@ DROP TABLE IF EXISTS textcontent;
 DROP TABLE IF EXISTS tablewithautoid;
 
 
-DROP USER "adbcj-other-user";
+DROP USER "ADBCJ-OTHER-USER";

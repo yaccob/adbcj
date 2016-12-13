@@ -87,8 +87,8 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.8</source>
+					<target>1.8</target>
 					<debug>true</debug>
                     <encoding>UTF-8</encoding>
 				</configuration>
@@ -230,9 +230,8 @@
 		<dependency>
 			<groupId>org.testng</groupId>
 			<artifactId>testng</artifactId>
-			<version>5.7</version>
+			<version>6.10</version>
 			<scope>test</scope>
-			<classifier>jdk15</classifier>
 		</dependency>
 
 

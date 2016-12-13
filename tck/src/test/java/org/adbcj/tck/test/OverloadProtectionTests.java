@@ -1,7 +1,7 @@
 package org.adbcj.tck.test;
 
-import junit.framework.Assert;
 import org.adbcj.*;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;

@@ -205,7 +205,7 @@ public class TestDefaultFuture {
                 foundThisTestInStack = true;
             }
         }
-        junit.framework.Assert.assertTrue(foundThisTestInStack);
+        Assert.assertTrue(foundThisTestInStack);
     }
 
     private void checkListener(final FutureState expectedState, ActionOnFuture future) throws InterruptedException {
