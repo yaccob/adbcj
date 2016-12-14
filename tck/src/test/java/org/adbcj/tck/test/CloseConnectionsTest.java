@@ -8,18 +8,10 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
-public class CloseConnectionsTest {
 
-    private ConnectionManager connectionManager;
+public class CloseConnectionsTest extends  AbstractWithConnectionManagerTest{
 
-    @Parameters({"url", "user", "password"})
-    @BeforeTest
-    public void createConnectionManager(String url, String user, String password) {
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url, user, password);
-    }
+
 
     @AfterTest
     public void closeConnectionManager() throws InterruptedException {
@@ -71,36 +63,11 @@ public class CloseConnectionsTest {
         final DbFuture<Void> closeFuture = connection.close();
         Assert.assertTrue(connection.isClosed());
 
-        shouldThrowException(new NoArgAction() {
-            @Override
-            public void invoke() {
-                connection.executeQuery("SELECT 1");
-            }
-        });
-        shouldThrowException(new NoArgAction() {
-            @Override
-            public void invoke() {
-                connection.beginTransaction();
-            }
-        });
-        shouldThrowException(new NoArgAction() {
-            @Override
-            public void invoke() {
-                connection.prepareQuery("SELECT 1");
-            }
-        });
-        shouldThrowException(new NoArgAction() {
-            @Override
-            public void invoke() {
-                preparedSelect.execute();
-            }
-        });
-        shouldThrowException(new NoArgAction() {
-            @Override
-            public void invoke() {
-                preparedUpdate.execute();
-            }
-        });
+        shouldThrowException(() -> connection.executeQuery("SELECT 1"));
+        shouldThrowException(connection::beginTransaction);
+        shouldThrowException(() -> connection.prepareQuery("SELECT 1"));
+        shouldThrowException(preparedSelect::execute);
+        shouldThrowException(preparedUpdate::execute);
         closeFuture.get();
 
     }
@@ -145,9 +112,7 @@ public class CloseConnectionsTest {
         try {
             toInvoke.invoke();
             Assert.fail("Expect exception telling us that the connection is closing");
-        } catch (DbSessionClosedException e) {
-            Assert.assertTrue(e.getMessage().contains("closed"));
-        } catch (IllegalStateException e) {
+        } catch (DbSessionClosedException | IllegalStateException e) {
             Assert.assertTrue(e.getMessage().contains("closed"));
         }
     }

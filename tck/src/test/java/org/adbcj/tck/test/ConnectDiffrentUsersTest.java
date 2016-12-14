@@ -11,7 +11,9 @@ public class ConnectDiffrentUsersTest extends AbstractWithConnectionManagerTest{
     public void connectWithOtherUser() throws Exception {
 
         Connection normalUser = connectionManager.connect().get();
-        Connection connectionOtherUser = connectionManager.connect("adbcj-other-user","adbcj-other-user").get();
+        Connection connectionOtherUser = connectionManager.connect(
+                "adbcj-other-user".toUpperCase(),
+                "adbcj-other-user").get();
 
         String userNormal = normalUser.executeQuery("SELECT current_user()").get().get(0).get(0).getString();
         String otherUser = connectionOtherUser.executeQuery("SELECT current_user()").get().get(0).get(0).getString();
