@@ -9,9 +9,7 @@ import org.adbcj.h2.protocol.StatusCodes;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public abstract class StatusReadingDecoder implements DecoderState {
     protected final H2Connection connection;
 
