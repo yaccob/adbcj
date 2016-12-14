@@ -11,9 +11,7 @@ import io.netty.channel.ChannelFutureListener;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class CloseConnection extends StatusReadingDecoder {
     private final DefaultDbFuture<Void> finishedClose;
 

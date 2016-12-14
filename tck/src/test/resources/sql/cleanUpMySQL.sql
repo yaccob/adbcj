@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS locks;
 DROP TABLE IF EXISTS table_with_some_values;
 DROP TABLE IF EXISTS supporteddatatypes;
 DROP TABLE IF EXISTS textcontent;
-DROP TABLE IF EXISTS tablewithautoid;
+DROP TABLE IF EXISTS tableWithAutoId;
 
-GRANT USAGE ON *.* TO 'adbcj-other-user'@'localhost';
-DROP USER 'adbcj-other-user'@'localhost';
+GRANT USAGE ON *.* TO 'ADBCJ-OTHER-USER'@'localhost';
+DROP USER 'ADBCJ-OTHER-USER'@'localhost';

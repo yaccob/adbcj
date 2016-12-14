@@ -1,4 +1,8 @@
 #!/bin/bash
 
 docker rm -f adbcj-test-mysql
-docker run --name adbcj-test-mysql -p 3306:3306 --env MYSQL_ROOT_PASSWORD=adbcjtck --env MYSQL_DATABASE=adbcjtck --env MYSQL_USER=adbcjtck --env MYSQL_PASSWORD=adbcjtck -d mysql
+# see mysqltestdb for building this image
+docker run --name adbcj-test-mysql -p 3306:3306 -d adbcjmysql
+
+
+docker run --name myadmin -d --link adbcj-test-mysql:db -p 8082:80 --env MYSQL_ROOT_PASSWORD=adbcjtck phpmyadmin/phpmyadmin

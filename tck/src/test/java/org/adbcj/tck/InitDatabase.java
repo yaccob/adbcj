@@ -23,7 +23,6 @@ public abstract class InitDatabase {
     }
 
     public final void prepareMySQL(String url, String user, String password) throws Exception {
-        loadDriver();
         beforeSetupScript(url, user, password);
         runSQLScript(url, user, password, setupScript());
     }
@@ -31,8 +30,6 @@ public abstract class InitDatabase {
     protected void beforeSetupScript(String url, String user, String password){
 
     }
-
-    protected abstract void loadDriver() throws ClassNotFoundException;
 
     protected abstract String setupScript();
 

@@ -11,10 +11,6 @@ import java.util.HashMap;
 public class InitH2 extends InitDatabase {
 
     @Override
-    protected void loadDriver() throws ClassNotFoundException {
-    }
-
-    @Override
     protected String setupScript() {
         return "sql/setupH2.sql";
     }

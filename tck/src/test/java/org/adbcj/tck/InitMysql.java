@@ -5,16 +5,6 @@ package org.adbcj.tck;
  */
 public class InitMysql extends InitDatabase {
 
-    @Override
-    protected void beforeSetupScript(String url, String user, String password) {
-        super.beforeSetupScript(url, user, password);
-    }
-
-    @Override
-    protected void loadDriver() throws ClassNotFoundException {
-        Class.forName("com.mysql.jdbc.Driver");
-        //Class.forName("org.adbcj.dbcj.Driver");
-    }
 
     @Override
     protected String setupScript() {

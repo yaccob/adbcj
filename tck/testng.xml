@@ -7,90 +7,39 @@
         <parameter name="url" value="adbcj:mysql://localhost/adbcjtck" />
         <parameter name="user" value="adbcjtck" />
         <parameter name="password" value="adbcjtck" />
+        <parameter name="setupClass" value="org.adbcj.tck.InitMysql" />
         <packages>
-            <!--<package name="org.adbcj.tck.test" />-->
+            <package name="org.adbcj.tck.test" />
         </packages>
-
-        <classes>
-            <class name="org.adbcj.tck.InitMysql" />
-        </classes>
     </test>
-    <test name="MySQL-Pooled">
-        <parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
-        <parameter name="url" value="adbcj:pooled:mysql://localhost/adbcjtck" />
-        <parameter name="user" value="adbcjtck" />
-        <parameter name="password" value="adbcjtck" />
-        <packages>
-            <!--<package name="org.adbcj.tck.test" />-->
-        </packages>
-
-        <classes>
-            <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.PreparedStatementsTest"/>-->
-        </classes>
-    </test>
-
 	<test name="MySQL-JDBC">
 		<parameter name="jdbcUrl" value="jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
 		<parameter name="url" value="adbcj:jdbc:mysql://localhost/adbcjtck?characterEncoding=UTF-8" />
 		<parameter name="user" value="adbcjtck" />
 		<parameter name="password" value="adbcjtck" />
+        <parameter name="setupClass" value="org.adbcj.tck.InitMysql" />
 		<packages>
 			<package name="org.adbcj.tck.test" />
 		</packages>
-		<classes>
-            <class name="org.adbcj.tck.InitMysql" />
-            <!--<class name="org.adbcj.tck.test.TransactionTest"/>-->
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
-		</classes>
 	</test>
     <test name="H2-JDBC">
         <parameter name="jdbcUrl" value="jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />
         <parameter name="url" value="adbcj:jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />
         <parameter name="user" value="adbcjtck" />
         <parameter name="password" value="adbcjtck" />
+        <parameter name="setupClass" value="org.adbcj.tck.InitH2" />
         <packages>
             <package name="org.adbcj.tck.test" />
         </packages>
-        <classes>
-            <class name="org.adbcj.tck.InitH2" />
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
-            <!--<class name="org.adbcj.tck.test.TransactionTest"/>-->
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
-        </classes>
     </test>
     <test name="H2-ADBCJ">
         <parameter name="jdbcUrl" value="jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />
         <parameter name="url" value="adbcj:h2://localhost:14242/adbcjtck;MVCC=TRUE" />
         <parameter name="user" value="adbcjtck" />
         <parameter name="password" value="adbcjtck" />
+        <parameter name="setupClass" value="org.adbcj.tck.InitH2" />
         <packages>
             <package name="org.adbcj.tck.test" />
         </packages>
-        <classes>
-            <class name="org.adbcj.tck.InitH2" />
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.TransactionTest"/>-->
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
-        </classes>
-    </test>
-    <test name="H2-ADBCJ-Pooled">
-        <parameter name="jdbcUrl" value="jdbc:h2:tcp://localhost:14242/adbcjtck;MVCC=TRUE" />
-        <parameter name="url" value="adbcj:pooled:h2://localhost:14242/adbcjtck;MVCC=TRUE" />
-        <parameter name="user" value="adbcjtck" />
-        <parameter name="password" value="adbcjtck" />
-        <packages>
-            <package name="org.adbcj.tck.test" />
-        </packages>
-        <classes>
-            <class name="org.adbcj.tck.InitH2" />
-            <!--<class name="org.adbcj.tck.test.PreparedStatementsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.TransactionTest"/>-->
-            <!--<class name="org.adbcj.tck.test.CloseConnectionsTest"/>-->
-            <!--<class name="org.adbcj.tck.test.SupportedDataTypesTest"/>-->
-        </classes>
     </test>
 </suite>
