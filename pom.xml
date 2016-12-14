@@ -26,7 +26,6 @@
 	<modules>
 		<module>api</module>
 		<module>jdbc</module>
-		<module>connection-pool</module>
 		<module>mysql</module>
 		<module>h2</module>
 		<module>tck</module>
