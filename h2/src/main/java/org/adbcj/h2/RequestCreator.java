@@ -7,9 +7,7 @@ import org.adbcj.support.CancellationToken;
 import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.SafeResultHandlerDecorator;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class RequestCreator {
     private final H2Connection connection;
 
@@ -103,27 +101,31 @@ public class RequestCreator {
     public Request createGetAutoIdStatement(DefaultDbFuture<Connection> completeConnection) {
         final int sessionId = connection.idForAutoId();
         String sql = "SELECT SCOPE_IDENTITY() WHERE SCOPE_IDENTITY() IS NOT NULL";
-        return new Request("Prepare Query: " + sql, completeConnection,
+        return new Request("Prepare Query: " + sql,
+                completeConnection,
                 StatementPrepare.createOnlyPassFailure(completeConnection, connection),
                 new QueryPrepareCommand(sessionId, sql,CancellationToken.NO_CANCELLATION));
     }
     public Request createCommitStatement(DefaultDbFuture<Connection> completeConnection) {
         final int sessionId = connection.idForCommit();
         String sql = "COMMIT";
-        return new Request("Prepare Query: " + sql, completeConnection,
+        return new Request("Prepare Query: " + sql,
+                completeConnection,
                 StatementPrepare.createOnlyPassFailure(completeConnection, connection),
                 new QueryPrepareCommand(sessionId, sql,CancellationToken.NO_CANCELLATION));
     }
     public Request createRollbackStatement(DefaultDbFuture<Connection> completeConnection) {
         final int sessionId = connection.idForRollback();
         String sql = "ROLLBACK";
-        return new Request("Prepare Query: " + sql, completeConnection,
+        return new Request("Prepare Query: " + sql,
+                completeConnection,
                 StatementPrepare.completeFuture(completeConnection, connection),
                 new QueryPrepareCommand(sessionId, sql,CancellationToken.NO_CANCELLATION));
     }
 
     public Request beginTransaction(){
-        return new Request("Begin Transacton",new DefaultDbFuture(connection.stackTrachingOptions()),
+        return new Request("Begin Transacton",
+                new DefaultDbFuture(connection.stackTrachingOptions()),
                 new AwaitOk(connection),
                 new AutoCommitChangeCommand(AutoCommitChangeCommand.AutoCommit.AUTO_COMMIT_OFF) );
 

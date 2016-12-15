@@ -12,11 +12,9 @@ import java.io.DataInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class Decoder extends ByteToMessageDecoder {
-    public static Object DecodedToken = new Object();
+    private static Object DecodedToken = new Object();
     private DecoderState currentState;
     private H2Connection connection;
 

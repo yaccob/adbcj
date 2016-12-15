@@ -8,9 +8,7 @@ import io.netty.channel.Channel;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public final class AnswerNextRequest extends StatusReadingDecoder {
 
     public AnswerNextRequest(H2Connection connection) {

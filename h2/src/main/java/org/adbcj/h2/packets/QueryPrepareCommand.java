@@ -6,11 +6,9 @@ import org.adbcj.h2.decoding.IoUtils;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class QueryPrepareCommand extends ClientToServerPacket {
-    public static final int SESSION_PREPARE = 0;
+    private static final int SESSION_PREPARE = 0;
     private int id;
     private String sql;
 

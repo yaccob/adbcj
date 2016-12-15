@@ -36,16 +36,14 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
         final CountDownLatch latch = new CountDownLatch(1);
         ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val " +
                 "FROM simple_values where str_val " +
-                "LIKE 'Not-In-Database-Value'").addListener(new DbListener<ResultSet>() {
-            public void onCompletion(DbFuture<ResultSet> future) {
-                try {
-                    Assert.assertNotNull(future.get());
-                    latch.countDown();
-                } catch (InterruptedException e) {
-                    throw new AssertionError(e);
-                }
-            }
-        }).get();
+                "LIKE 'Not-In-Database-Value'").addListener(future -> {
+                    try {
+                        Assert.assertNotNull(future.get());
+                        latch.countDown();
+                    } catch (InterruptedException e) {
+                        throw new AssertionError(e);
+                    }
+                }).get();
         Iterator<Row> i = resultSet.iterator();
         Assert.assertFalse(i.hasNext());
 
@@ -59,16 +57,14 @@ public class SelectTest extends AbstractWithConnectionManagerTest {
         try {
             ResultSet resultSet = connection.executeQuery("SELECT int_val, str_val " +
                     "FROM simple_values " +
-                    "ORDER BY int_val").addListener(new DbListener<ResultSet>() {
-                public void onCompletion(DbFuture<ResultSet> future) {
-                    try {
-                        Assert.assertNotNull(future.get());
-                        latch.countDown();
-                    } catch (InterruptedException e) {
-                        throw new AssertionError(e);
-                    }
-                }
-            }).get();
+                    "ORDER BY int_val").addListener(future -> {
+                        try {
+                            Assert.assertNotNull(future.get());
+                            latch.countDown();
+                        } catch (InterruptedException e) {
+                            throw new AssertionError(e);
+                        }
+                    }).get();
 
             Assert.assertEquals(6, resultSet.size());
 

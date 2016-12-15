@@ -23,12 +23,7 @@ public class CloseConnection extends StatusReadingDecoder {
     @Override
     protected ResultAndState processFurther(DataInputStream stream, Channel channel, int status) throws IOException {
         StatusCodes.STATUS_OK.expectStatusOrThrow(status);
-        channel.close().addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                finishedClose.trySetResult(null);
-            }
-        });
+        channel.close().addListener((ChannelFutureListener) future -> finishedClose.trySetResult(null));
         return ResultAndState.newState(new ClosedConnectionState(finishedClose,connection));
     }
 

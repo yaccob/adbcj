@@ -13,9 +13,7 @@ import org.adbcj.support.DefaultDbFuture;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public abstract class StatementPrepare<T> extends StatusReadingDecoder {
     private final DefaultDbFuture<T> resultFuture;
 

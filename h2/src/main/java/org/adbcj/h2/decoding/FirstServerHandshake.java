@@ -13,9 +13,7 @@ import io.netty.channel.Channel;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 class FirstServerHandshake extends StatusReadingDecoder {
     private final DefaultDbFuture<Connection> currentState;
     private final H2Connection connection;
@@ -60,10 +58,15 @@ class SessionIdReceived extends StatusReadingDecoder {
     @Override
     protected ResultAndState processFurther(DataInputStream input, Channel channel, int status) throws IOException {
         StatusCodes.STATUS_OK.expectStatusOrThrow(status);
-        connection.forceQueRequest(connection.requestCreator().createGetAutoIdStatement(currentState));
-        connection.forceQueRequest(connection.requestCreator().createCommitStatement(currentState));
-        connection.forceQueRequest(connection.requestCreator().createRollbackStatement(currentState));
-        return ResultAndState.newState(new AnswerNextRequest(connection));
+        ResultOrWait<Boolean> autoCommit = IoUtils.tryReadNextBoolean(input, ResultOrWait.Start);
+        if(autoCommit.couldReadResult){
+            connection.forceQueRequest(connection.requestCreator().createGetAutoIdStatement(currentState));
+            connection.forceQueRequest(connection.requestCreator().createCommitStatement(currentState));
+            connection.forceQueRequest(connection.requestCreator().createRollbackStatement(currentState));
+            return ResultAndState.newState(new AnswerNextRequest(connection));
+        } else{
+            return ResultAndState.waitForMoreInput(this);
+        }
     }
 
     @Override

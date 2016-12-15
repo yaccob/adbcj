@@ -193,12 +193,7 @@ public class H2Connection implements Connection {
                 channel.writeAndFlush(request.getRequest());
                 if(request.isBlocking()){
                     blockingRequest = new BlockingRequestInProgress(request);
-                    request.getToComplete().addListener(new DbListener<Object>() {
-                        @Override
-                        public void onCompletion(DbFuture<Object> future) {
-                            blockingRequest.continueWithRequests();
-                        }
-                    });
+                    request.getToComplete().addListener(future -> blockingRequest.continueWithRequests());
                 }
             } else{
                 if(blockingRequest.unblockBy(request)){
