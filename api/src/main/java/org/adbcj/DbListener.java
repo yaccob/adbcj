@@ -16,6 +16,7 @@
  */
 package org.adbcj;
 
+@FunctionalInterface
 public interface DbListener<T> {
 
 	void onCompletion(DbFuture<T> future);

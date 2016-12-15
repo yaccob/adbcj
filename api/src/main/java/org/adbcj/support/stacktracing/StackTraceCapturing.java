@@ -1,8 +1,6 @@
 package org.adbcj.support.stacktracing;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 abstract class StackTraceCapturing {
     private static final StackTraceCapturing defaultCapturer = initializeCapturer();
 

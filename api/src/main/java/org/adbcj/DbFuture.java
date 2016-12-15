@@ -16,8 +16,6 @@
  */
 package org.adbcj;
 
-import org.adbcj.support.OneArgFunction;
-
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;

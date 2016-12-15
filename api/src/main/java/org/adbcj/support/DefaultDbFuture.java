@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class DefaultDbFuture<T> implements DbFuture<T> {
+public final class DefaultDbFuture<T> implements DbFuture<T> {
 
     private final List<DbListener<T>> otherListeners = new ArrayList<DbListener<T>>(1);
 

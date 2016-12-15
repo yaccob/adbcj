@@ -1,7 +1,7 @@
 package org.adbcj;
 
 /**
- * Standart properties, which can be passed to {@link ConnectionManagerProvider#createConnectionManager}
+ * Standard properties, which can be passed to {@link ConnectionManagerProvider#createConnectionManager}
  * via property map
  * @author roman.stoffel@gamlor.info
  */
