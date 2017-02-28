@@ -29,7 +29,6 @@
 		<module>mysql</module>
 		<module>h2</module>
 		<module>tck</module>
-        <module>dbcj</module>
     </modules>
 
 	<scm>
