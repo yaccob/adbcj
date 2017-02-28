@@ -1,6 +1,5 @@
 package org.adbcj.dbcj;
 
-import org.adbcj.DbFuture;
 import org.adbcj.PreparedQuery;
 import org.adbcj.PreparedUpdate;
 
@@ -12,7 +11,6 @@ import java.sql.*;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 /**
  * @author foooling@gmail.com

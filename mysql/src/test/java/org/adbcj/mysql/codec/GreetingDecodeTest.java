@@ -1,10 +1,12 @@
 package org.adbcj.mysql.codec;
 
+import org.adbcj.mysql.MySqlConnection;
+import org.adbcj.mysql.MysqlConnectionManager;
 import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
-import org.adbcj.mysql.netty.MysqlConnectionManager;
 import org.adbcj.support.LoginCredentials;
 import io.netty.channel.Channel;
+import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -42,7 +44,7 @@ public class GreetingDecodeTest {
 	public void decodeGreeting1() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING1);
 		MySqlClientDecoder decoder = new MySqlClientDecoder(
-                new Connecting(null, createMockConnection(), login));
+                new Connecting(null,null,  createMockConnection(), login));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 64);
@@ -77,7 +79,7 @@ public class GreetingDecodeTest {
 	@Test
 	public void decodeGreeting2() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING2);
-		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null,createMockConnection(), login));
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null, null,createMockConnection(), login));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 74);
@@ -97,8 +99,15 @@ public class GreetingDecodeTest {
 
     private MySqlConnection createMockConnection() {
         return new MySqlConnection(64,
-                new MysqlConnectionManager("localhost",42,"sa","sa","test",new HashMap<String, String>()),
-                mock(Channel.class));
+                new MysqlConnectionManager(
+                		"localhost",
+						42,
+						"sa",
+						"sa",
+						"test",
+						new HashMap<String, String>()),
+                mock(Channel.class),
+				StackTracingOptions.GLOBAL_DEFAULT);
     }
 
 }

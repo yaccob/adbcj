@@ -13,10 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
-/**
- * @author roman.stoffel@gamlor.info
- * @since 12.04.12
- */
+
 public abstract class DecoderState {
     protected static final Logger logger = LoggerFactory.getLogger(DecoderState.class);
     protected static final String CHARSET = "UTF8";

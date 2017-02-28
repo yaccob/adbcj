@@ -1,14 +1,15 @@
 package org.adbcj.tck.test;
 
 import org.adbcj.Connection;
-import org.adbcj.DbFuture;
-import org.adbcj.DbListener;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+
 public class VoidIsVoidTest extends AbstractWithConnectionManagerTest {
 
     @Test
@@ -37,22 +38,15 @@ public class VoidIsVoidTest extends AbstractWithConnectionManagerTest {
     public void testClose() throws Exception {
         Connection connection = connectionManager.connect().get();
         try {
-            final DbFuture<Void> future = connection.close();
+            final CompletableFuture<Void> future = connection.close();
             assertFutureIsVoid(future);
         } finally {
             connection.close();
         }
     }
 
-    private void assertFutureIsVoid(DbFuture<Void> future) throws InterruptedException {
-        future.addListener(new DbListener<Void>() {
-            @Override
-            public void onCompletion(DbFuture<Void> future) {
-                final Object object = future.getResult();
-                Assert.assertTrue(object == null || object instanceof Void);
-            }
-        });
+    private void assertFutureIsVoid(CompletableFuture<Void> future) throws Exception {
         final Object object = future.get();
-        Assert.assertTrue(object == null || object instanceof Void);
+        Assert.assertTrue(object == null);
     }
 }

@@ -45,8 +45,8 @@ public class ErrorResponse extends ServerPacket {
 		return message;
 	}
 
-    public MysqlException toException(){
-        return new MysqlException(getSqlState() + " " + getMessage());
+    public MysqlException toException(StackTraceElement[] entry){
+        return new MysqlException(getSqlState() + " " + getMessage(), null, entry);
     }
 
 }

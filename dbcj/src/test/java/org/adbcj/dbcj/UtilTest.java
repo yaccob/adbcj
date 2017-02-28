@@ -81,10 +81,6 @@ public class UtilTest {
                         return false;  //To change body of implemented methods use File | Settings | File Templates.
                     }
 
-                    @Override
-                    public boolean isOpen() throws DbException {
-                        return false;  //To change body of implemented methods use File | Settings | File Templates.
-                    }
                 }
         ),mockSql);
 

@@ -6,19 +6,18 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class OverloadProtectionTests  extends AbstractWithConnectionManagerTest {
 
     @Test
     public void throwsOnOverloadWithRequests() throws Exception {
         final Connection connection = connectionManager.connect().get();
-        List<DbFuture> futures = new ArrayList<DbFuture>();
+        List<Future> futures = new ArrayList<Future>();
         try{
             for(int i=0;i<256;i++){
-                final DbFuture<ResultSet> future = connection.executeQuery("SELECT 1");
+                final Future<ResultSet> future = connection.executeQuery("SELECT 1");
                 futures.add(future);
 
             }
@@ -27,7 +26,7 @@ public class OverloadProtectionTests  extends AbstractWithConnectionManagerTest 
             Assert.assertTrue(e.getMessage().contains("64"));
             Assert.assertTrue(e.getMessage().contains("requests"));
         }
-        for (DbFuture future : futures) {
+        for (Future future : futures) {
             future.get();
         }
 

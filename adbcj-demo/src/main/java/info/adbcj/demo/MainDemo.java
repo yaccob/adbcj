@@ -3,9 +3,7 @@ package info.adbcj.demo;
 import org.adbcj.*;
 
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class MainDemo {
 
     public static void main(String[] args) {

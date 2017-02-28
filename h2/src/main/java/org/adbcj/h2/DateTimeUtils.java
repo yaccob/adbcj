@@ -7,9 +7,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class DateTimeUtils {
     private static int zoneOffset;
     private static Calendar cachedCalendar;

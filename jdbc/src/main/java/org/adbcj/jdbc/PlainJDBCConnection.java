@@ -1,19 +1,12 @@
 package org.adbcj.jdbc;
 
-import org.adbcj.DbException;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 
-import static java.sql.DriverManager.getConnection;
 
-/**
- * @author roman.stoffel@gamlor.info
- * @since 26.04.12
- */
 public final class PlainJDBCConnection implements JDBCConnectionProvider {
 
     private static final String USER = "user";

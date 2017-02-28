@@ -1,13 +1,13 @@
 package org.adbcj.h2.decoding;
 
 import org.adbcj.Connection;
+import org.adbcj.DbCallback;
 import org.adbcj.DbException;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.packets.AnnounceClientSession;
 import org.adbcj.h2.packets.SizeConstants;
 import org.adbcj.h2.protocol.StatusCodes;
-import org.adbcj.support.DefaultDbFuture;
 import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
@@ -15,12 +15,12 @@ import java.io.IOException;
 
 
 class FirstServerHandshake extends StatusReadingDecoder {
-    private final DefaultDbFuture<Connection> currentState;
+    private final DbCallback<Connection> callback;
     private final H2Connection connection;
 
-    public FirstServerHandshake(DefaultDbFuture<Connection> currentState, H2Connection connection) {
-        super(connection);
-        this.currentState = currentState;
+    FirstServerHandshake(DbCallback<Connection> callback, H2Connection connection, StackTraceElement[] entry) {
+        super(connection, entry);
+        this.callback = callback;
         this.connection = connection;
     }
 
@@ -38,21 +38,21 @@ class FirstServerHandshake extends StatusReadingDecoder {
                     + ", but server wants " + clientVersion);
         }
         channel.writeAndFlush(new AnnounceClientSession(connection.getSessionId()));
-        return ResultAndState.newState(new SessionIdReceived(currentState, connection));
+        return ResultAndState.newState(new SessionIdReceived(callback, connection, entry));
     }
 
     @Override
     protected void requestFailedContinue(H2DbException exception) {
-        currentState.trySetException(exception);
+        callback.onComplete(null, exception);
     }
 }
 
 class SessionIdReceived extends StatusReadingDecoder {
-    private final DefaultDbFuture<Connection> currentState;
+    private final DbCallback<Connection> callback;
 
-    SessionIdReceived(DefaultDbFuture<Connection> currentState, H2Connection connection) {
-        super(connection);
-        this.currentState = currentState;
+    SessionIdReceived(DbCallback<Connection> callback, H2Connection connection, StackTraceElement[] entry) {
+        super(connection, entry);
+        this.callback = callback;
     }
 
     @Override
@@ -60,10 +60,10 @@ class SessionIdReceived extends StatusReadingDecoder {
         StatusCodes.STATUS_OK.expectStatusOrThrow(status);
         ResultOrWait<Boolean> autoCommit = IoUtils.tryReadNextBoolean(input, ResultOrWait.Start);
         if(autoCommit.couldReadResult){
-            connection.forceQueRequest(connection.requestCreator().createGetAutoIdStatement(currentState));
-            connection.forceQueRequest(connection.requestCreator().createCommitStatement(currentState));
-            connection.forceQueRequest(connection.requestCreator().createRollbackStatement(currentState));
-            return ResultAndState.newState(new AnswerNextRequest(connection));
+            connection.forceQueRequest(connection.requestCreator().createGetAutoIdStatement(callback, entry));
+            connection.forceQueRequest(connection.requestCreator().createCommitStatement(callback, entry));
+            connection.forceQueRequest(connection.requestCreator().createRollbackStatement(callback, entry));
+            return ResultAndState.newState(new AnswerNextRequest(connection, entry));
         } else{
             return ResultAndState.waitForMoreInput(this);
         }
@@ -71,6 +71,6 @@ class SessionIdReceived extends StatusReadingDecoder {
 
     @Override
     protected void requestFailedContinue(H2DbException exception) {
-        this.currentState.trySetException(exception);
+        this.callback.onComplete(null, exception);
     }
 }

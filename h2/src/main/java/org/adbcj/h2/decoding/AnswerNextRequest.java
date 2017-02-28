@@ -1,5 +1,6 @@
 package org.adbcj.h2.decoding;
 
+import org.adbcj.DbException;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.Request;
@@ -11,8 +12,8 @@ import java.io.IOException;
 
 public final class AnswerNextRequest extends StatusReadingDecoder {
 
-    public AnswerNextRequest(H2Connection connection) {
-        super(connection);
+    public AnswerNextRequest(H2Connection connection, StackTraceElement[] entry) {
+        super(connection, entry);
     }
 
     @Override

@@ -1,10 +1,11 @@
 package org.adbcj.mysql.codec.decoding;
 
 import org.adbcj.Connection;
+import org.adbcj.DbCallback;
+import org.adbcj.mysql.MySqlConnection;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.LoginRequest;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
-import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.LoginCredentials;
 import io.netty.channel.Channel;
 
@@ -13,10 +14,7 @@ import java.util.Set;
 
 import static org.adbcj.mysql.codec.IoUtils.safeSkip;
 
-/**
-* @author roman.stoffel@gamlor.info
-* @since 12.04.12
-*/
+
 public class Connecting extends DecoderState {
     /**
      * The salt size in a server greeting
@@ -33,13 +31,17 @@ public class Connecting extends DecoderState {
      */
     public static final int GREETING_UNUSED_SIZE = 13;
 
-    private final DefaultDbFuture<Connection> connectFuture;
+    private final DbCallback<Connection> connected;
+    private final StackTraceElement[] entry;
     private final MySqlConnection connection;
     private final LoginCredentials loginWith;
 
-    public Connecting(DefaultDbFuture<Connection> connectFuture,
-                      MySqlConnection connection, LoginCredentials loginWith) {
-        this.connectFuture = connectFuture;
+    public Connecting(DbCallback<Connection> connected,
+                      StackTraceElement[] entry,
+                      MySqlConnection connection,
+                      LoginCredentials loginWith) {
+        this.connected = connected;
+        this.entry = entry;
         this.connection = connection;
         this.loginWith = loginWith;
     }
@@ -55,7 +57,7 @@ public class Connecting extends DecoderState {
                 connection.getExtendedClientCapabilities(),
                 MysqlCharacterSet.UTF8_UNICODE_CI,serverGreeting.getSalt());
         channel.writeAndFlush(loginRequest);
-        return result(new FinishLogin(connectFuture, connection),serverGreeting);
+        return result(new FinishLogin(connected, entry, connection),serverGreeting);
     }
 
     protected ServerGreeting decodeServerGreeting(BoundedInputStream in, int length, int packetNumber) throws IOException {

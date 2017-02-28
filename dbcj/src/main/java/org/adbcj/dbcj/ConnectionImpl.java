@@ -1,10 +1,5 @@
 package org.adbcj.dbcj;
 
-import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbFuture;
-import org.adbcj.PreparedQuery;
-import org.adbcj.PreparedUpdate;
-
 import java.sql.*;
 import java.sql.PreparedStatement;
 import java.sql.Statement;

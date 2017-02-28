@@ -32,26 +32,26 @@ public class CheckConstructionManager implements ConnectionManager{
         Assert.assertEquals(this.properties.get(property),value);
     }
 
-
     @Override
-    public DbFuture<Connection> connect() {
+    public void connect(DbCallback<Connection> connected) {
         throw new Error("Mock does not support this operation");
     }
 
     @Override
-    public DbFuture<Void> close() throws DbException {
+    public void connect(String user, String password, DbCallback<Connection> connected) {
         throw new Error("Mock does not support this operation");
     }
 
     @Override
-    public DbFuture<Connection> connect(String user, String password) {
+    public void close(DbCallback<Void> callback) {
         throw new Error("Mock does not support this operation");
     }
 
     @Override
-    public DbFuture<Void> close(CloseMode mode) throws DbException {
+    public void close(CloseMode mode, DbCallback<Void> callback) throws DbException {
         throw new Error("Mock does not support this operation");
     }
+
 
     @Override
     public boolean isClosed() {

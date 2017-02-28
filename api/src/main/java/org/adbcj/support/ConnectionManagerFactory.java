@@ -14,11 +14,25 @@
  *   limitations under the License.
  *
  */
-package org.adbcj;
+package org.adbcj.support;
 
-@FunctionalInterface
-public interface DbListener<T> {
+import org.adbcj.ConnectionManager;
+import org.adbcj.DbException;
 
-	void onCompletion(DbFuture<T> future);
-	
+import java.util.Map;
+
+/**
+ * Entry point to find a driver.
+ * The {@link org.adbcj.ConnectionManagerProvider} loads the ConnectionManagerFactory's via {@link java.util.ServiceLoader}.
+ * Then checks if can handle the given protocol at hand
+ */
+public interface ConnectionManagerFactory {
+
+	ConnectionManager createConnectionManager(String url,
+											  String username,
+											  String password,
+											  Map<String,String> properties) throws DbException;
+
+	boolean canHandle(String protocol);
+
 }

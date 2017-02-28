@@ -1,7 +1,7 @@
 package org.adbcj;
 
 /**
- * A empty implementation of the {@link ResultHandler} interface to avoid
+ * An empty implementation of the {@link ResultHandler} interface to avoid
  * implementing each and every method.
  */
 public abstract class AbstractResultHandler<T> implements ResultHandler<T> {
@@ -35,9 +35,5 @@ public abstract class AbstractResultHandler<T> implements ResultHandler<T> {
 
     @Override
     public void endResults(T accumulator) {
-    }
-
-    @Override
-    public void exception(Throwable t, T accumulator) {
     }
 }

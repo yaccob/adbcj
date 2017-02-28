@@ -11,13 +11,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author roman.stoffel@gamlor.info
- * @since 10.05.12
- */
-public class ResultSetCopier {
-    static <T> void fillResultSet(java.sql.ResultSet jdbcResultSet,
-                                  ResultHandler<T> eventHandler, T accumulator) throws SQLException {
+
+class ResultSetCopier {
+    static <T> void fillResultSet(
+            java.sql.ResultSet jdbcResultSet,
+            ResultHandler<T> eventHandler,
+            T accumulator) throws SQLException {
         ResultSetMetaData metaData = jdbcResultSet.getMetaData();
         int columnCount = metaData.getColumnCount();
         List<Field> fields = new ArrayList<Field>(columnCount);

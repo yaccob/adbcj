@@ -49,7 +49,6 @@ public abstract class InitDatabase {
             try (Connection connection = new PlainJDBCConnection(jdbcUrl, user, password, new HashMap<>()).getConnection()) {
                 for (String line : setupSQL(script)) {
                     Statement stmt = connection.createStatement();
-                    System.out.println("Prepare: " + line);
                     stmt.execute(line);
                     stmt.close();
 

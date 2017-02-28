@@ -8,6 +8,8 @@ import org.testng.Assert;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
+import java.util.concurrent.ExecutionException;
+
 
 public class ConnectionErrorsTest {
     @Parameters({"url"})
@@ -19,8 +21,9 @@ public class ConnectionErrorsTest {
         try {
             Connection connection = connectionManager.connect().get();
             Assert.fail("should not be able to connect, but got" + connection);
-        } catch (DbException e) {
+        } catch (ExecutionException e) {
             // expected
+            Assert.assertTrue(e.getCause() instanceof DbException);
         }
     }
 
@@ -34,8 +37,9 @@ public class ConnectionErrorsTest {
         try {
             Connection connection = connectionManager.connect().get();
             Assert.fail("should not be able to connect, but got" + connection);
-        } catch (DbException e) {
+        } catch (ExecutionException e) {
             // expected
+            Assert.assertTrue(e.getCause() instanceof DbException);
         }
     }
 

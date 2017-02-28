@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-/**
- * @author roman.stoffel@gamlor.info
- * @since 11.04.12
- */
+
 public class PreparedStatementRequest extends CommandRequest {
     private final int statementId;
     private final List<MysqlType> types;

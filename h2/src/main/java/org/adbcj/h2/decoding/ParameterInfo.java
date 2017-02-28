@@ -5,9 +5,7 @@ import org.adbcj.Type;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public final class ParameterInfo {
     private final Type type;
     private final long precision;

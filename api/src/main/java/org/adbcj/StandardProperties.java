@@ -3,7 +3,6 @@ package org.adbcj;
 /**
  * Standard properties, which can be passed to {@link ConnectionManagerProvider#createConnectionManager}
  * via property map
- * @author roman.stoffel@gamlor.info
  */
 public final class StandardProperties {
     private StandardProperties(){}

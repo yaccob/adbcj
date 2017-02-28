@@ -5,8 +5,8 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.adbcj.Connection;
+import org.adbcj.DbCallback;
 import org.adbcj.h2.H2Connection;
-import org.adbcj.support.DefaultDbFuture;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
@@ -18,8 +18,8 @@ public class Decoder extends ByteToMessageDecoder {
     private DecoderState currentState;
     private H2Connection connection;
 
-    public Decoder(DefaultDbFuture<Connection> initialStateCompletion, H2Connection connection) {
-        currentState = new FirstServerHandshake(initialStateCompletion,connection);
+    public Decoder(DbCallback<Connection> initialStateCompletion, H2Connection connection, StackTraceElement[] entry) {
+        currentState = new FirstServerHandshake(initialStateCompletion, connection, entry);
         this.connection = connection;
     }
 
@@ -28,17 +28,16 @@ public class Decoder extends ByteToMessageDecoder {
         InputStream in = new ByteBufInputStream(buffer);
         in.mark(Integer.MAX_VALUE);
         try {
-            final ResultAndState resultState = currentState.decode(new DataInputStream(in),ctx.channel());
+            final ResultAndState resultState = currentState.decode(new DataInputStream(in), ctx.channel());
             currentState = resultState.getNewState();
-            if(resultState.isWaitingForMoreInput()){
+            if (resultState.isWaitingForMoreInput()) {
                 in.reset();
-            } else{
+            } else {
                 out.add(DecodedToken);
             }
-        } catch (Exception ex){
-            ex.printStackTrace();
+        } catch (Exception ex) {
             throw ex;
-        }finally {
+        } finally {
             in.close();
         }
     }
@@ -46,6 +45,6 @@ public class Decoder extends ByteToMessageDecoder {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
-        connection.tryCompleteClose();
+        connection.tryCompleteClose(null);
     }
 }

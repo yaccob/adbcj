@@ -86,11 +86,4 @@ public interface ResultHandler<T> {
 	 */
 	void endResults(T accumulator);
 
-	/**
-	 * Invoked if there is an error processing the query.
-	 * 
-	 * @param t  the exception that was thrown
-	 * @param accumulator
-	 */
-	void exception(Throwable t, T accumulator);
 }

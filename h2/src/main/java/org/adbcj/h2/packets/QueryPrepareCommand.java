@@ -1,6 +1,5 @@
 package org.adbcj.h2.packets;
 
-import org.adbcj.support.CancellationToken;
 import org.adbcj.h2.decoding.IoUtils;
 
 import java.io.DataOutputStream;
@@ -12,8 +11,8 @@ public class QueryPrepareCommand extends ClientToServerPacket {
     private int id;
     private String sql;
 
-    public QueryPrepareCommand(int id, String sql, CancellationToken cancelSupport) {
-        super(cancelSupport);
+    public QueryPrepareCommand(int id, String sql) {
+        super();
         this.id = id;
         this.sql = sql;
     }

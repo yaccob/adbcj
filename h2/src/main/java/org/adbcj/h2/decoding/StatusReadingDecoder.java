@@ -1,6 +1,8 @@
 package org.adbcj.h2.decoding;
 
 import io.netty.channel.Channel;
+import org.adbcj.DbCallback;
+import org.adbcj.DbException;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.packets.SizeConstants;
@@ -12,9 +14,11 @@ import java.io.IOException;
 
 public abstract class StatusReadingDecoder implements DecoderState {
     protected final H2Connection connection;
+    protected final StackTraceElement[] entry;
 
-    protected StatusReadingDecoder(H2Connection connection) {
+    protected StatusReadingDecoder(H2Connection connection, StackTraceElement[] entry) {
         this.connection = connection;
+        this.entry = entry;
     }
 
     public final ResultAndState decode(DataInputStream stream, Channel channel) throws IOException {
@@ -29,12 +33,15 @@ public abstract class StatusReadingDecoder implements DecoderState {
             ResultOrWait<Integer> errorCode = IoUtils.tryReadNextInt(stream, sql);
             ResultOrWait<String> stackTrace = IoUtils.tryReadNextString(stream, errorCode);
             if(stackTrace.couldReadResult) {
-                return handleException(new H2DbException(sqlstate.result,message.result,sql.result,errorCode.result,stackTrace.result));
+                return handleException(
+                        H2DbException.create(sqlstate.result,message.result,sql.result,errorCode.result,stackTrace.result, entry)
+                );
             }  else{
                 return continueWithNextRequest();
             }
+        } else{
+            return processFurther(stream, channel, status);
         }
-        return processFurther(stream, channel, status);
     }
 
     private ResultAndState continueWithNextRequest() {
@@ -46,10 +53,10 @@ public abstract class StatusReadingDecoder implements DecoderState {
     @Override
     public ResultAndState handleException(H2DbException exception) {
         requestFailedContinue(exception);
-        return ResultAndState.newState(new AnswerNextRequest(connection));
+        return ResultAndState.newState(new AnswerNextRequest(connection, entry));
     }
 
-    protected void requestFailedContinue(H2DbException exception){};
+    protected void requestFailedContinue(H2DbException exception){}
 
 
 }

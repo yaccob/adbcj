@@ -1,45 +1,47 @@
 package org.adbcj.mysql.codec.decoding;
 
 import io.netty.channel.Channel;
-import org.adbcj.Field;
-import org.adbcj.ResultHandler;
-import org.adbcj.Value;
+import org.adbcj.*;
 import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.IoUtils;
-import org.adbcj.mysql.codec.MySqlConnection;
+import org.adbcj.mysql.MySqlConnection;
 import org.adbcj.mysql.codec.MysqlField;
 import org.adbcj.mysql.codec.packets.EofResponse;
 import org.adbcj.mysql.codec.packets.ResultSetRowResponse;
-import org.adbcj.support.DefaultDbFuture;
 import org.adbcj.support.DefaultValue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * @since 12.04.12
- */
+
 public class Row<T> extends DecoderState {
     private final RowDecodingType rowDecoding;
     private final List<MysqlField> fields;
-    private final DefaultDbFuture<T> future;
     private final MySqlConnection connection;
     private final ResultHandler<T> eventHandler;
     private final T accumulator;
+    private final DbCallback<T> callback;
+    private final StackTraceElement[] entry;
+    private DbException failure;
 
-    public Row(RowDecodingType rowDecoding,
-               List<MysqlField> fields,
-               DefaultDbFuture<T> future,
-               MySqlConnection connection,
-               ResultHandler<T> eventHandler,
-               T accumulator) {
+    public Row(
+            MySqlConnection connection,
+            RowDecodingType rowDecoding,
+            List<MysqlField> fields,
+            ResultHandler<T> eventHandler,
+            T accumulator,
+            DbCallback<T> callback,
+            StackTraceElement[] entry,
+            DbException failure) {
         this.rowDecoding = rowDecoding;
         this.fields = fields;
-        this.future = future;
         this.connection = connection;
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
+        this.callback = callback;
+        this.entry = entry;
+        this.failure = failure;
     }
 
     @Override
@@ -47,19 +49,34 @@ public class Row<T> extends DecoderState {
                                 BoundedInputStream in, Channel channel) throws IOException {
         int fieldCount = in.read(); // This is only for checking for EOF
         if (fieldCount == RESPONSE_EOF) {
-            eventHandler.endResults(accumulator);
-            future.trySetResult(accumulator);
+            try {
+                eventHandler.endResults(accumulator);
+            } catch (Exception ex) {
+                failure = DbException.attachSuppressedOrWrap(ex, entry, failure);
+            }
+            if (this.failure == null) {
+                callback.onComplete(accumulator, null);
+            } else {
+                callback.onComplete(null, failure);
+            }
             EofResponse rowEof = decodeEofResponse(in, length, packetNumber, EofResponse.Type.ROW);
             return result(new AcceptNextResponse(connection), rowEof);
         }
 
         Value[] values = rowDecoding.decode(in, fieldCount, this);
-        eventHandler.startRow(accumulator);
-        for (Value value : values) {
-            eventHandler.value(value, accumulator);
+        try {
+            eventHandler.startRow(accumulator);
+            for (Value value : values) {
+                eventHandler.value(value, accumulator);
+            }
+            eventHandler.endRow(accumulator);
+
+        } catch (Exception ex) {
+            failure = DbException.attachSuppressedOrWrap(ex, entry, failure);
         }
-        eventHandler.endRow(accumulator);
-        return result(new Row<T>(rowDecoding, fields, future,connection, eventHandler, accumulator), new ResultSetRowResponse(length, packetNumber, values));
+        return result(
+                new Row<T>(connection, rowDecoding, fields, eventHandler, accumulator, callback, entry, failure),
+                new ResultSetRowResponse(length, packetNumber, values));
 
     }
 
@@ -126,11 +143,7 @@ public class Row<T> extends DecoderState {
                 int nullMaskPos = 0;
                 boolean hasValue = false;
                 for (int i = 0; i <= valuePos; i++) {
-                    if ((nullBitMap[nullMaskPos] & bit) > 0) {
-                        hasValue = false;
-                    } else {
-                        hasValue = true;
-                    }
+                    hasValue = (nullBitMap[nullMaskPos] & bit) <= 0;
                     if (((bit <<= 1) & 255) == 0) {
                         bit = 1;
                         nullMaskPos++;

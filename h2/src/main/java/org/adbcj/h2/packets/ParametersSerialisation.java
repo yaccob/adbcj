@@ -9,9 +9,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 final class ParametersSerialisation {
 
 

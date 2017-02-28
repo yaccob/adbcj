@@ -9,8 +9,8 @@ import static org.adbcj.support.stacktracing.StackTracingOptions.FORCED_BY_INSTA
 public class StackTraceCapturingTest {
     @Test
     public void forcedCaptureOnCreation() {
-        final Throwable execption = FORCED_BY_INSTANCE.captureStacktraceAtEntryPoint();
-        Assert.assertNotNull(execption);
+        final StackTraceElement[] exeception = FORCED_BY_INSTANCE.captureStacktraceAtEntryPoint();
+        Assert.assertNotNull(exeception);
     }
 
 

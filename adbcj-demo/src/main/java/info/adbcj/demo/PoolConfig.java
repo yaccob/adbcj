@@ -6,9 +6,7 @@ import org.adbcj.ConnectionManagerProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public class PoolConfig {
     public static void main(String[] args) {
         Map<String,String> config = new HashMap<String,String>();

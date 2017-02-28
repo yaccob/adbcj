@@ -5,9 +5,6 @@ import org.adbcj.*;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
 public class Failure {
     public static void main(String[] args) {
 

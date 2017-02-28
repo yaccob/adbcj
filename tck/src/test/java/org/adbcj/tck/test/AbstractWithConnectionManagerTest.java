@@ -3,7 +3,6 @@ package org.adbcj.tck.test;
 import org.adbcj.CloseMode;
 import org.adbcj.ConnectionManager;
 import org.adbcj.ConnectionManagerProvider;
-import org.adbcj.DbFuture;
 import org.adbcj.tck.InitDatabase;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -11,10 +10,9 @@ import org.testng.annotations.Parameters;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
-/**
- * @author roman.stoffel@gamlor.info
- */
+
 public abstract class AbstractWithConnectionManagerTest {
     protected ConnectionManager connectionManager;
     private InitDatabase init;
@@ -29,9 +27,11 @@ public abstract class AbstractWithConnectionManagerTest {
         InitDatabase init = (InitDatabase) Class.forName(setupClass).newInstance();
         init.prepareMySQL(jdbcUrl, user, password);
         this.init = init;
-        connectionManager = ConnectionManagerProvider.createConnectionManager(url,
+        connectionManager = ConnectionManagerProvider.createConnectionManager(
+                url,
                 user,
-                password, properties());
+                password,
+                properties());
     }
 
     protected Map<String, String> properties() {
@@ -42,8 +42,8 @@ public abstract class AbstractWithConnectionManagerTest {
     @AfterClass
     public void closeConnectionManager(String jdbcUrl,
                                        String user,
-                                       String password) throws InterruptedException {
-        DbFuture<Void> closeFuture = connectionManager.close(CloseMode.CANCEL_PENDING_OPERATIONS);
+                                       String password) throws Exception {
+        CompletableFuture<Void> closeFuture = connectionManager.close(CloseMode.CANCEL_PENDING_OPERATIONS);
         closeFuture.get();
         init.cleanUp(jdbcUrl, user, password);
     }
