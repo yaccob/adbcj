@@ -11,11 +11,10 @@
 
 	<name>ADBCJ</name>
 	<description>
-		Asynchronous Database Connectivity in Java is a framework for
-		asynchronous database interaction.
+		Asynchronous Database Connectivity for Java is an library for asynchronous database interaction.
 	</description>
 
-	<url>http://adbcj.org/</url>
+	<url>https://github.com/gamlerhart/adbcj/</url>
 	<inceptionYear>2007</inceptionYear>
 
 	<properties>
@@ -45,12 +44,12 @@
 		<system>github</system>
 		<url>https://github.com/gamlerhart/adbcj/issues</url>
 	</issueManagement>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>https://github.com/gamlerhart/gamlor-mvn/tree/master/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
+	<distributionManagement>
+		<repository>
+			<id>gamlor-snapshots</id>
+			<url>scp://gamlor@gamlor.info/home/gamlor/gamlor.info/files/mvn</url>
+		</repository>
+	</distributionManagement>
 
 	<licenses>
 		<license>
@@ -69,7 +68,7 @@
 		<developer>
 			<id>rstoffel</id>
 			<name>Roman Stoffel</name>
-			<url>http://www.gamlor.info</url>
+			<url>https://www.gamlor.info</url>
 		</developer>
 	</developers>
 
@@ -81,6 +80,14 @@
 	</mailingLists>
 
 	<build>
+		<extensions>
+			<!-- Enabling the use of SSH -->
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>2.12</version>
+			</extension>
+		</extensions>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -231,7 +238,6 @@
 			<version>6.10</version>
 			<scope>test</scope>
 		</dependency>
-
 
 	</dependencies>
 

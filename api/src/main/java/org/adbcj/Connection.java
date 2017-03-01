@@ -116,6 +116,13 @@ public interface Connection {
         return result;
     }
 
+    default void executeQuery(String sql,
+                              DbCallback<ResultSet> callback) {
+        DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
+        DefaultResultSet accumulator = new DefaultResultSet();
+        executeQuery(sql, handler, accumulator, (DbCallback)callback);
+    }
+
     <T> void executeQuery(String sql,
                           ResultHandler<T> eventHandler,
                           T accumulator,
@@ -152,6 +159,13 @@ public interface Connection {
      */
     default CompletableFuture<Void> close() {
         return close(CloseMode.CLOSE_GRACEFULLY);
+    }
+
+    /**
+     * {@link #close(CloseMode)} with {@link CloseMode#CLOSE_GRACEFULLY}
+     */
+    default void close(DbCallback<Void> callback) {
+        close(CloseMode.CLOSE_GRACEFULLY, callback);
     }
 
     /**

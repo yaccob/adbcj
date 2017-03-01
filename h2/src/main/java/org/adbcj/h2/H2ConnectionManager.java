@@ -39,7 +39,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
 
         eventLoop = new NioEventLoopGroup();
         bootstrap = new Bootstrap()
-                .group(new NioEventLoopGroup())
+                .group(eventLoop)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_KEEPALIVE, true)
