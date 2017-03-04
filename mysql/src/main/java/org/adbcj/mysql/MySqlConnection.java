@@ -7,6 +7,7 @@ import org.adbcj.mysql.codec.MySqlRequest;
 import org.adbcj.mysql.codec.MySqlRequests;
 import io.netty.channel.Channel;
 import org.adbcj.support.CloseOnce;
+import org.adbcj.support.LoginCredentials;
 import org.adbcj.support.stacktracing.StackTracingOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ public class MySqlConnection implements Connection {
 
     private static final Logger logger = LoggerFactory.getLogger(MySqlConnection.class);
 
+    private final LoginCredentials login;
     private final int maxQueueSize;
     private final MysqlConnectionManager connectionManager;
     private final Channel channel;
@@ -34,10 +36,12 @@ public class MySqlConnection implements Connection {
     private volatile boolean isInTransaction = false;
 
     public MySqlConnection(
+            LoginCredentials login,
             int maxQueueSize,
             MysqlConnectionManager connectionManager,
             Channel channel,
             StackTracingOptions strackTraces) {
+        this.login = login;
         this.maxQueueSize = maxQueueSize;
         this.connectionManager = connectionManager;
         this.channel = channel;
@@ -54,9 +58,6 @@ public class MySqlConnection implements Connection {
         return connectionManager;
     }
 
-    public synchronized CompletableFuture<Void> close() throws DbException {
-        return close(CloseMode.CLOSE_GRACEFULLY);
-    }
 
     @Override
     public void beginTransaction(DbCallback<Void> callback) {
@@ -92,6 +93,10 @@ public class MySqlConnection implements Connection {
         }
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        doRollback(entry, callback);
+    }
+
+    private void doRollback(StackTraceElement[] entry, DbCallback<Void> callback) {
         synchronized (lock) {
             queRequest(MySqlRequests.rollbackTransaction(this, callback, entry));
             isInTransaction = false;
@@ -148,22 +153,43 @@ public class MySqlConnection implements Connection {
 
     @Override
     public void close(CloseMode closeMode, DbCallback<Void> callback) throws DbException {
+        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             closer.requestClose(callback, () -> {
-                if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
-                    forceCloseOnPendingRequests();
+                if (connectionManager.connectionPool == null) {
+                    doActualClose(closeMode, entry);
+                } else {
+                    doRollback(entry, (result, failure) -> {
+                        if (failure == null) {
+                            if (this.connectionManager.isClosed()) {
+                                doActualClose(closeMode, entry);
+                            } else {
+                                channel.pipeline().remove(MysqlConnectionManager.DECODER);
+                                connectionManager.connectionPool.release(login, channel);
+                                callback.onComplete(result, null);
+                            }
+                        } else {
+                            callback.onComplete(null,
+                                    new DbException("Failed to rollback transaction and return connection to pool", failure));
+                        }
+                    });
                 }
-                StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
-                if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
-                    forceCloseOnPendingRequests();
-                }
-                final MySqlRequest closeRequest = MySqlRequests.createCloseRequest(
-                        this,
-                        (res, error) -> tryCompleteClose(error),
-                        entry);
-                forceQueRequest(closeRequest);
             });
         }
+    }
+
+    private void doActualClose(CloseMode closeMode, StackTraceElement[] entry) {
+        if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
+            forceCloseOnPendingRequests();
+        }
+        if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
+            forceCloseOnPendingRequests();
+        }
+        final MySqlRequest closeRequest = MySqlRequests.createCloseRequest(
+                this,
+                (res, error) -> tryCompleteClose(error),
+                entry);
+        forceQueRequest(closeRequest);
     }
 
     void tryCompleteClose(DbException error) {

@@ -141,6 +141,11 @@ public class H2ConnectionManager extends AbstractConnectionManager {
     }
 
     @Override
+    protected void doCloseConnection(Connection connection, CloseMode mode, DbCallback<Void> callback) {
+        connection.close(mode, callback);
+    }
+
+    @Override
     protected void doClose(DbCallback<Void> callback, StackTraceElement[] entry) {
         new Thread("Closing H2 ConnectionManager") {
             @Override

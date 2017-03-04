@@ -41,7 +41,7 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
         this.executorService = createPool();
         this.connectionProvider = connectionProvider;
 
-        if(useConnectionPool){
+        if (useConnectionPool) {
             throw new DbException("JDBC connection provider does not support a connection pool." +
                     "The JDBC-ADBCJ connection bridge is for development purpose, to validate that ADBCJ returns the same results as JDBC");
         }
@@ -105,12 +105,17 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
     }
 
     @Override
+    protected void doCloseConnection(Connection connection, CloseMode mode, DbCallback<Void> callback) {
+        connection.close(mode, callback);
+    }
+
+    @Override
     protected void doClose(DbCallback<Void> callback, StackTraceElement[] entry) {
         callback.onComplete(null, null);
     }
 
 
-    void closedConnection(org.adbcj.jdbc.JdbcConnection jdbcConnection){
+    void closedConnection(org.adbcj.jdbc.JdbcConnection jdbcConnection) {
         removeConnection(jdbcConnection);
     }
 

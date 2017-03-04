@@ -137,24 +137,18 @@ public class H2Connection implements Connection {
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             closer.requestClose(callback, () -> {
-
-                if (this.manager.connectionPool == null) {
-                    if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
-                        forceCloseOnPendingRequests();
-                    }
-
-                    Request request = requestCreator.createCloseRequest(
-                            (result, error) -> {
-                                tryCompleteClose(error);
-                            },
-                            entry);
-                    forceQueRequest(request);
+                if (this.manager.connectionPool == null || manager.isClosed()) {
+                    doActualClose(closeMode, entry);
                 } else {
                     doRollback(entry, (result, failure) -> {
                         if (failure == null) {
-                            channel.pipeline().remove(H2ConnectionManager.DECODER);
-                            manager.connectionPool.release(login, channel);
-                            callback.onComplete(result, null);
+                            if(manager.isClosed()){
+                                doActualClose(closeMode, entry);
+                            } else{
+                                channel.pipeline().remove(H2ConnectionManager.DECODER);
+                                manager.connectionPool.release(login, channel);
+                                callback.onComplete(result, null);
+                            }
                         } else {
                             callback.onComplete(null,
                                     new DbException("Failed to rollback transaction and return connection to pool", failure));
@@ -163,6 +157,19 @@ public class H2Connection implements Connection {
                 }
             });
         }
+    }
+
+    private void doActualClose(CloseMode closeMode, StackTraceElement[] entry) {
+        if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
+            forceCloseOnPendingRequests();
+        }
+
+        Request request = requestCreator.createCloseRequest(
+                (result, error) -> {
+                    tryCompleteClose(error);
+                },
+                entry);
+        forceQueRequest(request);
     }
 
     @Override

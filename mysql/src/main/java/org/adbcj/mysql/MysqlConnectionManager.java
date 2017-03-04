@@ -14,10 +14,12 @@ import org.adbcj.mysql.codec.ClientRequest;
 import org.adbcj.mysql.codec.MySqlClientDecoder;
 import org.adbcj.mysql.codec.MySqlClientEncoder;
 import org.adbcj.mysql.MySqlConnection;
+import org.adbcj.mysql.codec.decoding.AcceptNextResponse;
 import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.adbcj.support.AbstractConnectionManager;
+import org.adbcj.support.ConnectionPool;
 import org.adbcj.support.LoginCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +35,14 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
 
     private static final String ENCODER = MysqlConnectionManager.class.getName() + ".encoder";
-    private static final String DECODER = MysqlConnectionManager.class.getName() + ".decoder";
+    static final String DECODER = MysqlConnectionManager.class.getName() + ".decoder";
     private final LoginCredentials defaultCredentials;
 
     private final Bootstrap bootstrap;
     private final AtomicInteger idCounter = new AtomicInteger();
     private final NioEventLoopGroup eventLoop;
+
+    final ConnectionPool<LoginCredentials, Channel> connectionPool;
 
     public MysqlConnectionManager(String host,
                                   int port,
@@ -66,6 +70,12 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
                     }
                 });
+
+        if(useConnectionPool){
+            this.connectionPool = new ConnectionPool<>();
+        } else{
+            this.connectionPool = null;
+        }
     }
 
 
@@ -84,6 +94,29 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         }
         logger.debug("Starting connection");
 
+
+        if(connectionPool!=null){
+            Channel channel = connectionPool.tryAquire(credentials);
+            if(channel!=null){
+                MySqlConnection dbConn = new MySqlConnection(
+                        credentials,
+                        maxQueueLength(),
+                        this,
+                        channel,
+                        getStackTracingOption()
+                );
+
+                channel.pipeline().addLast(DECODER, new Decoder(
+                        new AcceptNextResponse(dbConn), dbConn));
+
+                connected.onComplete(dbConn,
+                        null);
+
+                return;
+            }
+        }
+
+
         final ChannelFuture channelFuture = bootstrap.connect();
 
         channelFuture.addListener((ChannelFutureListener) future -> {
@@ -100,6 +133,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
             }
 
             MySqlConnection connection = new MySqlConnection(
+                    credentials,
                     maxQueueLength(),
                     MysqlConnectionManager.this,
                     channel,
@@ -107,7 +141,6 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
             addConnection(connection);
             channel.pipeline().addLast(DECODER, new Decoder(
                     new Connecting(connected, entry, connection, credentials), connection));
-            channel.pipeline().addLast("end-handler", new Handler(connection));
 
 
             channel.config().setAutoRead(true);
@@ -115,6 +148,11 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
         });
     }
 
+
+    @Override
+    protected void doCloseConnection(Connection connection, CloseMode mode, DbCallback<Void> callback) {
+        connection.close(mode,callback);
+    }
 
     @Override
     protected void doClose(DbCallback<Void> callback, StackTraceElement[] entry) {
@@ -133,7 +171,7 @@ public class MysqlConnectionManager extends AbstractConnectionManager {
 
     }
 
-    public int nextId() {
+    int nextId() {
         return idCounter.incrementAndGet();
     }
 
@@ -177,31 +215,6 @@ class Decoder extends ByteToMessageDecoder {
     }
 }
 
-
-class Handler extends SimpleChannelInboundHandler<ServerPacket> {
-    private final MySqlConnection connection;
-    private static final Logger logger = LoggerFactory.getLogger(Handler.class);
-
-    Handler(MySqlConnection connection) {
-        this.connection = connection;
-    }
-
-    @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, ServerPacket item) throws Exception {
-        // The binary decoder is a state machine,
-        // which decodes according to the expected state.
-        // and directly returns to the connection
-        // Not elegant, but works
-    }
-
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        throw new Error("Not implemented yet: TODO");  //TODO: Implement
-    }
-
-
-}
 
 @ChannelHandler.Sharable
 class Encoder extends MessageToByteEncoder<ClientRequest> {

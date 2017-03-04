@@ -49,7 +49,7 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
                 closer.didClose(null);
             } else {
                 for (Connection connection : connectionsCopy) {
-                    connection.close(mode, (success, failure) -> {
+                    doCloseConnection(connection, mode, (success, failure) -> {
                         if(failure!=null){
                             LOGGER.info("Exception in connection close",failure);
                         }
@@ -67,6 +67,11 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
             }
         });
     }
+
+    /**
+     * Close the given connection. Do not return it to the pool. This is done when the connection manager is shutting down.
+     */
+    protected abstract void doCloseConnection(Connection connection, CloseMode mode, DbCallback<Void> callback);
 
     protected abstract void doClose(DbCallback<Void> callback, StackTraceElement[] entry);
 

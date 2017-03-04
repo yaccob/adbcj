@@ -98,7 +98,9 @@ public class GreetingDecodeTest {
     }
 
     private MySqlConnection createMockConnection() {
-        return new MySqlConnection(64,
+        return new MySqlConnection(
+        		login,
+        		64,
                 new MysqlConnectionManager(
                 		"localhost",
 						42,
