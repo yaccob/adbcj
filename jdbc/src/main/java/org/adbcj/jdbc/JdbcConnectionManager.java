@@ -40,6 +40,11 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
         super(properties);
         this.executorService = createPool();
         this.connectionProvider = connectionProvider;
+
+        if(useConnectionPool){
+            throw new DbException("JDBC connection provider does not support a connection pool." +
+                    "The JDBC-ADBCJ connection bridge is for development purpose, to validate that ADBCJ returns the same results as JDBC");
+        }
     }
 
     @Override

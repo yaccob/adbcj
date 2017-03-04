@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public abstract class AbstractConnectionManager implements ConnectionManager {
@@ -15,11 +14,14 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
     private final StackTracingOptions stackTracingOption;
     private final HashSet<Connection> connections = new HashSet<Connection>();
     private final CloseOnce closer = new CloseOnce();
+    protected final boolean useConnectionPool;
 
     public AbstractConnectionManager(Map<String, String> properties) {
         this.properties = Collections.unmodifiableMap(properties);
         this.stackTracingOption = readStackTracingOption(properties);
+        this.useConnectionPool = readConnectionPoolEnabled(properties);
     }
+
 
 
     protected final void addConnection(Connection connection) {
@@ -92,6 +94,11 @@ public abstract class AbstractConnectionManager implements ConnectionManager {
         } else {
             return StackTracingOptions.GLOBAL_DEFAULT;
         }
+    }
+
+    private boolean readConnectionPoolEnabled(Map<String, String> properties){
+        String value = properties.get(StandardProperties.CONNECTION_POOL_ENABLE);
+        return "true".equalsIgnoreCase(value);
     }
 
     protected StackTracingOptions getStackTracingOption() {

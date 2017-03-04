@@ -33,7 +33,8 @@ public class InsertTest extends AbstractWithConnectionManagerTest{
     @Test
     public void returnsAutoIncrementPreparedQuery() throws Exception{
         Connection connection = connectionManager.connect().get();
-        PreparedUpdate statement = connection.prepareUpdate("INSERT INTO tableWithAutoId (textData) " +
+        PreparedUpdate statement = connection.prepareUpdate(
+                "INSERT INTO tableWithAutoId (textData) " +
                 "VALUES (?)").get();
         Result result = statement.execute("value prepared").get();
 

@@ -3,11 +3,16 @@ package org.adbcj.h2;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.pool.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.Future;
 import org.adbcj.*;
+import org.adbcj.h2.decoding.AnswerNextRequest;
 import org.adbcj.h2.decoding.Decoder;
 import org.adbcj.h2.packets.ClientHandshake;
 import org.adbcj.support.AbstractConnectionManager;
+import org.adbcj.support.ConnectionPool;
 import org.adbcj.support.LoginCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +26,15 @@ public class H2ConnectionManager extends AbstractConnectionManager {
 
     private final Bootstrap bootstrap;
     private static final String ENCODER = H2ConnectionManager.class.getName() + ".encoder";
-    private static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
+    static final String DECODER = H2ConnectionManager.class.getName() + ".decoder";
     private final String url;
     private final LoginCredentials defaultCredentials;
     private final Map<String, String> keys;
     private final NioEventLoopGroup eventLoop;
+    final ConnectionPool<LoginCredentials, Channel> connectionPool;
 
-    public H2ConnectionManager(String url, String host,
+    public H2ConnectionManager(String url,
+                               String host,
                                int port,
                                LoginCredentials credentials,
                                Map<String, String> properties,
@@ -52,6 +59,12 @@ public class H2ConnectionManager extends AbstractConnectionManager {
                         ch.pipeline().addLast("handler", new Handler());
                     }
                 });
+
+        if(useConnectionPool){
+            connectionPool = new ConnectionPool<>();
+        } else{
+            connectionPool = null;
+        }
     }
 
 
@@ -61,7 +74,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
     }
 
     @Override
-    public void connect(String user, String password, DbCallback<Connection> connected) {
+    public final void connect(String user, String password, DbCallback<Connection> connected) {
         connect(new LoginCredentials(user, password, defaultCredentials.getDatabase()), connected);
     }
 
@@ -71,6 +84,27 @@ public class H2ConnectionManager extends AbstractConnectionManager {
             throw new DbConnectionClosedException("Connection manager closed");
         }
         logger.debug("Starting connection");
+
+        if(connectionPool!=null){
+            Channel channel = connectionPool.tryAquire(credentials);
+            if(channel!=null){
+                H2Connection dbConn = new H2Connection(
+                        credentials,
+                        maxQueueLength(),
+                        this,
+                        channel,
+                        getStackTracingOption());
+
+                channel.pipeline().addFirst(DECODER,
+                        new Decoder(new AnswerNextRequest(dbConn, entry), dbConn, entry));
+
+                connected.onComplete(dbConn,
+                        null);
+
+                return;
+            }
+        }
+
         final ChannelFuture channelFuture = bootstrap.connect();
 
 
@@ -88,6 +122,7 @@ public class H2ConnectionManager extends AbstractConnectionManager {
             }
 
             H2Connection connection = new H2Connection(
+                    credentials,
                     maxQueueLength(),
                     H2ConnectionManager.this,
                     channel,

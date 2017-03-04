@@ -15,6 +15,7 @@ public class H2Connection implements Connection {
     private static final Logger logger = LoggerFactory.getLogger(H2Connection.class);
     private final String sessionId = StringUtils.convertBytesToHex(MathUtils.secureRandomBytes(32));
     private final ArrayDeque<Request> requestQueue;
+    private final LoginCredentials login;
     private final int maxQueueSize;
     private final H2ConnectionManager manager;
     private final Channel channel;
@@ -34,7 +35,13 @@ public class H2Connection implements Connection {
 
     private final RequestCreator requestCreator = new RequestCreator(this);
 
-    public H2Connection(int maxQueueSize, H2ConnectionManager manager, Channel channel, StackTracingOptions strackTraces) {
+    public H2Connection(
+            LoginCredentials login,
+            int maxQueueSize,
+            H2ConnectionManager manager,
+            Channel channel,
+            StackTracingOptions strackTraces) {
+        this.login = login;
         this.maxQueueSize = maxQueueSize;
         this.manager = manager;
         this.channel = channel;
@@ -81,10 +88,14 @@ public class H2Connection implements Connection {
             if (!isInTransaction()) {
                 throw new DbException("Not currently in a transaction, cannot rollback");
             }
-            final Request request = requestCreator.rollbackTransaction(callback, entry);
-            queRequest(request);
-            isInTransaction = false;
+            doRollback(entry, callback);
         }
+    }
+
+    private void doRollback(StackTraceElement[] entry, DbCallback<Void> callback) {
+        final Request request = requestCreator.rollbackTransaction(callback, entry);
+        queRequest(request);
+        isInTransaction = false;
     }
 
     @Override
@@ -104,7 +115,7 @@ public class H2Connection implements Connection {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
 
-        Request request =requestCreator.createUpdate(sql, callback, entry);
+        Request request = requestCreator.createUpdate(sql, callback, entry);
         queRequest(request);
     }
 
@@ -123,18 +134,33 @@ public class H2Connection implements Connection {
     }
 
     public void close(CloseMode closeMode, DbCallback<Void> callback) throws DbException {
+        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             closer.requestClose(callback, () -> {
-                if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
-                    forceCloseOnPendingRequests();
+
+                if (this.manager.connectionPool == null) {
+                    if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
+                        forceCloseOnPendingRequests();
+                    }
+
+                    Request request = requestCreator.createCloseRequest(
+                            (result, error) -> {
+                                tryCompleteClose(error);
+                            },
+                            entry);
+                    forceQueRequest(request);
+                } else {
+                    doRollback(entry, (result, failure) -> {
+                        if (failure == null) {
+                            channel.pipeline().remove(H2ConnectionManager.DECODER);
+                            manager.connectionPool.release(login, channel);
+                            callback.onComplete(result, null);
+                        } else {
+                            callback.onComplete(null,
+                                    new DbException("Failed to rollback transaction and return connection to pool", failure));
+                        }
+                    });
                 }
-                StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
-                Request request = requestCreator.createCloseRequest(
-                        (result, error) -> {
-                            tryCompleteClose(error);
-                        },
-                        entry);
-                forceQueRequest(request);
             });
         }
     }
@@ -152,7 +178,7 @@ public class H2Connection implements Connection {
     }
 
     void throwIfNoSpaceInQueue() {
-        int requestsPending = requestQueue.size() + (blockingRequest==null?0:blockingRequest.size());
+        int requestsPending = requestQueue.size() + (blockingRequest == null ? 0 : blockingRequest.size());
         if (requestsPending > maxQueueSize) {
             throw new DbException("To many pending requests. The current maximum is " + maxQueueSize + "." +
                     "Ensure that your not overloading the database with requests. " +
@@ -162,7 +188,7 @@ public class H2Connection implements Connection {
 
     void cancelBlockedRequest(Request request) {
         synchronized (lock) {
-            assert blockingRequest!=null;
+            assert blockingRequest != null;
             assert blockingRequest.unblockBy(request);
             BlockingRequestInProgress req = blockingRequest;
             blockingRequest = null;
@@ -241,13 +267,13 @@ public class H2Connection implements Connection {
 
 
     private void forceCloseOnPendingRequests() {
-        synchronized (lock){
+        synchronized (lock) {
             DbConnectionClosedException closedEx = new DbConnectionClosedException("Connection closed");
-            if(blockingRequest!=null){
+            if (blockingRequest != null) {
                 blockingRequest.completeFailure(closedEx);
             }
             for (Request request : requestQueue) {
-                if(blockingRequest!=request){
+                if (blockingRequest != request) {
                     request.completeFailure(closedEx);
                 }
             }

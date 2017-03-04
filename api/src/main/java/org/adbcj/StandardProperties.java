@@ -27,4 +27,13 @@ public final class StandardProperties {
      * This is disabled by default
      */
     public final static String CAPTURE_CALL_STACK= "org.adbcj.debug.capture.callstack";
+
+
+    /**
+     * When set to true, enables the default confection pool.
+     * If a driver does not support a connection pool, it should throw a {@link DbException}.
+     *
+     *
+     */
+    public final static String CONNECTION_POOL_ENABLE= "org.adbcj.connectionpool.enable";
 }

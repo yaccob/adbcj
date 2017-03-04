@@ -23,6 +23,11 @@ public class Decoder extends ByteToMessageDecoder {
         this.connection = connection;
     }
 
+    public Decoder(DecoderState currentState, H2Connection connection, StackTraceElement[] entry) {
+        this.currentState = currentState;
+        this.connection = connection;
+    }
+
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) throws Exception {
         InputStream in = new ByteBufInputStream(buffer);

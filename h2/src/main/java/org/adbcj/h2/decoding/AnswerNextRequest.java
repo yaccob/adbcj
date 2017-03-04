@@ -30,6 +30,7 @@ public final class AnswerNextRequest extends StatusReadingDecoder {
 
     private ResultAndState handleRequest(DataInputStream stream, Channel channel) throws IOException {
         final Request requestInfo = connection.dequeRequest();
+        assert requestInfo !=null;
         final DecoderState requestDecoder = requestInfo.getStartState();
         stream.reset();
         stream.mark(Integer.MAX_VALUE);

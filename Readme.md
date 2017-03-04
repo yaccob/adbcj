@@ -280,3 +280,26 @@ That's the true origin where the error started.
         at org.adbcj.h2.H2DbException.<init>(H2DbException.java:22)
         at org.adbcj.h2.H2DbException.create(H2DbException.java:40)
         // SNIP
+
+## Simple Connection Pool
+
+You can enable a connection pool by setting the `org.adbcj.connectionpool.enable` property to true.
+
+When set to true, when you close a connection, it is returned to a connection pool.
+So, when connecting the next time, a initial connection handshakes can be skipped.
+
+    Map<String, String> settings = new HashMap<>();
+    settings.put(StandardProperties.CONNECTION_POOL_ENABLE, "false");
+    final ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(
+            "adbcj:h2://localhost:14242/mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE",
+            "adbcj",
+            "password1234",
+            settings
+    );
+    
+Current implementation limitations:
+    
+- At the moment there are no limits like timouts, maximum connections.
+- If prepared statements or similar things were not closed, they are not closed when the connection returns to the pool.
+  The prepard statements will leak on the database side.
+    
