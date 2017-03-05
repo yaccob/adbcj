@@ -13,14 +13,14 @@ import java.util.Map;
 public class TutorialConnectionPool {
 
 
-    private static final int TEST_CONNECTION_COUNT = 50;
+    private static final int TEST_CONNECTION_COUNT = 100;
 
     public static void main(String[] args) throws Exception {
         // First, let's start a demo H2 database server
         Server demoH2Db = DemoServer.startServer();
 
         Map<String, String> settings = new HashMap<>();
-        settings.put(StandardProperties.CONNECTION_POOL_ENABLE, "false");
+        settings.put(StandardProperties.CONNECTION_POOL_ENABLE, "true");
         final ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(
                 "adbcj:h2://localhost:14242/mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE",
                 "adbcj",
@@ -30,12 +30,12 @@ public class TutorialConnectionPool {
 
         long firstTime = System.currentTimeMillis();
         openCloseBunchOfConnections(connectionManager);
-        System.out.println("First time: Time to connect: " + (System.currentTimeMillis()-firstTime)/ TEST_CONNECTION_COUNT);
+        System.out.println("First time: Time to connect: " + ((System.currentTimeMillis()-firstTime)/ TEST_CONNECTION_COUNT )+"ms");
 
 
         long secondTime = System.currentTimeMillis();
         openCloseBunchOfConnections(connectionManager);
-        System.out.println("Second time: Time to connect: " + (System.currentTimeMillis()-secondTime)/ TEST_CONNECTION_COUNT);
+        System.out.println("First time, pooled: Time to connect: " + ((System.currentTimeMillis()-secondTime)/ TEST_CONNECTION_COUNT )+"ms");
 
         connectionManager.close().get();
 
