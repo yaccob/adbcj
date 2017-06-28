@@ -299,7 +299,62 @@ So, when connecting the next time, a initial connection handshakes can be skippe
     
 Current implementation limitations:
     
-- At the moment there are no limits like timouts, maximum connections.
+- At the moment there are no limits like timeouts, maximum connections.
 - If prepared statements or similar things were not closed, they are not closed when the connection returns to the pool.
-  The prepard statements will leak on the database side.
+  The prepared statements will leak on the database side.
+  
+##  Request Queue Length
+With ADBCJ it is very easy to send hundreds to queries to the database, without waiting for results. 
+You might queue up more queries than you expect and unexpectedly overload the database.
+
+To protect from database overloads, ADBCJ as a default maximum queue length of 64 per connection
+That means if 64 requests are pending, and you issue another one, that one is aborted and a exception is returned.
+ 
+An example:
+ 
+    // Blocking code to keep demo code short
+    Connection connection = connectionManager.connect().get();
+    PreparedQuery stmt = connection.prepareQuery("SELECT ?").get();
+    
+    // Issue 200 requests, without waiting for any response
+    for (int i = 0; i < 200; i++) {
+        stmt.execute(i).handle((rows, queryFailure) -> {
+            if (queryFailure == null) {
+                System.out.println(" - Yeah, Result: " + rows.get(0).get(0));
+            } else {
+                failures.incrementAndGet();
+                System.err.println(" - Oups, we send to many queries");
+                queryFailure.printStackTrace(System.err);
+            }
+            waitForCompletion.countDown();
+            return null;
+        });
+    }
+    
+This will almost certainly hit the que maximum, creating this error:
+
+    org.adbcj.DbException: To many pending requests. The current maximum is 64. Ensure that your not overloading the database with requests. Also check the adbcj.maxQueueLength property
+        at org.adbcj.h2.H2Connection.failIfQueueFull(H2Connection.java:192)
+        at org.adbcj.h2.H2Connection.queRequest(H2Connection.java:182)
+        at org.adbcj.h2.H2PreparedQuery.executeWithCallback(H2PreparedQuery.java:29)
+        at org.adbcj.PreparedQuery.execute(PreparedQuery.java:15)
+        at info.adbcj.demo.TutorialQueueLimit.runQueries(TutorialQueueLimit.java:69)
+        at info.adbcj.demo.TutorialQueueLimit.firstRunToSmallQueue(TutorialQueueLimit.java:39)
+        at info.adbcj.demo.TutorialQueueLimit.main(TutorialQueueLimit.java:19)
+    Caused by: org.adbcj.DbException: To many pending requests. The current maximum is 64. Ensure that your not overloading the database with requests. Also check the adbcj.maxQueueLength property
+        ... 7 more
+        
+You can increase the queue limit by setting the max queue length:
+
+        int maxQueueLength = 200;
+        Map<String, String> props = new HashMap<>();
+        props.put(StandardProperties.MAX_QUEUE_LENGTH, String.valueOf(maxQueueLength));
+        final ConnectionManager connectionManager = ConnectionManagerProvider.createConnectionManager(
+                "adbcj:h2://localhost:14242/mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE",
+                "adbcj",
+                "password1234",
+                props
+        );
+
+
     
