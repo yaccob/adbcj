@@ -231,9 +231,12 @@ public class JdbcConnection implements Connection {
         synchronized (lock) {
             int requestsPending = requestQueue.size();
             if (requestsPending > maxQueueSize) {
-                throw new DbException("To many pending requests. The current maximum is " + maxQueueSize + "." +
-                        "Ensure that your not overloading the database with requests. " +
+
+                DbException ex = new DbException("To many pending requests. The current maximum is " + maxQueueSize +
+                        ". Ensure that your not overloading the database with requests. " +
                         "Also check the " + StandardProperties.MAX_QUEUE_LENGTH + " property");
+                callback.onComplete(null, ex);
+                return;
             }
             try {
                 boolean queueEmpty = requestQueue.isEmpty();

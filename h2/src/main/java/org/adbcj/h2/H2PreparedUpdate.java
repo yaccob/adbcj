@@ -18,6 +18,6 @@ public class H2PreparedUpdate extends AbstractStatement implements PreparedUpdat
         }
         StackTraceElement[] entry = connection.strackTraces.captureStacktraceAtEntryPoint();
         final Request request = connection.requestCreator().executeUpdateStatement(sessionId, params, callback, entry);
-        connection.queRequest(request);
+        connection.queRequest(request, entry);
     }
 }

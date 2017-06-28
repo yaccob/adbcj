@@ -64,7 +64,7 @@ public class H2Connection implements Connection {
             }
             isInTransaction = true;
             final Request request = requestCreator.beginTransaction(callback, entry);
-            queRequest(request);
+            queRequest(request, entry);
         }
     }
 
@@ -76,7 +76,7 @@ public class H2Connection implements Connection {
                 throw new DbException("Not currently in a transaction, cannot commit");
             }
             final Request request = requestCreator.commitTransaction(callback, entry);
-            queRequest(request);
+            queRequest(request, entry);
             isInTransaction = false;
         }
     }
@@ -94,7 +94,7 @@ public class H2Connection implements Connection {
 
     private void doRollback(StackTraceElement[] entry, DbCallback<Void> callback) {
         final Request request = requestCreator.rollbackTransaction(callback, entry);
-        queRequest(request);
+        queRequest(request, entry);
         isInTransaction = false;
     }
 
@@ -108,7 +108,7 @@ public class H2Connection implements Connection {
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
 
         Request request = requestCreator.createQuery(sql, eventHandler, accumulator, callback, entry);
-        queRequest(request);
+        queRequest(request, entry);
     }
 
     public void executeUpdate(String sql, DbCallback<Result> callback) {
@@ -116,21 +116,21 @@ public class H2Connection implements Connection {
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
 
         Request request = requestCreator.createUpdate(sql, callback, entry);
-        queRequest(request);
+        queRequest(request, entry);
     }
 
     public void prepareQuery(String sql, DbCallback<PreparedQuery> callback) {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         final Request request = requestCreator.executePrepareQuery(sql, callback, entry);
-        queRequest(request);
+        queRequest(request, entry);
     }
 
     public void prepareUpdate(String sql, DbCallback<PreparedUpdate> callback) {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         final Request request = requestCreator.executePrepareUpdate(sql, callback, entry);
-        queRequest(request);
+        queRequest(request, entry);
     }
 
     public void close(CloseMode closeMode, DbCallback<Void> callback) throws DbException {
@@ -177,19 +177,25 @@ public class H2Connection implements Connection {
         return closer.isClose();
     }
 
-    void queRequest(Request request) {
+    void queRequest(Request request, StackTraceElement[] entry) {
         synchronized (lock) {
-            throwIfNoSpaceInQueue();
-            forceQueRequest(request);
+            if(failIfQueueFull(request, entry)){
+                forceQueRequest(request);
+
+            }
         }
     }
 
-    void throwIfNoSpaceInQueue() {
+    private boolean failIfQueueFull(Request request, StackTraceElement[] entry) {
         int requestsPending = requestQueue.size() + (blockingRequest == null ? 0 : blockingRequest.size());
         if (requestsPending > maxQueueSize) {
-            throw new DbException("To many pending requests. The current maximum is " + maxQueueSize + "." +
-                    "Ensure that your not overloading the database with requests. " +
-                    "Also check the " + StandardProperties.MAX_QUEUE_LENGTH + " property");
+            DbException ex = new DbException("To many pending requests. The current maximum is " + maxQueueSize +
+                    ". Ensure that your not overloading the database with requests. " +
+                    "Also check the " + StandardProperties.MAX_QUEUE_LENGTH + " property", null, entry);
+            request.completeFailure(ex);
+            return false;
+        } else{
+            return true;
         }
     }
 

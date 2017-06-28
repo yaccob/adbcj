@@ -38,7 +38,7 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
         connection.checkClosed();
         validateParameters(params);
         StackTraceElement[] entry = connection.strackTraces.captureStacktraceAtEntryPoint();
-        connection.queRequest(
+        connection.failIfQueueFull(
                 MySqlRequests.executePreparedQuery(
                         connection,
                         statementInfo,
@@ -59,14 +59,15 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
     @Override
     public void close(DbCallback<Void> callback) {
         closeFuture.requestClose(callback, () -> {
-            connection.queRequest(
+            if(connection.failIfQueueFull(
                     MySqlRequests.closeStatemeent(
                             connection,
                             statementInfo,
                             (res, error) -> {
                             }
-                    ));
-            closeFuture.didClose(null);
+                    ))){
+                closeFuture.didClose(null);
+            }
         });
     }
 

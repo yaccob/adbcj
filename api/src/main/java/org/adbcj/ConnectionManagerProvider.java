@@ -48,9 +48,7 @@ public final class ConnectionManagerProvider {
      * @throws DbException if it cannot find the driver in the classpath, or one of the connection parameters is wrong
      */
     public static ConnectionManager createConnectionManager(String url, String username, String password) throws DbException {
-
         return createConnectionManager(url, username, password, Collections.emptyMap());
-
     }
 
     /**

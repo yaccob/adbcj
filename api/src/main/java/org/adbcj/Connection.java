@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Connection to the database.
- *
+ * <p>
  * You get a connection via a {@see ConnectionManager}. Like so:
  * <pre>
  *     ConnectionManager connections = ConnectionManagerProvider.createConnectionManager("adbcj:db-specific/url", "user", "password");
@@ -106,7 +106,6 @@ public interface Connection {
     }
 
 
-
     default <T> CompletableFuture<T> executeQuery(
             String sql,
             ResultHandler<T> eventHandler,
@@ -120,7 +119,7 @@ public interface Connection {
                               DbCallback<ResultSet> callback) {
         DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
         DefaultResultSet accumulator = new DefaultResultSet();
-        executeQuery(sql, handler, accumulator, (DbCallback)callback);
+        executeQuery(sql, handler, accumulator, (DbCallback) callback);
     }
 
     <T> void executeQuery(String sql,

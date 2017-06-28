@@ -26,7 +26,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
                 entry,
                 sessionId,
                 params);
-        connection.queRequest(request);
+        connection.queRequest(request, entry);
     }
 
 }

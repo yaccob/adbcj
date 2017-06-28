@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 public class MySqlConnection implements Connection {
 
@@ -80,8 +79,9 @@ public class MySqlConnection implements Connection {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
-            queRequest(MySqlRequests.commitTransaction(this, callback, entry));
-            isInTransaction = false;
+            if (failIfQueueFull(MySqlRequests.commitTransaction(this, callback, entry))) {
+                isInTransaction = false;
+            }
         }
     }
 
@@ -98,8 +98,9 @@ public class MySqlConnection implements Connection {
 
     private void doRollback(StackTraceElement[] entry, DbCallback<Void> callback) {
         synchronized (lock) {
-            queRequest(MySqlRequests.rollbackTransaction(this, callback, entry));
-            isInTransaction = false;
+            if (failIfQueueFull(MySqlRequests.commitTransaction(this, callback, entry))) {
+                isInTransaction = false;
+            }
         }
     }
 
@@ -113,7 +114,7 @@ public class MySqlConnection implements Connection {
     public <T> void executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DbCallback<T> callback) {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
-        queRequest(MySqlRequests.executeQuery(
+        failIfQueueFull(MySqlRequests.executeQuery(
                 this,
                 sql,
                 eventHandler,
@@ -127,7 +128,7 @@ public class MySqlConnection implements Connection {
     public void executeUpdate(String sql, DbCallback<Result> callback) {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
-        queRequest(
+        failIfQueueFull(
                 MySqlRequests.executeUpdate(this,
                         sql,
                         callback,
@@ -141,14 +142,14 @@ public class MySqlConnection implements Connection {
     public void prepareQuery(String sql, DbCallback<PreparedQuery> callback) {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
-        queRequest(MySqlRequests.prepareQuery(this, sql, (DbCallback) callback, entry));
+        failIfQueueFull(MySqlRequests.prepareQuery(this, sql, (DbCallback) callback, entry));
     }
 
     @Override
     public void prepareUpdate(String sql, DbCallback<PreparedUpdate> callback) {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
-        queRequest(MySqlRequests.prepareQuery(this, sql, (DbCallback) callback, entry));
+        failIfQueueFull(MySqlRequests.prepareQuery(this, sql, (DbCallback) callback, entry));
     }
 
     @Override
@@ -234,16 +235,19 @@ public class MySqlConnection implements Connection {
         return EXTENDED_CLIENT_CAPABILITIES;
     }
 
-    MySqlRequest queRequest(MySqlRequest request) {
+    boolean failIfQueueFull(MySqlRequest request) {
         synchronized (lock) {
 
             int requestsPending = requestQueue.size();
             if (requestsPending > maxQueueSize) {
-                throw new DbException("To many pending requests. The current maximum is " + maxQueueSize + "." +
-                        "Ensure that your not overloading the database with requests. " +
+                DbException ex = new DbException("To many pending requests. The current maximum is " + maxQueueSize
+                        + ". Ensure that your not overloading the database with requests. " +
                         "Also check the " + StandardProperties.MAX_QUEUE_LENGTH + " property");
+                request.callback.onComplete(null, ex);
+                return false;
             }
-            return forceQueRequest(request);
+            forceQueRequest(request);
+            return true;
         }
     }
 
