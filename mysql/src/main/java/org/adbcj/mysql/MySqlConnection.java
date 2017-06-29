@@ -98,7 +98,7 @@ public class MySqlConnection implements Connection {
 
     private void doRollback(StackTraceElement[] entry, DbCallback<Void> callback) {
         synchronized (lock) {
-            if (failIfQueueFull(MySqlRequests.commitTransaction(this, callback, entry))) {
+            if (failIfQueueFull(MySqlRequests.rollbackTransaction(this, callback, entry))) {
                 isInTransaction = false;
             }
         }
