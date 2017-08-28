@@ -8,6 +8,7 @@ import org.adbcj.mysql.codec.packets.OkResponse;
 import io.netty.channel.Channel;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 
 public abstract class ResponseStart extends DecoderState {
@@ -56,8 +57,8 @@ public abstract class ResponseStart extends DecoderState {
     public static ErrorResponse decodeErrorResponse(BoundedInputStream in, int length, int packetNumber) throws IOException {
         int errorNumber = IoUtils.readUnsignedShort(in);
         in.read(); // Throw away sqlstate marker
-        String sqlState = IoUtils.readNullTerminatedString(in, CHARSET);
-        String message = IoUtils.readNullTerminatedString(in, CHARSET);
+        String sqlState = IoUtils.readNullTerminatedString(in, StandardCharsets.UTF_8);
+        String message = IoUtils.readNullTerminatedString(in, StandardCharsets.UTF_8);
         return new ErrorResponse(length, packetNumber, errorNumber, sqlState, message);
     }
 }

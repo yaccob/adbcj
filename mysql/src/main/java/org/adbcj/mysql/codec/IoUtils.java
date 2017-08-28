@@ -19,6 +19,7 @@
 package org.adbcj.mysql.codec;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.Set;
@@ -150,16 +151,16 @@ public final class IoUtils {
         throw new IllegalStateException("Recieved a length value we don't know how to handle");
     }
 
-    public static String readLengthCodedString(InputStream in, String charset) throws IOException {
+    public static String readLengthCodedString(InputStream in, Charset charset) throws IOException {
         return readLengthCodedString(in, safeRead(in), charset);
     }
 
-    public static String readLengthCodedString(InputStream in, int firstByte, String charset) throws IOException {
+    public static String readLengthCodedString(InputStream in, int firstByte, Charset charset) throws IOException {
         long length = readBinaryLengthEncoding(in, firstByte);
         return readFixedLengthString(in, (int) length, charset);
     }
 
-    public static void writeLengthCodedString(OutputStream out, String stringToWrite, String charset) throws IOException {
+    public static void writeLengthCodedString(OutputStream out, String stringToWrite, Charset charset) throws IOException {
         if (stringToWrite == null) {
             out.write(251);
         } else {
@@ -191,7 +192,7 @@ public final class IoUtils {
     }
 
 
-    public static String readNullTerminatedString(BoundedInputStream in, String charset) throws IOException {
+    public static String readNullTerminatedString(BoundedInputStream in, Charset charset) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         if(in.getRemaining()<=0){
             return "";
@@ -205,7 +206,7 @@ public final class IoUtils {
 
     }
 
-    public static String readFixedLengthString(InputStream in, int length, String charset) throws IOException {
+    public static String readFixedLengthString(InputStream in, int length, Charset charset) throws IOException {
         if (length == 0) {
             return "";
         }

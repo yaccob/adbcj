@@ -10,6 +10,7 @@ import org.adbcj.support.LoginCredentials;
 import io.netty.channel.Channel;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import static org.adbcj.mysql.codec.IoUtils.safeSkip;
@@ -62,7 +63,7 @@ public class Connecting extends DecoderState {
 
     protected ServerGreeting decodeServerGreeting(BoundedInputStream in, int length, int packetNumber) throws IOException {
         int protocol = IoUtils.safeRead(in);
-        String version = IoUtils.readNullTerminatedString(in, "ASCII");
+        String version = IoUtils.readNullTerminatedString(in, StandardCharsets.US_ASCII);
         int threadId = IoUtils.readInt(in);
 
         byte[] salt = new byte[SALT_SIZE + SALT2_SIZE];

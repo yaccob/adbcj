@@ -16,7 +16,6 @@ import java.util.Set;
 
 public abstract class DecoderState {
     protected static final Logger logger = LoggerFactory.getLogger(DecoderState.class);
-    protected static final String CHARSET = "UTF8";
     public static final int RESPONSE_EOF = 0xfe;
 
 

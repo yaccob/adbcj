@@ -6,6 +6,7 @@ import org.adbcj.mysql.codec.MysqlType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 
@@ -79,9 +80,9 @@ public class PreparedStatementRequest extends CommandRequest {
             MysqlType type = types.get(i);
             if(null!=param){
                 if (MysqlType.VARCHAR == type) {
-                    IoUtils.writeLengthCodedString(out, param.toString(), "UTF-8");
+                    IoUtils.writeLengthCodedString(out, param.toString(), StandardCharsets.UTF_8);
                 } if (MysqlType.VAR_STRING == type) {
-                    IoUtils.writeLengthCodedString(out, param.toString(), "UTF-8");
+                    IoUtils.writeLengthCodedString(out, param.toString(), StandardCharsets.UTF_8);
                 }  else {
                     throw new UnsupportedOperationException("Not yet implemented:" + type);
                 }

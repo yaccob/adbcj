@@ -12,6 +12,7 @@ import org.adbcj.support.DefaultValue;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 
@@ -99,10 +100,10 @@ public class Row<T> extends DecoderState {
                                 value = IoUtils.readLong(in);
                                 break;
                             case VAR_STRING:
-                                value = IoUtils.readLengthCodedString(in, in.read(), CHARSET);
+                                value = IoUtils.readLengthCodedString(in, in.read(), StandardCharsets.UTF_8);
                                 break;
                             case NEWDECIMAL:
-                                value = IoUtils.readLengthCodedString(in, in.read(), CHARSET);
+                                value = IoUtils.readLengthCodedString(in, in.read(), StandardCharsets.UTF_8);
                                 break;
                             case DATE:
                                 value = IoUtils.readDate(in);
@@ -120,7 +121,7 @@ public class Row<T> extends DecoderState {
                                 value = Double.longBitsToDouble(IoUtils.readLong(in));
                                 break;
                             case BLOB:
-                                value = IoUtils.readLengthCodedString(in, in.read(), CHARSET);
+                                value = IoUtils.readLengthCodedString(in, in.read(), StandardCharsets.UTF_8);
                                 break;
                             case NULL:
                                 value = null;
@@ -161,7 +162,7 @@ public class Row<T> extends DecoderState {
                     Object value = null;
                     if (fieldCount != IoUtils.NULL_VALUE) {
                         // We will have to move this as some datatypes will not be sent across the wire as strings
-                        String strVal = IoUtils.readLengthCodedString(in, fieldCount, CHARSET);
+                        String strVal = IoUtils.readLengthCodedString(in, fieldCount, StandardCharsets.UTF_8);
 
                         switch (field.getColumnType()) {
                             case TINYINT:

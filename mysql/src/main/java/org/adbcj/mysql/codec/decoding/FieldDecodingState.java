@@ -10,6 +10,7 @@ import org.adbcj.mysql.codec.packets.ResultSetFieldResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -105,12 +106,12 @@ public class FieldDecodingState<T> extends DecoderState {
     }
 
     public static MysqlField parseField(InputStream in, int fieldNo) throws IOException {
-        String catalogName = IoUtils.readLengthCodedString(in, CHARSET);
-        String schemaName = IoUtils.readLengthCodedString(in, CHARSET);
-        String tableLabel = IoUtils.readLengthCodedString(in, CHARSET);
-        String tableName = IoUtils.readLengthCodedString(in, CHARSET);
-        String columnLabel = IoUtils.readLengthCodedString(in, CHARSET);
-        String columnName = IoUtils.readLengthCodedString(in, CHARSET);
+        String catalogName = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
+        String schemaName = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
+        String tableLabel = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
+        String tableName = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
+        String columnLabel = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
+        String columnName = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
         in.read(); // Skip filler
         int characterSetNumber = IoUtils.readUnsignedShort(in);
         MysqlCharacterSet charSet = MysqlCharacterSet.findById(characterSetNumber);
