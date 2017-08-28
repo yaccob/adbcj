@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
  *     // Then use the connection
  * </pre>
  */
-public interface Connection {
+public interface Connection extends AsyncCloseable {
     /**
      * Begin's a transaction using the default transaction isolation level.
      * <p>
@@ -152,13 +152,6 @@ public interface Connection {
 
     void prepareUpdate(String sql, DbCallback<PreparedUpdate> callback);
 
-
-    /**
-     * {@link #close(CloseMode)} with {@link CloseMode#CLOSE_GRACEFULLY}
-     */
-    default CompletableFuture<Void> close() {
-        return close(CloseMode.CLOSE_GRACEFULLY);
-    }
 
     /**
      * {@link #close(CloseMode)} with {@link CloseMode#CLOSE_GRACEFULLY}

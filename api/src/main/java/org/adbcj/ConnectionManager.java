@@ -23,13 +23,13 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Manages a set of {@link Connection} instances.  A database connection is established by invoking {@link #connect()}.
  * All the connections managed by this connection manager can be closed using {@link #close(CloseMode)}.
- *
+ * <p>
  * The connection manager holds heavy wait resources like connections, thread pools together in one place.
  * You typically create one connection manager for you're application.
  *
  * @author Mike Heath
  */
-public interface ConnectionManager {
+public interface ConnectionManager extends AsyncCloseable {
 
     /**
      * Establishes a new database connection.
@@ -75,20 +75,8 @@ public interface ConnectionManager {
      *
      * @throws DbException if there's an error closing all the database connections
      */
-    default void close(DbCallback<Void> callback){
+    default void close(DbCallback<Void> callback) {
         close(CloseMode.CLOSE_GRACEFULLY, callback);
-    }
-
-    /**
-     * Future returning version of {@link #close(DbCallback)}
-     *
-     * @return a future object that will complete when all database connections managed by this
-     * {@code ConnectionManager} have closed.
-     */
-    default CompletableFuture<Void> close() throws DbException {
-        DbCompletableFuture<Void> future = new DbCompletableFuture<>();
-        close(future);
-        return future;
     }
 
     /**
@@ -104,7 +92,7 @@ public interface ConnectionManager {
     void close(CloseMode mode, DbCallback<Void> callback) throws DbException;
 
     /**
-     * Future returning version of {@link #close(CloseMode,DbCallback)}
+     * Future returning version of {@link #close(CloseMode, DbCallback)}
      *
      * @return a future object that will complete when all database connections managed by this
      * {@code ConnectionManager} have closed.
