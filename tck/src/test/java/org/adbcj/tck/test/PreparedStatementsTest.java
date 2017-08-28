@@ -10,8 +10,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 
-@Test()
-//@Test(invocationCount = 3, threadPoolSize = 5, timeOut = 500000)
+@Test(invocationCount = 3, threadPoolSize = 5, timeOut = 500000)
 public class PreparedStatementsTest extends AbstractWithConnectionManagerTest {
 
     public void testSimpleSelect() throws Exception {

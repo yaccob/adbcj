@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 
-//@Test
+
 @Test(invocationCount = 10, threadPoolSize = 4, timeOut = 50000)
 public class SelectTest extends AbstractWithConnectionManagerTest {
 
