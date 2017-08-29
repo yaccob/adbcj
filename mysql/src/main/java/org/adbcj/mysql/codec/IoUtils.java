@@ -18,6 +18,8 @@
  */
 package org.adbcj.mysql.codec;
 
+import org.adbcj.support.SizeConstants;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Calendar;
@@ -184,6 +186,27 @@ public final class IoUtils {
         }
 
     }
+    public static int writeLengthCodedStringLength(String stringToWrite, Charset charset) {
+        if (stringToWrite == null) {
+            return SizeConstants.CHAR_SIZE;
+        } else {
+            byte[] data = stringToWrite.getBytes(charset);
+            if (data.length > 250) {
+                int length = SizeConstants.BYTE_SIZE + data.length;
+                if (data.length > 0xFFFFFF) {
+                    length += 4;
+                } else if (data.length > 0xFFFF) {
+                    length += 3;
+                } else {
+                    length += 2;
+                }
+                return length;
+            } else {
+                return SizeConstants.BYTE_SIZE + data.length;
+            }
+        }
+
+    }
 
     public static void writeLong(OutputStream out, long value, int length) throws IOException {
         for (int i = 0; i < length; i++) {
@@ -264,13 +287,17 @@ public final class IoUtils {
      * Creates a null value bit mask, according to http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#Execute_Packet_.28Tentative_Description.29
      */
     public static byte[] nullMask(Object[] arguments) {
-        byte[] nullBitsBuffer = new byte[(arguments.length + 7) / 8];
+        byte[] nullBitsBuffer = new byte[nullMaskSize(arguments)];
         for (int i = 0; i < arguments.length; i++) {
             if (arguments[i] == null) {
                 nullBitsBuffer[i / 8] |= (1 << (i & 7));
             }
         }
         return nullBitsBuffer;
+    }
+
+    public static int nullMaskSize(Object[] arguments) {
+        return (arguments.length + 7) / 8;
     }
 
     public static String readDate(BoundedInputStream in) throws IOException {

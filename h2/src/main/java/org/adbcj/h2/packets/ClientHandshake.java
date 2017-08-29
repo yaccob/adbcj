@@ -4,12 +4,13 @@ import org.adbcj.DbException;
 import org.adbcj.h2.decoding.Constants;
 import org.adbcj.h2.decoding.IoUtils;
 import org.adbcj.h2.h2.SHA256;
+import org.adbcj.support.SizeConstants;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import static org.adbcj.h2.packets.SizeConstants.INT_SIZE;
+import static org.adbcj.support.SizeConstants.INT_SIZE;
 
 
 public class ClientHandshake extends ClientToServerPacket{

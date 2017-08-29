@@ -2,6 +2,7 @@ package org.adbcj.h2.packets;
 
 import org.adbcj.h2.decoding.IoUtils;
 import org.adbcj.h2.protocol.CommandCodes;
+import org.adbcj.support.SizeConstants;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

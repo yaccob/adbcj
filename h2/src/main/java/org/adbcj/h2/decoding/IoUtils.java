@@ -1,6 +1,6 @@
 package org.adbcj.h2.decoding;
 
-import org.adbcj.h2.packets.SizeConstants;
+import org.adbcj.support.SizeConstants;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

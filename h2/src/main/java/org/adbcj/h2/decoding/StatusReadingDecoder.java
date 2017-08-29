@@ -1,11 +1,9 @@
 package org.adbcj.h2.decoding;
 
 import io.netty.channel.Channel;
-import org.adbcj.DbCallback;
-import org.adbcj.DbException;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
-import org.adbcj.h2.packets.SizeConstants;
+import org.adbcj.support.SizeConstants;
 import org.adbcj.h2.protocol.StatusCodes;
 
 import java.io.DataInputStream;
