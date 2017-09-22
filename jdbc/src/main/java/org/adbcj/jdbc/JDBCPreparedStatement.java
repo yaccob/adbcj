@@ -36,9 +36,7 @@ abstract class JDBCPreparedStatement<T> implements PreparedStatement {
     @Override
     public void close(DbCallback<Void> callback) {
         StackTraceElement[] entry = connection.strackTraces.captureStacktraceAtEntryPoint();
-        closer.requestClose(callback, () -> {
-            connection.queueRequestVoid(callback, entry, jdbc -> jdbc.close());
-        });
+        closer.requestClose(callback, () -> connection.queueRequestVoid(callback, entry, java.sql.Connection::close));
     }
 
     @Override

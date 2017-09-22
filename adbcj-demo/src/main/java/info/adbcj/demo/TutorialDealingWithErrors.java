@@ -30,18 +30,16 @@ public class TutorialDealingWithErrors {
      *
      */
     private static void oupsError(ConnectionManager connectionManager) {
-        connectionManager.connect().thenAccept(connection -> {
-            connection.executeQuery(
-                    "SELECT * FROM not-existing-table")
-                    .thenAccept(queryResult -> {
-                        // No result, since wrong SQL.
-                    }).whenComplete((res, failure) -> {
-                if (failure != null) {
-                    failure.printStackTrace();
-                }
-                connection.close();
-                connectionManager.close();
-            });
-        });
+        connectionManager.connect().thenAccept(connection -> connection.executeQuery(
+                "SELECT * FROM not-existing-table")
+                .thenAccept(queryResult -> {
+                    // No result, since wrong SQL.
+                }).whenComplete((res, failure) -> {
+            if (failure != null) {
+                failure.printStackTrace();
+            }
+            connection.close();
+            connectionManager.close();
+        }));
     }
 }

@@ -165,9 +165,7 @@ public class H2Connection implements Connection {
         }
 
         Request request = requestCreator.createCloseRequest(
-                (result, error) -> {
-                    tryCompleteClose(error);
-                },
+                (result, error) -> tryCompleteClose(error),
                 entry);
         forceQueRequest(request);
     }

@@ -34,9 +34,7 @@ public class TutorialFirstSql {
             CompletableFuture<Void> createAndInsertDone = CompletableFuture.allOf(create, firstInsert, secondInsert);
 
             // And then, a simple query
-            createAndInsertDone.thenCompose(res -> {
-                return connection.executeQuery("SELECT * FROM posts");
-            }).thenAccept(queryResult -> {
+            createAndInsertDone.thenCompose(res -> connection.executeQuery("SELECT * FROM posts")).thenAccept(queryResult -> {
                 // NOTE: ADBCJ default result sets are regular Java collections.
                 // They start at index 0 (ZERO)
                 // And interate like regular collections
