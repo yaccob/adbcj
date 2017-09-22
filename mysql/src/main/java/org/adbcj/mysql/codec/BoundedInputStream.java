@@ -60,6 +60,7 @@ public class BoundedInputStream extends InputStream {
         int count = 0;
         while (count < length) {
             int read = in.read(buffer, off + count, length - count);
+            remaining -= read;
             if (read < 0)
                 throw new EOFException("Expected to read " + length + ". But stream ended at " + count);
             count += read;
