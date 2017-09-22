@@ -53,7 +53,7 @@ class ResultSetCopier {
             eventHandler.startRow(accumulator);
             for (int i = 1; i <= columnCount; i++) {
                 Field field = fields.get(i - 1);
-                Object value = null;
+                Object value;
                 switch (field.getColumnType()) {
                     case BIGINT:
                         value = jdbcResultSet.getLong(i);

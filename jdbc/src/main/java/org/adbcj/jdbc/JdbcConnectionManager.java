@@ -89,9 +89,7 @@ public class JdbcConnectionManager extends AbstractConnectionManager implements 
                         getStackTracingOption());
                 synchronized (lock) {
                     if (isClosed()) {
-                        connection.close(CloseMode.CANCEL_PENDING_OPERATIONS, (res, error) -> {
-                            callback.onComplete(null, new DbException("Connection manager closed", error, entry));
-                        });
+                        connection.close(CloseMode.CANCEL_PENDING_OPERATIONS, (res, error) -> callback.onComplete(null, new DbException("Connection manager closed", error, entry)));
                     } else {
                         addConnection(connection);
                         callback.onComplete(connection, null);
