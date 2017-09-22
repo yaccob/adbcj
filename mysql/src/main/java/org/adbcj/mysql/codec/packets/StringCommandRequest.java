@@ -37,7 +37,6 @@ public class StringCommandRequest extends CommandRequest {
     public String toString() {
         return "StringCommandRequest{" +
                 "payload='" + payload + '\'' +
-                ", dataAsBytes=" + payloadAsBinary() +
                 '}';
     }
 
