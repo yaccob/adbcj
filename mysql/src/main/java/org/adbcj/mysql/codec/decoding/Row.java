@@ -88,7 +88,7 @@ public class Row<T> extends DecoderState {
                 Value[] values = new Value[row.fields.size()];
                 // 0 (packet header)   should have been read by the calling method
                 byte[] nullBits = new byte[(values.length + 7 + 2) / 8];
-                in.read(nullBits);
+                in.readFully(nullBits);
                 for (MysqlField field : row.fields) {
                     Object value = null;
                     if (hasValue(field.getIndex(), nullBits)) {

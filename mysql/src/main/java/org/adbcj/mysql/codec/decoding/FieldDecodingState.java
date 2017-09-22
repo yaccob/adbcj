@@ -8,6 +8,7 @@ import org.adbcj.mysql.MySqlConnection;
 import org.adbcj.mysql.codec.*;
 import org.adbcj.mysql.codec.packets.ResultSetFieldResponse;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -112,7 +113,10 @@ public class FieldDecodingState<T> extends DecoderState {
         String tableName = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
         String columnLabel = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
         String columnName = IoUtils.readLengthCodedString(in, StandardCharsets.UTF_8);
-        in.read(); // Skip filler
+        // Skip filler
+        if(in.read()<0){
+            throw new EOFException("Unexpected EOF. Expected to read 1 more byte");
+        }
         int characterSetNumber = IoUtils.readUnsignedShort(in);
         MysqlCharacterSet charSet = MysqlCharacterSet.findById(characterSetNumber);
         long length = IoUtils.readUnsignedInt(in);

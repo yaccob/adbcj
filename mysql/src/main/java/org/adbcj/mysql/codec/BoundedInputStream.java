@@ -1,5 +1,6 @@
 package org.adbcj.mysql.codec;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -47,6 +48,22 @@ public class BoundedInputStream extends InputStream {
 
     public int getRemaining() {
         return remaining;
+    }
+
+    public void readFully(byte[] buffer) throws IOException {
+        readFully(buffer, 0, buffer.length);
+    }
+
+    public void readFully(byte buffer[], int off, int length) throws IOException {
+        if (length < 0)
+            throw new IndexOutOfBoundsException();
+        int count = 0;
+        while (count < length) {
+            int read = in.read(buffer, off + count, length - count);
+            if (read < 0)
+                throw new EOFException("Expected to read " + length + ". But stream ended at " + count);
+            count += read;
+        }
     }
 
 }

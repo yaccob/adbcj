@@ -31,7 +31,7 @@ abstract class FinishPrepareStatement extends DecoderState {
     }
 
     protected void readAllAndIgnore(BoundedInputStream in) throws IOException {
-        in.read(new byte[in.getRemaining()]);
+        in.readFully(new byte[in.getRemaining()]);
     }
 
     public static DecoderState create(MySqlConnection connection,
