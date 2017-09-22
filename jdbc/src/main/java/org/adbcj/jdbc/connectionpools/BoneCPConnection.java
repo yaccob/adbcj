@@ -1,7 +1,6 @@
 package org.adbcj.jdbc.connectionpools;
 
 import com.jolbox.bonecp.BoneCP;
-import org.adbcj.DbException;
 import org.adbcj.jdbc.JDBCConnectionProvider;
 
 import java.sql.Connection;

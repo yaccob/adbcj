@@ -3,7 +3,6 @@ package org.adbcj.h2;
 import org.adbcj.DbCallback;
 import org.adbcj.DbException;
 import org.adbcj.h2.decoding.DecoderState;
-import org.adbcj.h2.decoding.StatementPrepare;
 import org.adbcj.h2.packets.ClientToServerPacket;
 
 import java.util.ArrayList;

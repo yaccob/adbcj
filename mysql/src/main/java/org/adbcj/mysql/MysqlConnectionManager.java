@@ -9,15 +9,16 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
-import org.adbcj.*;
+import org.adbcj.CloseMode;
+import org.adbcj.Connection;
+import org.adbcj.DbCallback;
+import org.adbcj.DbException;
 import org.adbcj.mysql.codec.ClientRequest;
 import org.adbcj.mysql.codec.MySqlClientDecoder;
 import org.adbcj.mysql.codec.MySqlClientEncoder;
-import org.adbcj.mysql.MySqlConnection;
 import org.adbcj.mysql.codec.decoding.AcceptNextResponse;
 import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.decoding.DecoderState;
-import org.adbcj.mysql.codec.packets.ServerPacket;
 import org.adbcj.support.AbstractConnectionManager;
 import org.adbcj.support.ConnectionPool;
 import org.adbcj.support.LoginCredentials;
@@ -26,7 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MysqlConnectionManager extends AbstractConnectionManager {

@@ -3,10 +3,7 @@ package org.adbcj.h2;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.pool.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.concurrent.DefaultPromise;
-import io.netty.util.concurrent.Future;
 import org.adbcj.*;
 import org.adbcj.h2.decoding.AnswerNextRequest;
 import org.adbcj.h2.decoding.Decoder;
@@ -18,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.Map;
 
 
 public class H2ConnectionManager extends AbstractConnectionManager {

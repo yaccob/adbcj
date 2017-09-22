@@ -1,12 +1,11 @@
 package org.adbcj.h2.decoding;
 
+import io.netty.channel.Channel;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
-import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.Stack;
 
 
 public class AwaitOk extends StatusReadingDecoder {

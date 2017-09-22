@@ -40,8 +40,6 @@ public class Decoder extends ByteToMessageDecoder {
             } else {
                 out.add(DecodedToken);
             }
-        } catch (Exception ex) {
-            throw ex;
         } finally {
             in.close();
         }

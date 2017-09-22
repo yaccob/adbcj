@@ -4,7 +4,6 @@ import org.adbcj.mysql.codec.IoUtils;
 import org.adbcj.mysql.codec.MysqlType;
 import org.adbcj.support.SizeConstants;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;

@@ -1,10 +1,9 @@
 package org.adbcj.h2.decoding;
 
-import org.adbcj.DbException;
+import io.netty.channel.Channel;
 import org.adbcj.h2.H2Connection;
 import org.adbcj.h2.H2DbException;
 import org.adbcj.h2.Request;
-import io.netty.channel.Channel;
 
 import java.io.DataInputStream;
 import java.io.IOException;
