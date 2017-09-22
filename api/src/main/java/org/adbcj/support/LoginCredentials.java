@@ -51,9 +51,7 @@ public final class LoginCredentials {
 
         if (!database.equals(that.database)) return false;
         if (password != null ? !password.equals(that.password) : that.password != null) return false;
-        if (!userName.equals(that.userName)) return false;
-
-        return true;
+        return userName.equals(that.userName);
     }
 
     @Override
