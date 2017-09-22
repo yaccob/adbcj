@@ -16,7 +16,6 @@ public abstract class ClientRequest {
 	/**
 	 * The packet number is sent as a byte so only the least significant byte will be used.
 	 *
-	 * @return
 	 */
 	public int getPacketNumber() {
 		return 0;

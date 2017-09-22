@@ -50,7 +50,6 @@ public class MySqlClientDecoder {
      *
      *
      * @param input the {@code InputStream} from which to decode the message
-     * @param channel
      *@param block true if the decoder can block, false otherwise  @return the decode message, null if the {@code block} is {@code} false and there is not enough data available
      *         to decode the message without blocking
      * @throws IOException thrown if an error occurs reading data from the inputstream
@@ -112,8 +111,6 @@ public class MySqlClientDecoder {
 
     /**
      * Sets the state, used for testing.
-     *
-     * @param state
      */
     void setState(DecoderState state) {
         this.state = state;

@@ -85,7 +85,6 @@ public interface ConnectionManager extends AsyncCloseable {
      * <p>
      * Closes according to the given {@link CloseMode}.
      *
-     * @return a future object that will complete when all database connections managed by this
      * {@code ConnectionManager} have closed.
      * @throws DbException if there's an error closing all the database connections
      */
