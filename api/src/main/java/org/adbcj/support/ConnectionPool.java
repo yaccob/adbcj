@@ -4,11 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- * Simple connection pool.
- * @param <TKey>
- * @param <VConnection>
- */
+
 public final class ConnectionPool<TKey, VConnection> {
 
     private ConcurrentMap<TKey, ConcurrentLinkedDeque<VConnection>> keyToConnections = new ConcurrentHashMap<>();
