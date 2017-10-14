@@ -18,7 +18,7 @@ public class H2PreparedQuery extends AbstractStatement implements PreparedQuery 
         if (paramsCount != params.length) {
             throw new IllegalArgumentException("Expect " + paramsCount + " parameters, but got: " + params.length);
         }
-        StackTraceElement[] entry = connection.strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = connection.stackTraces.captureStacktraceAtEntryPoint();
         final Request request = connection.requestCreator().executeQueryStatement(
                 eventHandler,
                 accumulator,

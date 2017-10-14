@@ -25,7 +25,7 @@ public class AbstractStatement implements PreparedStatement {
     @Override
     public void close(DbCallback<Void> callback) {
         synchronized (connection.connectionLock()) {
-            StackTraceElement[] entry = connection.strackTraces.captureStacktraceAtEntryPoint();
+            StackTraceElement[] entry = connection.stackTraces.captureStacktraceAtEntryPoint();
             closer.requestClose(callback, () -> {
                 Request<Void> req = connection.requestCreator().executeCloseStatement(
                         sessionId,

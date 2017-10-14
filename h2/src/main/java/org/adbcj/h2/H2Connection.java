@@ -20,7 +20,7 @@ public class H2Connection implements Connection {
     private final H2ConnectionManager manager;
     private final Channel channel;
     private final Object lock = new Object();
-    final StackTracingOptions strackTraces;
+    final StackTracingOptions stackTraces;
     private final AtomicInteger requestId = new AtomicInteger(0);
     private final int autoIdSession = nextId();
     private final int commitIdSession = nextId();
@@ -40,13 +40,13 @@ public class H2Connection implements Connection {
             int maxQueueSize,
             H2ConnectionManager manager,
             Channel channel,
-            StackTracingOptions strackTraces) {
+            StackTracingOptions stackTraces) {
         this.login = login;
         this.maxQueueSize = maxQueueSize;
         this.manager = manager;
         this.channel = channel;
         requestQueue = new ArrayDeque<>(maxQueueSize + 1);
-        this.strackTraces = strackTraces;
+        this.stackTraces = stackTraces;
     }
 
 
@@ -57,7 +57,7 @@ public class H2Connection implements Connection {
 
     public void beginTransaction(DbCallback<Void> callback) {
         checkClosed();
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             if (isInTransaction()) {
                 throw new DbException("Cannot begin new transaction.  Current transaction needs to be committed or rolled back");
@@ -70,7 +70,7 @@ public class H2Connection implements Connection {
 
     public void commit(DbCallback<Void> callback) {
         checkClosed();
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             if (!isInTransaction()) {
                 throw new DbException("Not currently in a transaction, cannot commit");
@@ -83,7 +83,7 @@ public class H2Connection implements Connection {
 
     public void rollback(DbCallback<Void> callback) {
         checkClosed();
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             if (!isInTransaction()) {
                 throw new DbException("Not currently in a transaction, cannot rollback");
@@ -105,7 +105,7 @@ public class H2Connection implements Connection {
 
     public <T> void executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DbCallback<T> callback) {
         checkClosed();
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
 
         Request request = requestCreator.createQuery(sql, eventHandler, accumulator, callback, entry);
         queRequest(request, entry);
@@ -113,7 +113,7 @@ public class H2Connection implements Connection {
 
     public void executeUpdate(String sql, DbCallback<Result> callback) {
         checkClosed();
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
 
         Request request = requestCreator.createUpdate(sql, callback, entry);
         queRequest(request, entry);
@@ -121,20 +121,20 @@ public class H2Connection implements Connection {
 
     public void prepareQuery(String sql, DbCallback<PreparedQuery> callback) {
         checkClosed();
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
         final Request request = requestCreator.executePrepareQuery(sql, callback, entry);
         queRequest(request, entry);
     }
 
     public void prepareUpdate(String sql, DbCallback<PreparedUpdate> callback) {
         checkClosed();
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
         final Request request = requestCreator.executePrepareUpdate(sql, callback, entry);
         queRequest(request, entry);
     }
 
     public void close(CloseMode closeMode, DbCallback<Void> callback) throws DbException {
-        StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             closer.requestClose(callback, () -> {
                 if (this.manager.connectionPool == null || manager.isClosed()) {

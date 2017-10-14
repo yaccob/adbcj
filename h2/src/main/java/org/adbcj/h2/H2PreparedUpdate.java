@@ -16,7 +16,7 @@ public class H2PreparedUpdate extends AbstractStatement implements PreparedUpdat
         if(paramsCount!=params.length){
             throw new IllegalArgumentException("Expect "+paramsCount+" parameters, but got: "+params.length);
         }
-        StackTraceElement[] entry = connection.strackTraces.captureStacktraceAtEntryPoint();
+        StackTraceElement[] entry = connection.stackTraces.captureStacktraceAtEntryPoint();
         final Request request = connection.requestCreator().executeUpdateStatement(sessionId, params, callback, entry);
         connection.queRequest(request, entry);
     }
