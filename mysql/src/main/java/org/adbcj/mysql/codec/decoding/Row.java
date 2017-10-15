@@ -40,9 +40,9 @@ public class Row<T> extends DecoderState {
         this.connection = connection;
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
-        this.callback = callback;
-        this.entry = entry;
-        this.failure = failure;
+        this.callback = sandboxCb(callback);
+        this.entry    = entry;
+        this.failure  = failure;
     }
 
     @Override

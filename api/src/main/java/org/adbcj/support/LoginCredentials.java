@@ -64,9 +64,10 @@ public final class LoginCredentials {
 
     @Override
     public String toString() {
+    	// Mask password for security issue sine 2017-10-15 little-pan
         return "LoginCredentials{" +
                 "userName='" + userName + '\'' +
-                ", password='" + password + '\'' +
+                ", password='" + "******" + '\'' +
                 ", database='" + database + '\'' +
                 '}';
     }

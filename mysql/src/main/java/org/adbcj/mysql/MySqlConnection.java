@@ -157,7 +157,10 @@ public class MySqlConnection implements Connection {
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             closer.requestClose(callback, () -> {
-                if (connectionManager.connectionPool == null) {
+            	// Close the connection forcibly when IO error such as 'Too many connections' 
+            	//even if using connection-pool.
+            	// @since 2017-09-02 little-pan
+                if (connectionManager.connectionPool == null || CloseMode.CLOSE_FORCIBLY == closeMode) {
                     doActualClose(closeMode, entry);
                 } else {
                     doRollback(entry, (result, failure) -> {
@@ -180,8 +183,12 @@ public class MySqlConnection implements Connection {
     }
 
     private void doActualClose(CloseMode closeMode, StackTraceElement[] entry) {
-        if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
-            forceCloseOnPendingRequests();
+    	if (closeMode == CloseMode.CLOSE_FORCIBLY) {
+        	// Close the connection forcibly
+        	// @since 2017-09-02 little-pan
+        	forceCloseOnPendingRequests();
+        	realClose(entry);
+        	return;
         }
         if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
             forceCloseOnPendingRequests();
@@ -191,6 +198,20 @@ public class MySqlConnection implements Connection {
                 (res, error) -> tryCompleteClose(error),
                 entry);
         forceQueRequest(closeRequest);
+    }
+    
+    private void realClose(final StackTraceElement[] entry) {
+    	final Channel ch = channel;
+    	ch.close().addListener((f)->{
+    		logger.debug("Real close channel#{}", ch.id());
+    		final DbException failure;
+    		if(f.cause() == null) {
+    			failure = null;
+    		}else {
+    			failure = DbException.wrap(f.cause(), entry);
+    		}
+    		tryCompleteClose(failure);
+    	});
     }
 
     void tryCompleteClose(DbException error) {

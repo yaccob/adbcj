@@ -39,10 +39,9 @@ public class FieldDecodingState<T> extends DecoderState {
             StackTraceElement[] entry,
             DbException failure) {
         this.decodingType = decodingType;
-
         this.expectedAmountOfFields = expectedAmountOfFields;
         this.fields = fields;
-        this.callback = callback;
+        this.callback = sandboxCb(callback);
         this.entry = entry;
         this.connection = connection;
         this.eventHandler = eventHandler;

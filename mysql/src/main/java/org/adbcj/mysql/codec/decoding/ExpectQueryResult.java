@@ -31,7 +31,7 @@ public class ExpectQueryResult<T> extends ResponseStart {
         this.decodingType = decodingType;
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;
-        this.callback = callback;
+        this.callback = sandboxCb(callback);
         this.entry = entry;
     }
 

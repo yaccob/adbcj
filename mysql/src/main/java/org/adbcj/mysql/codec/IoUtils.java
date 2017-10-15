@@ -220,10 +220,14 @@ public final class IoUtils {
         if(in.getRemaining()<=0){
             return "";
         }
-        int c = in.read();
-        while (c > 0 && in.getRemaining()>0) {
-            out.write(c);
-            c = in.read();
+        for (int c = in.read(); c > 0; c = in.read()) {
+        	out.write(c);
+            // fixbug: lost the last char issue. The remaining decision should be placed here 
+            //and not in for-condition!
+            // @since 2017-09-01 little-pan
+            if(in.getRemaining() <= 0) {
+            	break;
+            }
         }
         return new String(out.toByteArray(), charset);
 

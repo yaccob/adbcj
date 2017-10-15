@@ -1,20 +1,16 @@
 package org.adbcj.mysql.codec.decoding;
 
-import org.adbcj.mysql.codec.BoundedInputStream;
-import org.adbcj.mysql.codec.IoUtils;
+import java.io.IOException;
+
 import org.adbcj.mysql.MySqlConnection;
+import org.adbcj.mysql.codec.BoundedInputStream;
 import org.adbcj.mysql.codec.packets.ErrorResponse;
 import org.adbcj.mysql.codec.packets.OkResponse;
+
 import io.netty.channel.Channel;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
-
 public abstract class ResponseStart extends DecoderState {
-    public static final int RESPONSE_OK = 0x00;
-    public static final int RESPONSE_ERROR = 0xff;
+	
     protected final MySqlConnection connection;
 
     protected ResponseStart(MySqlConnection connection) {
@@ -53,16 +49,5 @@ public abstract class ResponseStart extends DecoderState {
         throw new IllegalStateException("This state: "+this+" does not expect a result which can be interpreted as " +
                 "query result");
     }
-
-
-    public static ErrorResponse decodeErrorResponse(BoundedInputStream in, int length, int packetNumber) throws IOException {
-        int errorNumber = IoUtils.readUnsignedShort(in);
-        // Throw away sqlstate marker
-        if(in.read()<0){
-            throw new EOFException("Unexpected EOF. Expected to read 1 more byte");
-        }
-        String sqlState = IoUtils.readNullTerminatedString(in, StandardCharsets.UTF_8);
-        String message = IoUtils.readNullTerminatedString(in, StandardCharsets.UTF_8);
-        return new ErrorResponse(length, packetNumber, errorNumber, sqlState, message);
-    }
+    
 }

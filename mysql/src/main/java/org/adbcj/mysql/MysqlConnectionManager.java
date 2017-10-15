@@ -195,7 +195,12 @@ class Decoder extends ByteToMessageDecoder {
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) throws Exception {
-        InputStream in = new ByteBufInputStream(buffer);
+    	// debug buffer since 2017-10-15 little-pan
+    	final boolean debug = log.isDebugEnabled();
+    	if(debug) {
+    		log.debug("Decoded buffer#{}: {}", buffer.hashCode(), buffer);
+    	}
+        final InputStream in = new ByteBufInputStream(buffer);
         try {
             Object obj = decoder.decode(in, ctx.channel(), false);
             if (log.isDebugEnabled() && null != obj) {

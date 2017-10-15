@@ -22,6 +22,9 @@ import org.adbcj.mysql.codec.decoding.DecoderState;
 import org.adbcj.mysql.codec.decoding.ResultAndState;
 import org.adbcj.mysql.codec.packets.FailedToParseInput;
 import org.adbcj.mysql.codec.packets.ServerPacket;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,16 +93,39 @@ public class MySqlClientDecoder {
             }
         }
         final int packetNumber = IoUtils.safeRead(input);
-        BoundedInputStream in = new BoundedInputStream(input, length);
-        logger.trace("Decoding in state {}", state);
-        ResultAndState stateAndResult = state.parse(length, packetNumber, in, channel);
-        if(logger.isDebugEnabled() && (state!=stateAndResult.getNewState())){
-            logger.debug("New state of the decoding is: {}",stateAndResult.getNewState());
+        // Dump packet for debug
+        // @since 2017-08-29 little-pan
+        final boolean debug;
+        if(debug = logger.isDebugEnabled()) {
+        	ByteBuf dumpBuf = null;
+        	try {
+        		input.mark(Integer.MAX_VALUE);
+        		dumpBuf = channel.alloc()
+        		.buffer(length + 4)
+        		.writeMedium(length)
+        		.writeByte(packetNumber);
+        		dumpBuf.writeBytes(input, length);
+        		logger.debug("Received packet: \n{}", ByteBufUtil.prettyHexDump(dumpBuf));
+        	} finally {
+        		if(dumpBuf != null) {
+        			dumpBuf.release();
+        		}
+        		input.reset();
+        	}
         }
-        state = stateAndResult.getNewState();
-        if (in.getRemaining() > 0) {
+        // Dump packet for debug
+        final BoundedInputStream in = new BoundedInputStream(input, length);
+        logger.trace("Decoding in state {}", state);
+        final ResultAndState stateAndResult = state.parse(length, packetNumber, in, channel);
+        final DecoderState nextState = stateAndResult.getNewState();
+        if(debug && (state != nextState)){
+            logger.debug("New state of the decoding is: {}", nextState);
+        }
+        state = nextState;
+        final int rem = in.getRemaining();
+        if (rem > 0) {
             final String message = "Didn't read all input. Maybe this input belongs to a failed request. " +
-                    "Remaining bytes: " + in.getRemaining();
+                    "Remaining bytes: " + rem;
             return new FailedToParseInput(length, packetNumber, new IllegalStateException(message));
         }
         return stateAndResult.getResult();
