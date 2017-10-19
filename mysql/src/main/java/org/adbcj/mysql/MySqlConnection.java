@@ -185,7 +185,6 @@ public class MySqlConnection implements Connection {
     private void doActualClose(CloseMode closeMode, StackTraceElement[] entry) {
     	if (closeMode == CloseMode.CLOSE_FORCIBLY) {
         	// Close the connection forcibly
-        	// @since 2017-09-02 little-pan
         	forceCloseOnPendingRequests();
         	realClose(entry);
         	return;
