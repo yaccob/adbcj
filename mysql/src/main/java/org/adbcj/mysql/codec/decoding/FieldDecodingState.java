@@ -41,7 +41,7 @@ public class FieldDecodingState<T> extends DecoderState {
         this.decodingType = decodingType;
         this.expectedAmountOfFields = expectedAmountOfFields;
         this.fields = fields;
-        this.callback = sandboxCb(callback);
+        this.callback = sandboxCallback(callback);
         this.entry = entry;
         this.connection = connection;
         this.eventHandler = eventHandler;

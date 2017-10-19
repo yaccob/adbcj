@@ -79,39 +79,38 @@ public abstract class DecoderState {
         }
         return new ErrorResponse(length, packetNumber, errorNumber, sqlState, message);
     }
-    
+
     /**
      * Sand-boxing the DbCallback for protecting ADBCJ kernel from being destroyed when the exception
-	 *occurs in user DbCallback.onComplete() code.
-     * 
+     * occurs in user DbCallback.onComplete() code.
+     *
      * @param cb the database callback
      * @return the sand-boxed callback
-     * 
      * @since 2017-09-02 little-pan
      */
-    public static <T> DbCallback<T> sandboxCb(final DbCallback<T> cb){
+    public static <T> DbCallback<T> sandboxCallback(final DbCallback<T> cb){
     	if(cb.getClass() == SandboxDbCallback.class) {
     		return cb;
     	}
     	return (new SandboxDbCallback<T>(cb));
     }
-    
-    static class SandboxDbCallback<T> implements DbCallback<T> {
-    	final DbCallback<T> callback;
-    	
-    	SandboxDbCallback(final DbCallback<T> callback){
-    		this.callback = callback;
-    	}
 
-		@Override
-		public void onComplete(final T result, final DbException failure) {
-			try {
-				callback.onComplete(result, failure);
-    		}catch(final Throwable cause) {
-    			logger.warn("Uncaught exception in DbCallback", cause);
-    		}
-		}
-    	
+    static class SandboxDbCallback<T> implements DbCallback<T> {
+        final DbCallback<T> callback;
+
+        SandboxDbCallback(final DbCallback<T> callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public void onComplete(final T result, final DbException failure) {
+            try {
+                callback.onComplete(result, failure);
+            } catch (final Throwable cause) {
+                logger.warn("Uncaught exception in DbCallback", cause);
+            }
+        }
+
     }
     
 }

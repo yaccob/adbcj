@@ -50,7 +50,7 @@ public class Connecting extends DecoderState {
                       StackTraceElement[] entry,
                       MySqlConnection connection,
                       LoginCredentials loginWith) {
-        this.connected = sandboxCb(connected);
+        this.connected = sandboxCallback(connected);
         this.entry = entry;
         this.connection = connection;
         this.loginWith = loginWith;
