@@ -26,7 +26,7 @@ abstract class FinishPrepareStatement extends DecoderState {
             PreparedStatementToBuild statement,
             DbCallback<MySqlPreparedStatement> callback) {
         this.statement = statement;
-        this.callback = callback;
+        this.callback  = sandboxCb(callback);
         this.connection = connection;
     }
 

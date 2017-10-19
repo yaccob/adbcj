@@ -46,7 +46,15 @@ public class ErrorResponse extends ServerPacket {
 	}
 
     public MysqlException toException(StackTraceElement[] entry){
-        return new MysqlException(getSqlState() + " " + getMessage(), null, entry);
+    	// Error format adjustment as mysql command reporting.
+    	// @since 2017-09-01 little-pan
+        return new MysqlException(toString(), null, entry);
+    }
+    
+    @Override
+    public String toString() {
+    	final String format= "ERROR %d (%s): %s";
+    	return (String.format(format, errorNumber, sqlState, message));
     }
 
 }

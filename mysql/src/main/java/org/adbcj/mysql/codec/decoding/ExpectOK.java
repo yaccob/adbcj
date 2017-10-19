@@ -13,7 +13,7 @@ public class ExpectOK<T> extends ResponseStart {
 
     public ExpectOK(MySqlConnection connection, DbCallback<T> callback, StackTraceElement[] entry) {
         super(connection);
-        this.callback = callback;
+        this.callback = sandboxCb(callback);
         this.entry = entry;
     }
 

@@ -2,11 +2,14 @@ package org.adbcj.h2.decoding;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.adbcj.Connection;
 import org.adbcj.DbCallback;
 import org.adbcj.h2.H2Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
@@ -14,6 +17,8 @@ import java.util.List;
 
 
 public class Decoder extends ByteToMessageDecoder {
+	private static final Logger logger = LoggerFactory.getLogger(Decoder.class);
+	
     private static Object DecodedToken = new Object();
     private DecoderState currentState;
     private H2Connection connection;
@@ -30,6 +35,11 @@ public class Decoder extends ByteToMessageDecoder {
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) throws Exception {
+    	// debug received packet since 2017-09-19 pzp
+    	if(logger.isDebugEnabled()) {
+    		final int ri = buffer.readerIndex(), length = buffer.readableBytes();
+    		logger.debug("Packet recv: \n{}", ByteBufUtil.prettyHexDump(buffer, ri, length));
+    	}
         InputStream in = new ByteBufInputStream(buffer);
         in.mark(Integer.MAX_VALUE);
         try {

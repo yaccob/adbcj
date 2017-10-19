@@ -23,7 +23,7 @@ public class ExpectPreparQuery extends DecoderState {
             DbCallback<MySqlPreparedStatement> callback,
             StackTraceElement[] entry) {
         super();
-        this.callback = callback;
+        this.callback = sandboxCb(callback);
         this.entry = entry;
         this.connection = connection;
     }

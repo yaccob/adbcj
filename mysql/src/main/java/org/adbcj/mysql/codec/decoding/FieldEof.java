@@ -34,7 +34,7 @@ class FieldEof<T> extends DecoderState {
             DbException failure) {
         this.decodingType = decodingType;
         this.fields = fields;
-        this.callback = callback;
+        this.callback = sandboxCb(callback);
         this.connection = connection;
         this.eventHandler = eventHandler;
         this.accumulator = accumulator;

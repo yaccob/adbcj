@@ -13,7 +13,7 @@ public class FinishLogin extends ResponseStart {
 
     public FinishLogin(DbCallback<Connection> connected, StackTraceElement[] entry, MySqlConnection connectionToBuild) {
         super(connectionToBuild);
-        this.connected = connected;
+        this.connected = sandboxCb(connected);
         this.entry = entry;
     }
 
