@@ -137,7 +137,7 @@ public class H2Connection implements Connection {
         StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
         synchronized (lock) {
             closer.requestClose(callback, () -> {
-                if (this.manager.connectionPool == null || manager.isClosed()) {
+                if (this.manager.connectionPool == null || manager.isClosed() || closeMode == CloseMode.CLOSE_FORCIBLY) {
                     doActualClose(closeMode, entry);
                 } else {
                     doRollback(entry, (result, failure) -> {
@@ -160,7 +160,7 @@ public class H2Connection implements Connection {
     }
 
     private void doActualClose(CloseMode closeMode, StackTraceElement[] entry) {
-        if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS) {
+        if (closeMode == CloseMode.CANCEL_PENDING_OPERATIONS || closeMode == CloseMode.CLOSE_FORCIBLY) {
             forceCloseOnPendingRequests();
         }
 

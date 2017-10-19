@@ -94,6 +94,39 @@ public class CloseConnectionsTest extends  AbstractWithConnectionManagerTest{
         }
     }
 
+    @Parameters({"connectionPool"})
+    @Test
+    public void closeRealConnectionInPool(boolean connectionPool) throws Exception {
+        if(!connectionPool){
+            // Irrelevant without connection pool
+            return;
+        }
+
+        // Warmup
+        for (int i = 0; i < 10; i++) {
+            final Connection connection = connectionManager.connect().get();
+            connection.close(CloseMode.CLOSE_GRACEFULLY).get();
+        }
+
+        long startPooled = System.nanoTime();
+        for (int i = 0; i < 100; i++) {
+            final Connection connection = connectionManager.connect().get();
+            connection.close(CloseMode.CLOSE_GRACEFULLY).get();
+        }
+        long timeUsedPooled = System.nanoTime()-startPooled;
+
+        long startForced = System.nanoTime();
+        for (int i = 0; i < 100; i++) {
+            final Connection connection = connectionManager.connect().get();
+            connection.close(CloseMode.CLOSE_FORCIBLY).get();
+        }
+        long timeUsedForced = System.nanoTime()-startForced;
+
+
+        System.out.println("Time used pooled: "+timeUsedPooled +" time used unpooled: "+timeUsedForced);
+        Assert.assertTrue( timeUsedForced>timeUsedPooled*1.5);
+    }
+
     private void checkClosed(final Connection c1, Future<ResultSet> runningQuery, Future<ResultSet> runningQuery2, Connection c2) {
         shouldThrowException(() -> c1.executeQuery("SELECT 1"));
 
