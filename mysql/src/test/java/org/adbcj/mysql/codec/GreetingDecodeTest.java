@@ -1,9 +1,11 @@
 package org.adbcj.mysql.codec;
 
+import io.netty.channel.embedded.EmbeddedChannel;
 import org.adbcj.mysql.MySqlConnection;
 import org.adbcj.mysql.MysqlConnectionManager;
 import org.adbcj.mysql.codec.decoding.Connecting;
 import org.adbcj.mysql.codec.packets.ServerGreeting;
+import org.adbcj.support.DbCompletableFuture;
 import org.adbcj.support.LoginCredentials;
 import io.netty.channel.Channel;
 import org.adbcj.support.stacktracing.StackTracingOptions;
@@ -44,7 +46,7 @@ public class GreetingDecodeTest {
 	public void decodeGreeting1() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING1);
 		MySqlClientDecoder decoder = new MySqlClientDecoder(
-                new Connecting(null,null,  createMockConnection(), login));
+                new Connecting(new DbCompletableFuture<>(), null,  createMockConnection(), login));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 64);
@@ -79,7 +81,7 @@ public class GreetingDecodeTest {
 	@Test
 	public void decodeGreeting2() throws IOException {
 		InputStream in = new ByteArrayInputStream(GREETING2);
-		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(null, null,createMockConnection(), login));
+		MySqlClientDecoder decoder = new MySqlClientDecoder(new Connecting(new DbCompletableFuture<>(), null,createMockConnection(), login));
 		ServerGreeting greeting = castToServerGreeting(in, decoder);
 
 		Assert.assertEquals(greeting.getPacketLength(), 74);
@@ -94,7 +96,7 @@ public class GreetingDecodeTest {
 	}
 
     private ServerGreeting castToServerGreeting(InputStream in, MySqlClientDecoder decoder) throws IOException {
-        return (ServerGreeting) decoder.decode(in, mock(Channel.class), true);
+        return (ServerGreeting) decoder.decode(in, new EmbeddedChannel(), true);
     }
 
     private MySqlConnection createMockConnection() {
@@ -108,7 +110,7 @@ public class GreetingDecodeTest {
 						"sa",
 						"test",
 						new HashMap<String, String>()),
-                mock(Channel.class),
+				new EmbeddedChannel(),
 				StackTracingOptions.GLOBAL_DEFAULT);
     }
 

@@ -1,5 +1,6 @@
 package org.adbcj.mysql.codec;
 
+import io.netty.channel.embedded.EmbeddedChannel;
 import org.adbcj.mysql.codec.decoding.ExpectOK;
 import org.adbcj.mysql.codec.packets.OkResponse;
 import org.adbcj.support.DbCompletableFuture;
@@ -70,7 +71,7 @@ public class OkResponseDecodeTest {
     }
 
     private OkResponse.RegularOK castToOk(InputStream in, MySqlClientDecoder decoder) throws IOException {
-        return (OkResponse.RegularOK) decoder.decode(in, null, true);
+        return (OkResponse.RegularOK) decoder.decode(in, new EmbeddedChannel(), true);
     }
 
 }

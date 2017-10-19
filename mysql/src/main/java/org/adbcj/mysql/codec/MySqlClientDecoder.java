@@ -66,7 +66,7 @@ public class MySqlClientDecoder {
         input.mark(Integer.MAX_VALUE);
         ServerPacket message = null;
         try {
-            message = doDecode( input,channel, block);
+            message = doDecode(input, channel, block);
         } finally {
             if (message == null) {
                 input.reset();
