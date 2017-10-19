@@ -12,8 +12,6 @@ import java.io.DataOutputStream;
 
 
 class Encoder extends MessageToByteEncoder<ClientToServerPacket> {
-    private final static Logger logger = LoggerFactory.getLogger(Encoder.class);
-
     @Override
     public void encode(ChannelHandlerContext ctx, ClientToServerPacket request, ByteBuf buffer) throws Exception {
         ByteBufOutputStream out = new ByteBufOutputStream(buffer);
