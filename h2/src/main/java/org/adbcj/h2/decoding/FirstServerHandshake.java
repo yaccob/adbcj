@@ -69,11 +69,8 @@ class SessionIdReceived extends StatusReadingDecoder {
         // response auto-commit only after version 15.
         // @since 2017-09-24 little-pan
         final ResultOrWait<Boolean> autoCommit;
-        if(channel.attr(FirstServerHandshake.ATTR_CLI_VER).get() >= Constants.TCP_PROTOCOL_VERSION_15) {
-        	autoCommit = IoUtils.tryReadNextBoolean(input, ResultOrWait.Start);
-        }else {
-        	autoCommit = ResultOrWait.result(Boolean.TRUE);
-        }
+        autoCommit = IoUtils.tryReadNextBoolean(input, ResultOrWait.Start);
+
         if(autoCommit.couldReadResult){
             connection.forceQueRequest(connection.requestCreator().createGetAutoIdStatement(callback, entry));
             connection.forceQueRequest(connection.requestCreator().createCommitStatement(callback, entry));
