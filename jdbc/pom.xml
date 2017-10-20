@@ -5,12 +5,12 @@
 	<parent>
         <groupId>org.adbcj</groupId>
 		<artifactId>adbcj</artifactId>
-		<version>0.9-SNAPSHOT</version>
+		<version>0.9</version>
 	</parent>
 
 	<artifactId>adbcj-jdbc</artifactId>
 	<packaging>jar</packaging>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.9</version>
 	<name>ADBCJ - JDBC Driver</name>
 
 	<dependencies>

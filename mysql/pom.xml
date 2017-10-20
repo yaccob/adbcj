@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.adbcj</groupId>
         <artifactId>adbcj</artifactId>
-        <version>0.9-SNAPSHOT</version>
+        <version>0.9</version>
     </parent>
 
     <artifactId>mysql-async-driver</artifactId>
     <packaging>jar</packaging>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.9</version>
     <name>ADBCJ - MySQL Async Driver based on Netty</name>
 
     <dependencies>
