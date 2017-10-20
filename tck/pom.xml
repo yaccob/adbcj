@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>org.adbcj</groupId>
 		<artifactId>adbcj</artifactId>
-		<version>0.9</version>
+		<version>0.10-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>adbcj-tck</artifactId>
 	<packaging>jar</packaging>
-    <version>0.9</version>
+    <version>0.10-SNAPSHOT</version>
 	<name>ADBCJ - TCK</name>
 
 	<build>
