@@ -14,29 +14,28 @@ Therefore it's is written in Java, so other languages like Scala, Groovy, Kotlin
 # Getting Started
 All the code of this section is in the 'adbcj-demo' directory. 
 ## Add the dependencies
-First add the Maven dependency and repository. Currently only snapshots are available. Fixed releases coming soon
+First add the Maven dependency and repository. Currently only snapshots are available.
 
     <repository>
-        <id>adbcj-snapshot</id>
-        <url>https://gamlor.info/files/mvn/</url>
         <snapshots>
-            <enabled>true</enabled>
+            <enabled>false</enabled>
         </snapshots>
-        <layout>default</layout>
+        <id>bintray-gamlor-adbcj-repo</id>
+        <name>bintray</name>
+        <url>https://dl.bintray.com/gamlor/adbcj-repo</url>
     </repository>
-
     
 Add you're dependencies now. For MySQL:
 
     <dependency>
         <groupId>org.adbcj</groupId>
         <artifactId>adbcj-api</artifactId>
-        <version>0.8-SNAPSHOT</version>
+        <version>0.9</version>
     </dependency>
     <dependency>
         <groupId>org.adbcj</groupId>
         <artifactId>mysql-async-driver</artifactId>
-        <version>0.8-SNAPSHOT</version>
+        <version>0.9</version>
     </dependency>
     
 Or for H2:
@@ -44,12 +43,12 @@ Or for H2:
     <dependency>
         <groupId>org.adbcj</groupId>
         <artifactId>adbcj-api</artifactId>
-        <version>0.8-SNAPSHOT</version>
+        <version>0.9</version>
     </dependency>
     <dependency>
         <groupId>org.adbcj</groupId>
         <artifactId>h2-async-driver</artifactId>
-        <version>0.8-SNAPSHOT</version>
+        <version>0.9</version>
     </dependency>
 
 
