@@ -20,9 +20,9 @@ First add the Maven dependency and repository. Currently only snapshots are avai
         <snapshots>
             <enabled>false</enabled>
         </snapshots>
-        <id>bintray-gamlor-adbcj-repo</id>
+        <id>central</id>
         <name>bintray</name>
-        <url>https://dl.bintray.com/gamlor/adbcj-repo</url>
+        <url>https://jcenter.bintray.com</url>
     </repository>
     
 Add you're dependencies now. For MySQL:
