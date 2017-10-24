@@ -14,7 +14,7 @@
 
     <properties>
         <slf4j.version>1.7.2</slf4j.version>
-        <adbcj.version>0.8-SNAPSHOT</adbcj.version>
+        <adbcj.version>0.9</adbcj.version>
     </properties>
 
     <dependencies>
@@ -63,12 +63,12 @@
 
     <repositories>
         <repository>
-            <id>adbcj-snapshot</id>
-            <url>https://gamlor.info/files/mvn/</url>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
             </snapshots>
-            <layout>default</layout>
+            <id>central</id>
+            <name>bintray</name>
+            <url>https://jcenter.bintray.com</url>
         </repository>
     </repositories>
 
