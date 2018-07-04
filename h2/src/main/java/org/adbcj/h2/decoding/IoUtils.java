@@ -61,7 +61,7 @@ public final class IoUtils {
             return previousResult;
         }
         if(stream.available()< SizeConstants.BYTE_SIZE){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerBoolean;
         }
         return ResultOrWait.result(stream.readByte()==1);
     }
@@ -71,7 +71,7 @@ public final class IoUtils {
             return previousResult;
         }
         if(stream.available()< SizeConstants.INT_SIZE){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerInteger;
         }
         return ResultOrWait.result(stream.readInt());
     }
@@ -81,7 +81,7 @@ public final class IoUtils {
             return previousResult;
         }
         if(stream.available()< SizeConstants.LONG_SIZE){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerLong;
         }
         return ResultOrWait.result(stream.readLong());
     }
@@ -91,7 +91,7 @@ public final class IoUtils {
             return previousResult;
         }
         if(stream.available()< SizeConstants.DOUBLE_SIZE){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerDouble;
         }
         return ResultOrWait.result(stream.readDouble());
     }
@@ -101,7 +101,7 @@ public final class IoUtils {
             return previousResult;
         }
         if(stream.available()< SizeConstants.INT_SIZE){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerString;
         }
         int stringLength = stream.readInt();
         if(stringLength<0){
@@ -109,7 +109,7 @@ public final class IoUtils {
         }
 
         if(stream.available()< stringLength*SizeConstants.CHAR_SIZE){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerString;
         } else{
             char[] stringChars = new char[stringLength];
             for (int i = 0; i < stringLength; i++) {
@@ -121,7 +121,7 @@ public final class IoUtils {
 
     public static ResultOrWait<String> readEncodedString(DataInputStream stream, int stringLength) throws IOException {
         if(stream.available()< stringLength){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerString;
         } else{
             char[] buff = new char[stringLength];
             int i = 0;
@@ -131,7 +131,7 @@ public final class IoUtils {
                 }
                 return ResultOrWait.result(new String(buff));
             } catch (EOFException e) {
-                return ResultOrWait.WaitLonger;
+                return ResultOrWait.WaitLongerString;
             }
         }
     }
@@ -149,17 +149,17 @@ public final class IoUtils {
     public static ResultOrWait<byte[]> tryReadNextBytes(DataInputStream stream,
                                                         ResultOrWait<?> previousResult) throws IOException {
         if(!previousResult.couldReadResult){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerByteArray;
         }
         if(stream.available()< SizeConstants.INT_SIZE){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerByteArray;
         }
         int byteLength = stream.readInt();
         if (byteLength == -1) {
             return ResultOrWait.result(null);
         }
         if(stream.available()< byteLength){
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerByteArray;
         }
         byte[] b = new byte[byteLength];
         final int readAmount = stream.read(b);

@@ -8,12 +8,12 @@ import java.util.concurrent.CompletableFuture;
 
 public interface PreparedQuery extends PreparedStatement {
 
-    default CompletableFuture<ResultSet> execute(Object... params){
+    default CompletableFuture<? extends ResultSet> execute(Object... params){
         DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
         DefaultResultSet acc = new DefaultResultSet();
         DbCompletableFuture<DefaultResultSet> future = new DbCompletableFuture<>();
         executeWithCallback(handler, acc, future, params);
-        return (CompletableFuture)future;
+        return future;
     }
 
     default <T> CompletableFuture<T> executeWithCallback(

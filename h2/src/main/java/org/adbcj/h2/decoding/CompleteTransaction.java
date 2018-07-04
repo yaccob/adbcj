@@ -22,7 +22,7 @@ public class CompleteTransaction extends StatusReadingDecoder {
     protected ResultAndState processFurther(DataInputStream stream, Channel channel, int status) throws IOException {
         StatusCodes.STATUS_OK.expectStatusOrThrow(status);
 
-        final ResultOrWait<Integer> affected = IoUtils.tryReadNextInt(stream, ResultOrWait.Start);
+        final ResultOrWait<Integer> affected = IoUtils.tryReadNextInt(stream, ResultOrWait.StartWaitInteger);
         final ResultOrWait<Boolean> autoCommit = IoUtils.tryReadNextBoolean(stream, affected);
         final ResultOrWait<Integer> okStatus = IoUtils.tryReadNextInt(stream, autoCommit);
         if (okStatus.couldReadResult) {

@@ -97,12 +97,12 @@ public interface Connection extends AsyncCloseable {
     boolean isInTransaction();
 
 
-    default CompletableFuture<ResultSet> executeQuery(String sql) {
+    default CompletableFuture<? extends ResultSet> executeQuery(String sql) {
         DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
         DefaultResultSet accumulator = new DefaultResultSet();
         DbCompletableFuture<DefaultResultSet> result = new DbCompletableFuture<>();
         executeQuery(sql, handler, accumulator, result);
-        return (DbCompletableFuture) result;
+        return result;
     }
 
 
@@ -119,11 +119,11 @@ public interface Connection extends AsyncCloseable {
                               DbCallback<ResultSet> callback) {
         DefaultResultEventsHandler handler = new DefaultResultEventsHandler();
         DefaultResultSet accumulator = new DefaultResultSet();
-        executeQuery(sql, handler, accumulator, (DbCallback) callback);
+        executeQuery(sql, handler, accumulator, callback);
     }
 
     <T> void executeQuery(String sql,
-                          ResultHandler<T> eventHandler,
+                          ResultHandler<? extends T> eventHandler,
                           T accumulator,
                           DbCallback<T> callback);
 

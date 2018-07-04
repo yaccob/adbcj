@@ -46,7 +46,7 @@ public class RowDecoder<T> implements DecoderState {
 
     @Override
     public ResultAndState decode(DataInputStream stream, Channel channel) throws IOException {
-        final ResultOrWait<Boolean> row = IoUtils.tryReadNextBoolean(stream, ResultOrWait.Start);
+        final ResultOrWait<Boolean> row = IoUtils.tryReadNextBoolean(stream, ResultOrWait.StartWaitBoolean);
         if (0 == rowToRead) {
             try {
                 eventHandler.startResults(accumulator);
@@ -62,11 +62,11 @@ public class RowDecoder<T> implements DecoderState {
     }
 
     private ResultAndState decodeRow(DataInputStream stream, ResultOrWait row) throws IOException {
-        ResultOrWait<Value> lastValue = (ResultOrWait) row;
+        ResultOrWait<Value> lastValue = (ResultOrWait<Value>) row;
         ResultOrWait<Value> values[] = new ResultOrWait[fields.size()];
         for (int i = 0; i < fields.size(); i++) {
             final ResultOrWait<Integer> type = IoUtils.tryReadNextInt(stream, lastValue);
-            lastValue = ReadUtils.tryReadValue(stream, type);
+            lastValue = (ResultOrWait<Value>) ReadUtils.tryReadValue(stream, type);
             values[i] = lastValue;
         }
         if (lastValue.couldReadResult) {

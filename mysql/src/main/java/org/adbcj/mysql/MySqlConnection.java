@@ -111,13 +111,13 @@ public class MySqlConnection implements Connection {
 
 
     @Override
-    public <T> void executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DbCallback<T> callback) {
+    public <T> void executeQuery(String sql, ResultHandler<? extends T> eventHandler, T accumulator, DbCallback<T> callback) {
         checkClosed();
         StackTraceElement[] entry = strackTraces.captureStacktraceAtEntryPoint();
         failIfQueueFull(MySqlRequests.executeQuery(
                 this,
                 sql,
-                eventHandler,
+                (ResultHandler<T>) eventHandler,
                 accumulator,
                 callback,
                 entry));

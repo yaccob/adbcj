@@ -25,7 +25,7 @@ public abstract class StatusReadingDecoder implements DecoderState {
         }
         final int status = stream.readInt();
         if(StatusCodes.STATUS_ERROR.isStatus(status)){
-            ResultOrWait<String> sqlstate = IoUtils.tryReadNextString(stream, ResultOrWait.Start);
+            ResultOrWait<String> sqlstate = IoUtils.tryReadNextString(stream, ResultOrWait.StartWaitString);
             ResultOrWait<String> message = IoUtils.tryReadNextString(stream, sqlstate);
             ResultOrWait<String> sql = IoUtils.tryReadNextString(stream, message);
             ResultOrWait<Integer> errorCode = IoUtils.tryReadNextInt(stream, sql);

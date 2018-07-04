@@ -29,7 +29,7 @@ public class MySqlPreparedStatement implements PreparedQuery, PreparedUpdate {
     }
 
     @Override
-    public void execute(DbCallback callback, Object... params) {
+    public void execute(DbCallback<Result> callback, Object... params) {
         executeWithCallback(new DefaultResultEventsHandler(), new DefaultResultSet(), callback, params);
     }
 

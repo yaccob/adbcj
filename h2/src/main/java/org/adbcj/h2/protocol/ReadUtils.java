@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 public class ReadUtils {
     public static ResultOrWait<Value> tryReadValue(DataInputStream stream, ResultOrWait<Integer> maybeType) throws IOException {
         if (!maybeType.couldReadResult) {
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerValue;
         }
         int typeCode = maybeType.result;
         H2Types type = H2Types.typeCodeToType(typeCode);
@@ -42,7 +42,7 @@ public class ReadUtils {
             case STRING:
                 return convertToValue(IoUtils.tryReadNextString(stream, maybeType));
             case CLOB:
-                final ResultOrWait<Long> length = IoUtils.tryReadNextLong(stream, ResultOrWait.Start);
+                final ResultOrWait<Long> length = IoUtils.tryReadNextLong(stream, ResultOrWait.StartWaitLong);
                 if(length.couldReadResult){
                     if(length.result==-1)  {
                         throw new DbException("Cannot handle this CLOB, we only support inlined CLOBs");
@@ -50,7 +50,7 @@ public class ReadUtils {
                         return directReadClob(stream, length);
                     }
                 } else{
-                    return ResultOrWait.WaitLonger;
+                    return ResultOrWait.WaitLongerValue;
                 }
             default:
                 throw new DbException("Cannot handle type: " + type);
@@ -64,13 +64,13 @@ public class ReadUtils {
         if(lobMagicBits.couldReadResult){
             return value;
         } else{
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerValue;
         }
     }
 
     static <T> ResultOrWait<Value> convertToValue(ResultOrWait<T> maybeValue) {
         if (!maybeValue.couldReadResult) {
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerValue;
         } else {
             return ResultOrWait.result(new DefaultValue(maybeValue.result));
         }
@@ -78,7 +78,7 @@ public class ReadUtils {
 
     static ResultOrWait<Value> convertToDecimalValue(ResultOrWait<String> maybeValue) {
         if (!maybeValue.couldReadResult) {
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerValue;
         } else {
             return ResultOrWait.result(new DefaultValue(new BigDecimal(maybeValue.result)));
         }
@@ -86,7 +86,7 @@ public class ReadUtils {
 
     static ResultOrWait<Value> convertNanoToTime(ResultOrWait<Long> maybeValue) {
         if (!maybeValue.couldReadResult) {
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerValue;
         } else {
             return ResultOrWait.result(new DefaultValue(DateTimeUtils.convertNanoToTime(maybeValue.result)));
         }
@@ -94,7 +94,7 @@ public class ReadUtils {
 
     static ResultOrWait<Value> convertToDateValue(ResultOrWait<Long> maybeValue) {
         if (!maybeValue.couldReadResult) {
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerValue;
         } else {
             return ResultOrWait.result(new DefaultValue(DateTimeUtils.convertDateValueToDate(maybeValue.result)));
         }
@@ -105,7 +105,7 @@ public class ReadUtils {
             return ResultOrWait.result(new DefaultValue(
                     DateTimeUtils.convertDateValueToTimestamp(dateValue.result,nanos.result)));
         } else {
-            return ResultOrWait.WaitLonger;
+            return ResultOrWait.WaitLongerValue;
         }
     }
 }

@@ -51,7 +51,7 @@ public class ColumnDecoder<T> implements DecoderState {
 
     @Override
     public ResultAndState decode(DataInputStream stream, Channel channel) throws IOException {
-        ResultOrWait<String> alias = tryReadNextString(stream, ResultOrWait.Start);
+        ResultOrWait<String> alias = tryReadNextString(stream, ResultOrWait.StartWaitString);
         ResultOrWait<String> schemaName = tryReadNextString(stream, alias);
         ResultOrWait<String> tableName = tryReadNextString(stream, schemaName);
         ResultOrWait<String> columnName = tryReadNextString(stream, tableName);

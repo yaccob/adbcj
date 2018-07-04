@@ -103,11 +103,11 @@ public class H2Connection implements Connection {
         return isInTransaction;
     }
 
-    public <T> void executeQuery(String sql, ResultHandler<T> eventHandler, T accumulator, DbCallback<T> callback) {
+    public <T> void executeQuery(String sql, ResultHandler<? extends T> eventHandler, T accumulator, DbCallback<T> callback) {
         checkClosed();
         StackTraceElement[] entry = stackTraces.captureStacktraceAtEntryPoint();
 
-        Request request = requestCreator.createQuery(sql, eventHandler, accumulator, callback, entry);
+        Request request = requestCreator.createQuery(sql, (ResultHandler<T>) eventHandler, accumulator, callback, entry);
         queRequest(request, entry);
     }
 

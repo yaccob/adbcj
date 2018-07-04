@@ -69,7 +69,7 @@ class SessionIdReceived extends StatusReadingDecoder {
         // response auto-commit only after version 15.
         // @since 2017-09-24 little-pan
         final ResultOrWait<Boolean> autoCommit;
-        autoCommit = IoUtils.tryReadNextBoolean(input, ResultOrWait.Start);
+        autoCommit = IoUtils.tryReadNextBoolean(input, ResultOrWait.StartWaitBoolean);
 
         if(autoCommit.couldReadResult){
             connection.forceQueRequest(connection.requestCreator().createGetAutoIdStatement(callback, entry));
